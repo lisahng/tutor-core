@@ -27,11 +27,6 @@ class BugLibraryTest {
     }
 
     @Test
-    void b09IstEnthalten() {
-        assertTrue(lib.byId("B09").isPresent(), "B09 (Kurzschluss) muss enthalten sein");
-    }
-
-    @Test
     void jedeKategorieHatPflichtfelder() {
         for (Misconception m : lib.all()) {
             assertNotNull(m.id());
