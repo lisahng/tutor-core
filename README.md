@@ -74,3 +74,25 @@ ersetzt werden: `jackson-databind` als Dependency in die `pom.xml`, dann in
   über die Klausur-Musterlösungen).
 - **Schritt 3:** Zufallsgenerator für typkonforme Ausdrücke.
 - **Schritt 4–6:** Diagnose/Feedback, Studentenmodell, Frontend.
+
+---
+
+## Schritt 2 – Ausdrucksbaum (AST)
+
+Paket `de.lmu.tutor.ast`:
+- `JType` – die Datentypen des Sprachumfangs (int, double, char, boolean, String, Arrays)
+- `Expr` – sealed interface mit allen Knotentypen (Lit, Var, Bin, Unary, Cast, Index, Call, Ternary, IncDec); `render()` erzeugt Java-Quelltext, `children()`/`groesse()`/`hoehe()` für die Struktur
+- `AST` – Fabrik mit kurzen Baumethoden (`bin`, `var`, `intLit`, `call`, `index`, …)
+
+Demo ausführen:
+```bash
+mvn compile exec:java -Dexec.mainClass=de.lmu.tutor.demo.AstDemo
+```
+
+Ohne Maven:
+```bash
+javac -d target/classes $(find src/main/java -name "*.java")
+java -cp target/classes de.lmu.tutor.demo.AstDemo
+```
+
+Tests: `src/test/java/de/lmu/tutor/ast/AstTest.java` (mit `mvn test`).

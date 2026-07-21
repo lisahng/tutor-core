@@ -1,6 +1,10 @@
-C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\buglib\BugLibrary.java
-C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\buglib\Difficulty.java
-C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\buglib\json\MiniJson.java
-C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\buglib\Misconception.java
-C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\buglib\Subtype.java
-C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\demo\BugLibraryDemo.java
+C:\Users\lisah\Downloads\tutor-core-schritt2\tutor-core\src\main\java\de\lmu\tutor\ast\AST.java
+C:\Users\lisah\Downloads\tutor-core-schritt2\tutor-core\src\main\java\de\lmu\tutor\ast\Expr.java
+C:\Users\lisah\Downloads\tutor-core-schritt2\tutor-core\src\main\java\de\lmu\tutor\ast\JType.java
+C:\Users\lisah\Downloads\tutor-core-schritt2\tutor-core\src\main\java\de\lmu\tutor\buglib\BugLibrary.java
+C:\Users\lisah\Downloads\tutor-core-schritt2\tutor-core\src\main\java\de\lmu\tutor\buglib\Difficulty.java
+C:\Users\lisah\Downloads\tutor-core-schritt2\tutor-core\src\main\java\de\lmu\tutor\buglib\json\MiniJson.java
+C:\Users\lisah\Downloads\tutor-core-schritt2\tutor-core\src\main\java\de\lmu\tutor\buglib\Misconception.java
+C:\Users\lisah\Downloads\tutor-core-schritt2\tutor-core\src\main\java\de\lmu\tutor\buglib\Subtype.java
+C:\Users\lisah\Downloads\tutor-core-schritt2\tutor-core\src\main\java\de\lmu\tutor\demo\AstDemo.java
+C:\Users\lisah\Downloads\tutor-core-schritt2\tutor-core\src\main\java\de\lmu\tutor\demo\BugLibraryDemo.java

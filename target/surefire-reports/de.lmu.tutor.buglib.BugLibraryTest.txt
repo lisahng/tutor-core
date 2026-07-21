@@ -1,4 +1,0 @@
--------------------------------------------------------------------------------
-Test set: de.lmu.tutor.buglib.BugLibraryTest
--------------------------------------------------------------------------------
-Tests run: 11, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.954 s -- in de.lmu.tutor.buglib.BugLibraryTest
