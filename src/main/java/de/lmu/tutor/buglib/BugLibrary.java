@@ -1,7 +1,5 @@
 package de.lmu.tutor.buglib;
 
-import de.lmu.tutor.buglib.json.MiniJson;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
@@ -15,17 +13,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import de.lmu.tutor.buglib.json.MiniJson;
+
 /**
- * Registry und Loader der Bug Library.
- *
- * <p>Die Bug Library ist die zentrale Datengrundlage des Tutorsystems: der
- * empirisch fundierte Katalog der 14 Fehlerkategorien (B01-B14) aus FQ1.
- * Diese Klasse laedt die Kategorien aus {@code bug-library.json}, stellt
- * Abfragen bereit und berechnet das Auswahlgewicht einer Kategorie.</p>
+ * Registry und Loader der Bug Library (Katalog der 14 Fehlerkategorien B01-B14).
+ * Laedt aus {@code bug-library.json}, stellt Abfragen bereit und berechnet die
+ * Aufgabenauswahl nach Performance Factors Analysis (PFA, Pavlik et al. 2009).
  */
 public final class BugLibrary {
 
-    /** Standard-Ressourcenpfad der Bug-Library-Daten (im Classpath). */
     public static final String RESOURCE = "/bug-library.json";
 
     private final List<Misconception> eintraege;
@@ -44,7 +40,6 @@ public final class BugLibrary {
     // Laden
     // ---------------------------------------------------------------
 
-    /** Laedt die Bug Library aus der Standard-Ressource im Classpath. */
     public static BugLibrary loadDefault() {
         try (InputStream in = BugLibrary.class.getResourceAsStream(RESOURCE)) {
             if (in == null) {
@@ -56,7 +51,6 @@ public final class BugLibrary {
         }
     }
 
-    /** Laedt die Bug Library aus einer Datei (z. B. fuer Tests oder alternative Datenstaende). */
     public static BugLibrary load(Path datei) {
         try {
             return parse(Files.readString(datei, StandardCharsets.UTF_8));
@@ -65,7 +59,6 @@ public final class BugLibrary {
         }
     }
 
-    /** Baut die Bug Library aus einem JSON-Text auf. */
     @SuppressWarnings("unchecked")
     public static BugLibrary parse(String json) {
         Object wurzel = MiniJson.parse(json);
@@ -77,7 +70,6 @@ public final class BugLibrary {
         if (!(liste instanceof List)) {
             throw new IllegalArgumentException("Feld 'misconceptions' fehlt oder ist kein Array");
         }
-
         List<Misconception> ergebnis = new ArrayList<>();
         for (Object element : (List<Object>) liste) {
             ergebnis.add(leseMisconception((Map<String, Object>) element));
@@ -100,21 +92,19 @@ public final class BugLibrary {
         if (ut instanceof List) {
             for (Object sub : (List<Object>) ut) {
                 Map<String, Object> s = (Map<String, Object>) sub;
-                untertypen.add(new Subtype(
-                        str(s, "id"),
-                        str(s, "name"),
-                        str(s, "beispiel")));
+                untertypen.add(new Subtype(str(s, "id"), str(s, "name"), str(s, "beispiel")));
             }
         }
 
+        // Hinweis: ein evtl. noch vorhandenes Feld "schwierigkeit" in der JSON wird
+        // ignoriert - die Schwierigkeit wird jetzt aus beta abgeleitet.
         return new Misconception(
                 str(o, "id"),
                 str(o, "name"),
                 str(o, "beschreibung"),
                 str(o, "beispiel"),
                 str(o, "typischerFehler"),
-                Difficulty.vonText(str(o, "schwierigkeit")),
-                (int) Math.round(num(o, "basisgewicht")),
+                numOrDefault(o, "beta", 0.0),
                 str(o, "konzept"),
                 List.copyOf(feedback),
                 List.copyOf(untertypen));
@@ -125,58 +115,57 @@ public final class BugLibrary {
         return v == null ? "" : String.valueOf(v);
     }
 
-    private static double num(Map<String, Object> o, String key) {
+    /** Liest ein Zahlenfeld; fehlt es oder ist es keine Zahl, wird der Standardwert genutzt. */
+    private static double numOrDefault(Map<String, Object> o, String key, double standard) {
         Object v = o.get(key);
-        if (v instanceof Number n) return n.doubleValue();
-        throw new IllegalArgumentException("Zahl erwartet fuer Feld '" + key + "'");
+        return (v instanceof Number n) ? n.doubleValue() : standard;
     }
 
     // ---------------------------------------------------------------
     // Abfragen
     // ---------------------------------------------------------------
 
-    /** Alle Kategorien in Reihenfolge der Datei (B01..B14). */
     public List<Misconception> all() {
         return eintraege;
     }
 
-    /** Anzahl der Kategorien. */
     public int size() {
         return eintraege.size();
     }
 
-    /** Eine Kategorie ueber ihre ID (z. B. "B05"), falls vorhanden. */
     public Optional<Misconception> byId(String id) {
         return Optional.ofNullable(nachId.get(id));
     }
 
-    /** Alle Kategorien eines Schwierigkeitsgrads. */
-    public List<Misconception> byDifficulty(Difficulty grad) {
-        List<Misconception> res = new ArrayList<>();
-        for (Misconception m : eintraege) {
-            if (m.schwierigkeit() == grad) res.add(m);
-        }
-        return res;
+    // ---------------------------------------------------------------
+    // Aufgabenauswahl nach Performance Factors Analysis (PFA)
+    //   m = beta + gamma*erfolge + rho*fehler ; P(richtig) = 1/(1+e^-m)
+    // Ausgewaehlt wird die am wenigsten beherrschte Kategorie (kleinste P).
+    // ---------------------------------------------------------------
+
+    public double pfaWert(String id, int erfolge, int fehler, double gamma, double rho) {
+        double beta = byId(id)
+                .map(Misconception::beta)
+                .orElseThrow(() -> new IllegalArgumentException("Unbekannte Kategorie: " + id));
+        return beta + gamma * erfolge + rho * fehler;
     }
 
-    // ---------------------------------------------------------------
-    // Aufgabenauswahl / Gewichtung
-    // ---------------------------------------------------------------
+    public double erfolgswahrscheinlichkeit(String id, int erfolge, int fehler, double gamma, double rho) {
+        double m = pfaWert(id, erfolge, fehler, gamma, rho);
+        return 1.0 / (1.0 + Math.exp(-m));
+    }
 
-    /**
-     * Auswahlgewicht einer Kategorie nach der Formel
-     * <pre>  w(K, s) = b(K) * (1 + alpha * f(K, s))  </pre>
-     * mit dem Basisgewicht b(K) aus der Bug Library, der individuellen
-     * Fehlerhaeufigkeit f(K, s) (0..1) und der Adaptionsstaerke alpha.
-     *
-     * @param id          Kategorie-ID
-     * @param fehlerquote f(K, s), relative Fehlerhaeufigkeit der Person (0..1)
-     * @param alpha       Adaptionsstaerke (>= 0)
-     * @return das Auswahlgewicht; 0, falls die Kategorie unbekannt ist
-     */
-    public double auswahlGewicht(String id, double fehlerquote, double alpha) {
-        return byId(id)
-                .map(m -> m.basisgewicht() * (1.0 + alpha * fehlerquote))
-                .orElse(0.0);
+    public Optional<Misconception> naechsteKategorie(Map<String, int[]> statistik, double gamma, double rho) {
+        Misconception beste = null;
+        double minP = Double.MAX_VALUE;
+        for (Misconception m : eintraege) {
+            int[] sf = statistik.getOrDefault(m.id(), new int[]{0, 0});
+            double p = erfolgswahrscheinlichkeit(m.id(), sf[0], sf[1], gamma, rho);
+            if (p < minP) {
+                minP = p;
+                beste = m;
+            }
+        }
+        return Optional.ofNullable(beste);
     }
 }

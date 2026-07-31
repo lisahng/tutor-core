@@ -94,21 +94,20 @@ public final class MiniJson {
             if (c == '\\') {
                 char esc = next();
                 switch (esc) {
-                    case '"':  sb.append('"');  break;
-                    case '\\': sb.append('\\'); break;
-                    case '/':  sb.append('/');  break;
-                    case 'b':  sb.append('\b'); break;
-                    case 'f':  sb.append('\f'); break;
-                    case 'n':  sb.append('\n'); break;
-                    case 'r':  sb.append('\r'); break;
-                    case 't':  sb.append('\t'); break;
-                    case 'u':
+                    case '"' -> sb.append('"');
+                    case '\\' -> sb.append('\\');
+                    case '/' -> sb.append('/');
+                    case 'b' -> sb.append('\b');
+                    case 'f' -> sb.append('\f');
+                    case 'n' -> sb.append('\n');
+                    case 'r' -> sb.append('\r');
+                    case 't' -> sb.append('\t');
+                    case 'u' -> {
                         String hex = text.substring(pos, pos + 4);
                         sb.append((char) Integer.parseInt(hex, 16));
                         pos += 4;
-                        break;
-                    default:
-                        throw new JsonException("Ungueltige Escape-Sequenz \\" + esc);
+                    }
+                    default -> throw new JsonException("Ungueltige Escape-Sequenz \\" + esc);
                 }
             } else {
                 sb.append(c);

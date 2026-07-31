@@ -10,7 +10,7 @@
     <packaging>jar</packaging>
 
     <name>Tutor Core</name>
-    <description>Kernlogik des intelligenten Tutorsystems fuer Java-Ausdruecke (Schritt 1: Bug Library)</description>
+    <description>Kernlogik des intelligenten Tutorsystems fuer Java-Ausdruecke</description>
 
     <properties>
         <maven.compiler.release>17</maven.compiler.release>
@@ -35,7 +35,6 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.2.5</version>
             </plugin>
-            <!-- Erlaubt: mvn exec:java -Dexec.mainClass=de.lmu.tutor.demo.BugLibraryDemo -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>

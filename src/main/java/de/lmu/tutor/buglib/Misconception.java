@@ -5,19 +5,15 @@ import java.util.List;
 /**
  * Ein Eintrag der Bug Library: eine typische Fehlvorstellung (Misconception).
  *
- * <p>Die Felder entsprechen direkt der Bug-Library-Tabelle aus FQ1 und dem
- * JSON-Schema aus dem Entwurfspapier:</p>
+ * <p>Felder:</p>
  * <ul>
- *   <li>{@code id}              - eindeutige Kennung, z. B. "B05"</li>
- *   <li>{@code name}            - Kurzbezeichnung</li>
- *   <li>{@code beschreibung}    - was die Fehlvorstellung ausmacht</li>
- *   <li>{@code beispiel}        - ein Beispielausdruck</li>
- *   <li>{@code typischerFehler} - die typische falsche Reaktion</li>
- *   <li>{@code schwierigkeit}   - LEICHT / MITTEL / SCHWER</li>
- *   <li>{@code basisgewicht}    - Basisgewicht b(K) fuer die Aufgabenauswahl</li>
- *   <li>{@code konzept}         - verknuepftes Konzept (spaeter Bruecke zum Evaluator)</li>
- *   <li>{@code feedback}        - geordnete Scaffolding-Stufen (allgemein -> konkret)</li>
- *   <li>{@code untertypen}      - optionale Verfeinerungen</li>
+ *   <li>{@code id}, {@code name}, {@code beschreibung}, {@code beispiel},
+ *       {@code typischerFehler}, {@code konzept} - beschreibende Angaben</li>
+ *   <li>{@code beta} - PFA-Leichtigkeit (easiness) der Kategorie, aus Daten
+ *       kalibriert (Pavlik et al. 2009). Aus beta ergibt sich alles Weitere
+ *       (Aufgabenauswahl, ggf. Schwierigkeit) - es wird nichts von Hand gesetzt.</li>
+ *   <li>{@code feedback} - geordnete Scaffolding-Stufen (allgemein -> konkret)</li>
+ *   <li>{@code untertypen} - optionale Verfeinerungen</li>
  * </ul>
  */
 public record Misconception(
@@ -26,8 +22,7 @@ public record Misconception(
         String beschreibung,
         String beispiel,
         String typischerFehler,
-        Difficulty schwierigkeit,
-        int basisgewicht,
+        double beta,
         String konzept,
         List<String> feedback,
         List<Subtype> untertypen
@@ -36,7 +31,6 @@ public record Misconception(
     /**
      * Liefert die Feedback-Stufe zum gegebenen Index (0 = allgemeinster Hinweis).
      * Liegt der Index ausserhalb, wird die letzte (konkreteste) Stufe zurueckgegeben.
-     * So kann die Diagnose gefahrlos "immer eine Stufe weiter" anfordern.
      */
     public String feedbackStufe(int stufe) {
         if (feedback == null || feedback.isEmpty()) {
