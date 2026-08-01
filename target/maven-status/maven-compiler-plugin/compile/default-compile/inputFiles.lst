@@ -8,3 +8,10 @@ C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\buglib\Misco
 C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\buglib\Subtype.java
 C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\demo\AstDemo.java
 C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\demo\BugLibraryDemo.java
+C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\demo\EvaluatorDemo.java
+C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\eval\EvaluationContext.java
+C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\eval\EvaluationResult.java
+C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\eval\EvaluationStep.java
+C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\eval\NotEvaluableException.java
+C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\eval\StepEvaluator.java
+C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\eval\Value.java

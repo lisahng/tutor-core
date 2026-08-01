@@ -1,9 +1,19 @@
 package de.lmu.tutor.demo;
 
+import static de.lmu.tutor.ast.AST.bin;
+import static de.lmu.tutor.ast.AST.boolLit;
+import static de.lmu.tutor.ast.AST.call;
+import static de.lmu.tutor.ast.AST.cast;
+import static de.lmu.tutor.ast.AST.doubleLit;
+import static de.lmu.tutor.ast.AST.index;
+import static de.lmu.tutor.ast.AST.intLit;
+import static de.lmu.tutor.ast.AST.neg;
+import static de.lmu.tutor.ast.AST.preInc;
+import static de.lmu.tutor.ast.AST.stringLit;
+import static de.lmu.tutor.ast.AST.ternary;
+import static de.lmu.tutor.ast.AST.var;
 import de.lmu.tutor.ast.Expr;
 import de.lmu.tutor.ast.JType;
-
-import static de.lmu.tutor.ast.AST.*;
 
 /**
  * Zeigt Schritt 2: baut Ausdrucksbaeume, gibt sie als Java-Quelltext aus
@@ -13,7 +23,7 @@ import static de.lmu.tutor.ast.AST.*;
 public final class AstDemo {
 
     public static void main(String[] args) {
-        System.out.println("=== Ausdrucksbaum (AST) - Demo ===\n");
+        System.out.println("Ausdrucksbaum (AST) - Demo\n");
 
         // Hauptbeispiel: a[k + 1].length() * k
         Expr beispiel = bin("*",

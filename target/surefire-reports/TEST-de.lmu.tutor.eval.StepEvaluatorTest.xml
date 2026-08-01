@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report-3.0.xsd" version="3.0" name="de.lmu.tutor.ast.AstTest" time="0.164" tests="12" errors="0" skipped="0" failures="0">
+<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report-3.0.xsd" version="3.0" name="de.lmu.tutor.eval.StepEvaluatorTest" time="0.098" tests="17" errors="0" skipped="0" failures="0">
   <properties>
     <property name="java.specification.version" value="21"/>
     <property name="sun.cpu.isalist" value="amd64"/>
@@ -58,16 +58,21 @@
     <property name="sun.io.unicode.encoding" value="UnicodeLittle"/>
     <property name="java.class.version" value="65.0"/>
   </properties>
-  <testcase name="kinderGroesseHoehe" classname="de.lmu.tutor.ast.AstTest" time="0.043"/>
-  <testcase name="renderNegationMitKlammer" classname="de.lmu.tutor.ast.AstTest" time="0.025"/>
-  <testcase name="renderLiterale" classname="de.lmu.tutor.ast.AstTest" time="0.003"/>
-  <testcase name="renderInkrement" classname="de.lmu.tutor.ast.AstTest" time="0.003"/>
-  <testcase name="renderSetztKlammernWennNoetig" classname="de.lmu.tutor.ast.AstTest" time="0.001"/>
-  <testcase name="renderLinksAssoziativOhneKlammern" classname="de.lmu.tutor.ast.AstTest" time="0.0"/>
-  <testcase name="renderRechtsGeklammert" classname="de.lmu.tutor.ast.AstTest" time="0.002"/>
-  <testcase name="renderCast" classname="de.lmu.tutor.ast.AstTest" time="0.008"/>
-  <testcase name="renderRespektiertPraezedenz" classname="de.lmu.tutor.ast.AstTest" time="0.004"/>
-  <testcase name="renderHauptbeispiel" classname="de.lmu.tutor.ast.AstTest" time="0.004"/>
-  <testcase name="renderTernaer" classname="de.lmu.tutor.ast.AstTest" time="0.002"/>
-  <testcase name="renderMethodChaining" classname="de.lmu.tutor.ast.AstTest" time="0.0"/>
+  <testcase name="b09_kurzschluss" classname="de.lmu.tutor.eval.StepEvaluatorTest" time="0.032"/>
+  <testcase name="b08b_unbekannteVariable" classname="de.lmu.tutor.eval.StepEvaluatorTest" time="0.0"/>
+  <testcase name="b06_chaining" classname="de.lmu.tutor.eval.StepEvaluatorTest" time="0.0"/>
+  <testcase name="b10_modulo" classname="de.lmu.tutor.eval.StepEvaluatorTest" time="0.0"/>
+  <testcase name="b08_nichtAuswertbar" classname="de.lmu.tutor.eval.StepEvaluatorTest" time="0.007"/>
+  <testcase name="b07_datentyp" classname="de.lmu.tutor.eval.StepEvaluatorTest" time="0.0"/>
+  <testcase name="b03_konkatenation" classname="de.lmu.tutor.eval.StepEvaluatorTest" time="0.0"/>
+  <testcase name="b01_praezedenz" classname="de.lmu.tutor.eval.StepEvaluatorTest" time="0.0"/>
+  <testcase name="b13_charAt" classname="de.lmu.tutor.eval.StepEvaluatorTest" time="0.0"/>
+  <testcase name="b12_postfixInkrement" classname="de.lmu.tutor.eval.StepEvaluatorTest" time="0.002"/>
+  <testcase name="b05a_indexAusserhalb" classname="de.lmu.tutor.eval.StepEvaluatorTest" time="0.005"/>
+  <testcase name="b02_ganzzahldivision" classname="de.lmu.tutor.eval.StepEvaluatorTest" time="0.001"/>
+  <testcase name="b12_praefixInkrement" classname="de.lmu.tutor.eval.StepEvaluatorTest" time="0.001"/>
+  <testcase name="b04_castTruncation" classname="de.lmu.tutor.eval.StepEvaluatorTest" time="0.002"/>
+  <testcase name="hauptbeispiel" classname="de.lmu.tutor.eval.StepEvaluatorTest" time="0.014"/>
+  <testcase name="b14_equals" classname="de.lmu.tutor.eval.StepEvaluatorTest" time="0.002"/>
+  <testcase name="b11_ternaer" classname="de.lmu.tutor.eval.StepEvaluatorTest" time="0.002"/>
 </testsuite>
