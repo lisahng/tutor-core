@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report-3.0.xsd" version="3.0" name="de.lmu.tutor.buglib.BugLibraryTest" time="0.123" tests="11" errors="0" skipped="0" failures="0">
+<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report-3.0.xsd" version="3.0" name="de.lmu.tutor.eval.KlausurTest" time="0.121" tests="25" errors="0" skipped="0" failures="0">
   <properties>
     <property name="java.specification.version" value="21"/>
     <property name="sun.cpu.isalist" value="amd64"/>
@@ -58,15 +58,29 @@
     <property name="sun.io.unicode.encoding" value="UnicodeLittle"/>
     <property name="java.class.version" value="65.0"/>
   </properties>
-  <testcase name="mehrFehlerSenktErfolgswahrscheinlichkeit" classname="de.lmu.tutor.buglib.BugLibraryTest" time="0.004"/>
-  <testcase name="b09IstEnthalten" classname="de.lmu.tutor.buglib.BugLibraryTest" time="0.002"/>
-  <testcase name="naechsteKategorieIstDieSchwaechste" classname="de.lmu.tutor.buglib.BugLibraryTest" time="0.001"/>
-  <testcase name="laedtGenau14Kategorien" classname="de.lmu.tutor.buglib.BugLibraryTest" time="0.002"/>
-  <testcase name="ohneDatenIstWahrscheinlichkeitEinHalb" classname="de.lmu.tutor.buglib.BugLibraryTest" time="0.003"/>
-  <testcase name="mehrErfolgErhoehtErfolgswahrscheinlichkeit" classname="de.lmu.tutor.buglib.BugLibraryTest" time="0.001"/>
-  <testcase name="unbekannteKategorieWirftFehler" classname="de.lmu.tutor.buglib.BugLibraryTest" time="0.008"/>
-  <testcase name="jedeKategorieHatPflichtfelder" classname="de.lmu.tutor.buglib.BugLibraryTest" time="0.003"/>
-  <testcase name="alleIdsB01BisB14Vorhanden" classname="de.lmu.tutor.buglib.BugLibraryTest" time="0.009"/>
-  <testcase name="b05HatUntertyp" classname="de.lmu.tutor.buglib.BugLibraryTest" time="0.002"/>
-  <testcase name="jedeKategorieHatMindestensDreiFeedbackStufen" classname="de.lmu.tutor.buglib.BugLibraryTest" time="0.001"/>
+  <testcase name="k1b" classname="de.lmu.tutor.eval.KlausurTest" time="0.043"/>
+  <testcase name="k1c" classname="de.lmu.tutor.eval.KlausurTest" time="0.002"/>
+  <testcase name="k1d" classname="de.lmu.tutor.eval.KlausurTest" time="0.005"/>
+  <testcase name="k1e" classname="de.lmu.tutor.eval.KlausurTest" time="0.003"/>
+  <testcase name="k1f" classname="de.lmu.tutor.eval.KlausurTest" time="0.005"/>
+  <testcase name="k2a" classname="de.lmu.tutor.eval.KlausurTest" time="0.002"/>
+  <testcase name="k2b" classname="de.lmu.tutor.eval.KlausurTest" time="0.002"/>
+  <testcase name="k2c" classname="de.lmu.tutor.eval.KlausurTest" time="0.001"/>
+  <testcase name="k2d" classname="de.lmu.tutor.eval.KlausurTest" time="0.001"/>
+  <testcase name="k2e" classname="de.lmu.tutor.eval.KlausurTest" time="0.001"/>
+  <testcase name="k2f" classname="de.lmu.tutor.eval.KlausurTest" time="0.001"/>
+  <testcase name="k3a" classname="de.lmu.tutor.eval.KlausurTest" time="0.001"/>
+  <testcase name="k3b" classname="de.lmu.tutor.eval.KlausurTest" time="0.002"/>
+  <testcase name="k3c" classname="de.lmu.tutor.eval.KlausurTest" time="0.013"/>
+  <testcase name="k3d" classname="de.lmu.tutor.eval.KlausurTest" time="0.001"/>
+  <testcase name="k3e" classname="de.lmu.tutor.eval.KlausurTest" time="0.001"/>
+  <testcase name="k4a" classname="de.lmu.tutor.eval.KlausurTest" time="0.001"/>
+  <testcase name="k4b" classname="de.lmu.tutor.eval.KlausurTest" time="0.0"/>
+  <testcase name="k4d" classname="de.lmu.tutor.eval.KlausurTest" time="0.001"/>
+  <testcase name="k5a" classname="de.lmu.tutor.eval.KlausurTest" time="0.001"/>
+  <testcase name="k5b" classname="de.lmu.tutor.eval.KlausurTest" time="0.001"/>
+  <testcase name="k5c" classname="de.lmu.tutor.eval.KlausurTest" time="0.002"/>
+  <testcase name="k6_3" classname="de.lmu.tutor.eval.KlausurTest" time="0.001"/>
+  <testcase name="k6_4" classname="de.lmu.tutor.eval.KlausurTest" time="0.001"/>
+  <testcase name="k6_5" classname="de.lmu.tutor.eval.KlausurTest" time="0.0"/>
 </testsuite>

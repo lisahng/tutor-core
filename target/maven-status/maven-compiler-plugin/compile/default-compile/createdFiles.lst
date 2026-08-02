@@ -8,6 +8,8 @@ de\lmu\tutor\buglib\BugLibrary.class
 de\lmu\tutor\ast\Expr$Call.class
 de\lmu\tutor\buglib\Subtype.class
 de\lmu\tutor\ast\Expr$Cast.class
+de\lmu\tutor\demo\GeneratorDemo.class
+de\lmu\tutor\gen\Aufgabe.class
 de\lmu\tutor\eval\StepEvaluator.class
 de\lmu\tutor\eval\Value.class
 de\lmu\tutor\buglib\json\MiniJson.class
@@ -27,4 +29,5 @@ de\lmu\tutor\ast\Expr$Unary.class
 de\lmu\tutor\eval\EvaluationStep.class
 de\lmu\tutor\demo\EvaluatorDemo.class
 de\lmu\tutor\demo\BugLibraryDemo.class
+de\lmu\tutor\gen\AufgabenGenerator.class
 de\lmu\tutor\ast\Expr$Ternary.class

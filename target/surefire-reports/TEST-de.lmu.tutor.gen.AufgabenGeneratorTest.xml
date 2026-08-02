@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report-3.0.xsd" version="3.0" name="de.lmu.tutor.buglib.BugLibraryTest" time="0.123" tests="11" errors="0" skipped="0" failures="0">
+<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report-3.0.xsd" version="3.0" name="de.lmu.tutor.gen.AufgabenGeneratorTest" time="0.09" tests="4" errors="0" skipped="0" failures="0">
   <properties>
     <property name="java.specification.version" value="21"/>
     <property name="sun.cpu.isalist" value="amd64"/>
@@ -58,15 +58,8 @@
     <property name="sun.io.unicode.encoding" value="UnicodeLittle"/>
     <property name="java.class.version" value="65.0"/>
   </properties>
-  <testcase name="mehrFehlerSenktErfolgswahrscheinlichkeit" classname="de.lmu.tutor.buglib.BugLibraryTest" time="0.004"/>
-  <testcase name="b09IstEnthalten" classname="de.lmu.tutor.buglib.BugLibraryTest" time="0.002"/>
-  <testcase name="naechsteKategorieIstDieSchwaechste" classname="de.lmu.tutor.buglib.BugLibraryTest" time="0.001"/>
-  <testcase name="laedtGenau14Kategorien" classname="de.lmu.tutor.buglib.BugLibraryTest" time="0.002"/>
-  <testcase name="ohneDatenIstWahrscheinlichkeitEinHalb" classname="de.lmu.tutor.buglib.BugLibraryTest" time="0.003"/>
-  <testcase name="mehrErfolgErhoehtErfolgswahrscheinlichkeit" classname="de.lmu.tutor.buglib.BugLibraryTest" time="0.001"/>
-  <testcase name="unbekannteKategorieWirftFehler" classname="de.lmu.tutor.buglib.BugLibraryTest" time="0.008"/>
-  <testcase name="jedeKategorieHatPflichtfelder" classname="de.lmu.tutor.buglib.BugLibraryTest" time="0.003"/>
-  <testcase name="alleIdsB01BisB14Vorhanden" classname="de.lmu.tutor.buglib.BugLibraryTest" time="0.009"/>
-  <testcase name="b05HatUntertyp" classname="de.lmu.tutor.buglib.BugLibraryTest" time="0.002"/>
-  <testcase name="jedeKategorieHatMindestensDreiFeedbackStufen" classname="de.lmu.tutor.buglib.BugLibraryTest" time="0.001"/>
+  <testcase name="gleicherSeedErzeugtGleicheAufgabe" classname="de.lmu.tutor.gen.AufgabenGeneratorTest" time="0.005"/>
+  <testcase name="b09KurzschlussVermeidetDivisionDurchNull" classname="de.lmu.tutor.gen.AufgabenGeneratorTest" time="0.001"/>
+  <testcase name="unbekannteKategorieWirftFehler" classname="de.lmu.tutor.gen.AufgabenGeneratorTest" time="0.002"/>
+  <testcase name="jedeErzeugteAufgabeIstLoesbar" classname="de.lmu.tutor.gen.AufgabenGeneratorTest" time="0.072"/>
 </testsuite>

@@ -200,6 +200,15 @@ public final class StepEvaluator {
         List<Value> args = new ArrayList<>();
         for (Expr a : c.argumente()) args.add(eval(a, ctx, schritte));
 
+        // Array-Laenge: a.length (hier als length()-Aufruf modelliert)
+        if (empf.typ().isArray()) {
+            if (c.methode().equals("length") && args.isEmpty()) {
+                int len = empf.typ() == JType.INT_ARRAY ? empf.asIntArray().length : empf.asStringArray().length;
+                return Value.ofInt(len);
+            }
+            throw new NotEvaluableException("Methode " + c.methode() + " auf Array nicht definiert");
+        }
+
         if (empf.typ() == JType.STRING) {
             String s = empf.asString();
             return switch (c.methode()) {

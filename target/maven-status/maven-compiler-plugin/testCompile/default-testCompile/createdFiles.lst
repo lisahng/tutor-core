@@ -1,3 +1,5 @@
 de\lmu\tutor\ast\AstTest.class
+de\lmu\tutor\gen\AufgabenGeneratorTest.class
+de\lmu\tutor\eval\KlausurTest.class
 de\lmu\tutor\buglib\BugLibraryTest.class
 de\lmu\tutor\eval\StepEvaluatorTest.class
