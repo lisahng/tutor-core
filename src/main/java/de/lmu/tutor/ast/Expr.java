@@ -95,55 +95,84 @@ public sealed interface Expr {
                 default -> String.valueOf(wert);
             };
         }
-    @Override
+
+        @Override
         public List<Expr> children() { return List.of(); }
+
+        @Override
         public int precedence() { return 100; }
     }
 
     /** Eine Variable, z. B. k oder a. */
     record Var(String name) implements Expr {
+        @Override
         public String render() { return name; }
+
+        @Override
         public List<Expr> children() { return List.of(); }
+
+        @Override
         public int precedence() { return 100; }
     }
 
     /** Ein binaerer Operator mit linkem und rechtem Operanden, z. B. 3 + 4. */
     record Bin(String op, Expr links, Expr rechts) implements Expr {
+        @Override
         public String render() {
             return Expr.klammere(links, precedence()) + " " + op + " "
                     + Expr.klammereRechts(rechts, precedence());
         }
+
+        @Override
         public List<Expr> children() { return List.of(links, rechts); }
+
+        @Override
         public int precedence() { return Expr.precedenceOf(op); }
     }
 
     /** Ein unaerer Operator vor seinem Operanden: ! oder unaeres -. */
     record Unary(String op, Expr operand) implements Expr {
+        @Override
         public String render() { return op + Expr.klammere(operand, precedence()); }
+
+        @Override
         public List<Expr> children() { return List.of(operand); }
+
+        @Override
         public int precedence() { return 80; }
     }
 
     /** Ein expliziter Cast, z. B. (int) 2.1. */
     record Cast(JType zielTyp, Expr operand) implements Expr {
+        @Override
         public String render() {
             return "(" + zielTyp.javaName() + ") " + Expr.klammere(operand, precedence());
         }
+
+        @Override
         public List<Expr> children() { return List.of(operand); }
+
+        @Override
         public int precedence() { return 80; }
     }
 
     /** Ein Array-Zugriff, z. B. a[k + 1]. */
     record Index(Expr array, Expr indexAusdruck) implements Expr {
+        @Override
         public String render() {
             return Expr.klammere(array, precedence()) + "[" + indexAusdruck.render() + "]";
         }
+
+        @Override
         public List<Expr> children() { return List.of(array, indexAusdruck); }
+
+        @Override
         public int precedence() { return 90; }
     }
 
     /** Ein Methodenaufruf, z. B. s.substring(1) oder a[0].length(). */
     record Call(Expr empfaenger, String methode, List<Expr> argumente) implements Expr {
+        @Override
         public String render() {
             StringBuilder args = new StringBuilder();
             for (int i = 0; i < argumente.size(); i++) {
@@ -152,12 +181,16 @@ public sealed interface Expr {
             }
             return Expr.klammere(empfaenger, precedence()) + "." + methode + "(" + args + ")";
         }
+
+        @Override
         public List<Expr> children() {
             List<Expr> kinder = new ArrayList<>();
             kinder.add(empfaenger);
             kinder.addAll(argumente);
             return List.copyOf(kinder);
         }
+
+        @Override
         public int precedence() { return 90; }
     }
 
@@ -167,6 +200,7 @@ public sealed interface Expr {
      * sondern nur einen Klassennamen (er wird nicht als Variable im Kontext nachgeschlagen).
      */
     record StaticCall(String klasse, String methode, List<Expr> argumente) implements Expr {
+        @Override
         public String render() {
             StringBuilder args = new StringBuilder();
             for (int i = 0; i < argumente.size(); i++) {
@@ -175,29 +209,43 @@ public sealed interface Expr {
             }
             return klasse + "." + methode + "(" + args + ")";
         }
+
+        @Override
         public List<Expr> children() { return List.copyOf(argumente); }
+
+        @Override
         public int precedence() { return 90; }
     }
 
     /** Der ternaere Operator: bedingung ? dann : sonst. */
     record Ternary(Expr bedingung, Expr dann, Expr sonst) implements Expr {
+        @Override
         public String render() {
             int p = precedence() + 1;
             return Expr.klammere(bedingung, p) + " ? "
                     + Expr.klammere(dann, p) + " : "
                     + Expr.klammere(sonst, p);
         }
+
+        @Override
         public List<Expr> children() { return List.of(bedingung, dann, sonst); }
+
+        @Override
         public int precedence() { return 20; }
     }
 
     /** Inkrement/Dekrement, Praefix (++x) oder Postfix (x++). */
     record IncDec(String op, boolean prefix, Expr ziel) implements Expr {
+        @Override
         public String render() {
             String z = Expr.klammere(ziel, precedence());
             return prefix ? op + z : z + op;
         }
+
+        @Override
         public List<Expr> children() { return List.of(ziel); }
+
+        @Override
         public int precedence() { return 85; }
     }
 }
