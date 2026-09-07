@@ -16,6 +16,7 @@ import static de.lmu.tutor.ast.AST.not;
 import static de.lmu.tutor.ast.AST.postDec;
 import static de.lmu.tutor.ast.AST.postInc;
 import static de.lmu.tutor.ast.AST.preInc;
+import static de.lmu.tutor.ast.AST.staticCall;
 import static de.lmu.tutor.ast.AST.stringLit;
 import static de.lmu.tutor.ast.AST.ternary;
 import static de.lmu.tutor.ast.AST.var;
@@ -27,10 +28,10 @@ import de.lmu.tutor.ast.JType;
  * der Zulassungsarbeit. Jede Teilaufgabe wird gegen ihre Musterloesung (Wert und
  * Datentyp bzw. "nicht auswertbar") geprueft.
  *
- * <p>Nicht enthalten (ausserhalb des aktuellen AST-Umfangs): Klausur 1a
- * (Double.parseDouble, statischer Methodenaufruf) und Klausur 4c (new String,
- * Objekterzeugung). Diese lassen sich ergaenzen, sobald der Baum Knoten fuer
- * statische Aufrufe bzw. Objekterzeugung erhaelt.</p>
+ * <p>Klausur 1a) ist seit Einfuehrung von {@code Expr.StaticCall} enthalten
+ * (statischer Methodenaufruf Double.parseDouble, vgl. Scope in 3.2.4). Weiterhin
+ * nicht enthalten: Klausur 4c (new String, Objekterzeugung) - dafuer braeuchte
+ * der Baum noch einen Knoten fuer Objekterzeugung.</p>
  */
 class KlausurTest {
 
@@ -64,6 +65,8 @@ class KlausurTest {
     }
 
     // ================= Klausur 1 =================
+    // (int) Double.parseDouble(a[3])  mit a[3] = "2.1"  ->  2 : int (Cast schneidet ab, rundet nicht)
+    @Test void k1a() { wert("2", JType.INT, cast(JType.INT, staticCall("Double", "parseDouble", index(var("a"), intLit(3)))), k1()); }
     @Test void k1b() { wert("3", JType.INT, bin("*", call(index(var("a"), bin("+", var("k"), intLit(1))), "length"), var("k")), k1()); }
     @Test void k1c() { wert("\"ey\"", JType.STRING, call(call(index(var("a"), intLit(0)), "substring", intLit(1)), "toLowerCase"), k1()); }
     @Test void k1d() { nichtAuswertbar(bin("-", bin("+", stringLit("17"), intLit(4)), var("k")), k1()); }

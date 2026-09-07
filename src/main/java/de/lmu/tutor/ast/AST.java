@@ -35,6 +35,10 @@ public final class AST {
     public static Expr call(Expr empfaenger, String methode, Expr... argumente) {
         return new Expr.Call(empfaenger, methode, List.of(argumente));
     }
+    /** Statischer Methodenaufruf, z. B. staticCall("Double", "parseDouble", index(...)). */
+    public static Expr staticCall(String klasse, String methode, Expr... argumente) {
+        return new Expr.StaticCall(klasse, methode, List.of(argumente));
+    }
 
     // ---- Ternaer und Inkrement ----
     public static Expr ternary(Expr bedingung, Expr dann, Expr sonst) { return new Expr.Ternary(bedingung, dann, sonst); }

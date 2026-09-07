@@ -161,6 +161,24 @@ public sealed interface Expr {
         public int precedence() { return 90; }
     }
 
+    /**
+     * Ein statischer Methodenaufruf auf einer Klasse, z. B. Double.parseDouble(a[3])
+     * oder Math.sqrt(x). Anders als {@link Call} gibt es hier keinen Empfaenger-Ausdruck,
+     * sondern nur einen Klassennamen (er wird nicht als Variable im Kontext nachgeschlagen).
+     */
+    record StaticCall(String klasse, String methode, List<Expr> argumente) implements Expr {
+        public String render() {
+            StringBuilder args = new StringBuilder();
+            for (int i = 0; i < argumente.size(); i++) {
+                if (i > 0) args.append(", ");
+                args.append(argumente.get(i).render());
+            }
+            return klasse + "." + methode + "(" + args + ")";
+        }
+        public List<Expr> children() { return List.copyOf(argumente); }
+        public int precedence() { return 90; }
+    }
+
     /** Der ternaere Operator: bedingung ? dann : sonst. */
     record Ternary(Expr bedingung, Expr dann, Expr sonst) implements Expr {
         public String render() {

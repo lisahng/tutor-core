@@ -42,6 +42,7 @@ public final class StepEvaluator {
             case Expr.Cast c -> protokolliere(c, evalCast(c, ctx, schritte), schritte);
             case Expr.Index i -> protokolliere(i, evalIndex(i, ctx, schritte), schritte);
             case Expr.Call c -> protokolliere(c, evalCall(c, ctx, schritte), schritte);
+            case Expr.StaticCall sc -> protokolliere(sc, evalStaticCall(sc, ctx, schritte), schritte);
             case Expr.Ternary t -> protokolliere(t, evalTernary(t, ctx, schritte), schritte);
             case Expr.IncDec d -> protokolliere(d, evalIncDec(d, ctx, schritte), schritte);
         };
@@ -232,6 +233,30 @@ public final class StepEvaluator {
             };
         }
         throw new NotEvaluableException("Methode " + c.methode() + " auf " + empf.typ().javaName() + " nicht definiert");
+    }
+
+    // ---- Statische Methodenaufrufe (aus dem in 3.2.4 definierten Scope: Math.sqrt, Double.parseDouble) ----
+    private Value evalStaticCall(Expr.StaticCall sc, EvaluationContext ctx, List<EvaluationStep> schritte) {
+        List<Value> args = new ArrayList<>();
+        for (Expr a : sc.argumente()) args.add(eval(a, ctx, schritte));
+
+        if (sc.klasse().equals("Double") && sc.methode().equals("parseDouble")) {
+            if (args.size() != 1 || args.get(0).typ() != JType.STRING) {
+                throw new NotEvaluableException("Double.parseDouble erwartet genau ein String-Argument");
+            }
+            try {
+                return Value.ofDouble(Double.parseDouble(args.get(0).asString()));
+            } catch (NumberFormatException e) {
+                throw new NotEvaluableException("\"" + args.get(0).asString() + "\" ist keine gueltige Zahl");
+            }
+        }
+        if (sc.klasse().equals("Math") && sc.methode().equals("sqrt")) {
+            if (args.size() != 1 || !args.get(0).typ().isNumeric()) {
+                throw new NotEvaluableException("Math.sqrt erwartet genau ein numerisches Argument");
+            }
+            return Value.ofDouble(Math.sqrt(args.get(0).alsZahl()));
+        }
+        throw new NotEvaluableException(sc.klasse() + "." + sc.methode() + " ist nicht unterstuetzt");
     }
 
     // ---- Ternaerer Operator: nur der gewaehlte Zweig wird ausgewertet ----
