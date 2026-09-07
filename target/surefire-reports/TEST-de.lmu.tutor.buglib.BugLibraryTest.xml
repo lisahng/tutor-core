@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report-3.0.xsd" version="3.0" name="de.lmu.tutor.buglib.BugLibraryTest" time="0.123" tests="11" errors="0" skipped="0" failures="0">
+<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report-3.0.xsd" version="3.0" name="de.lmu.tutor.buglib.BugLibraryTest" time="0.533" tests="11" errors="0" skipped="0" failures="0">
   <properties>
     <property name="java.specification.version" value="21"/>
     <property name="sun.cpu.isalist" value="amd64"/>
@@ -15,7 +15,7 @@
     <property name="sun.java.launcher" value="SUN_STANDARD"/>
     <property name="user.country" value="DE"/>
     <property name="sun.boot.library.path" value="C:\Users\lisah\Downloads\OpenJDK-21\bin"/>
-    <property name="sun.java.command" value="C:\Users\lisah\AppData\Local\Temp\surefire15886379773321799346\surefirebooter-20260802233127015_3.jar C:\Users\lisah\AppData\Local\Temp\surefire15886379773321799346 2026-08-02T23-31-26_723-jvmRun1 surefire-20260802233127015_1tmp surefire_0-20260802233127015_2tmp"/>
+    <property name="sun.java.command" value="C:\Users\lisah\AppData\Local\Temp\surefire14647364867813089460\surefirebooter-20260813130439154_3.jar C:\Users\lisah\AppData\Local\Temp\surefire14647364867813089460 2026-08-13T13-04-38_240-jvmRun1 surefire-20260813130439154_1tmp surefire_0-20260813130439154_2tmp"/>
     <property name="jdk.debug" value="release"/>
     <property name="surefire.test.class.path" value="C:\Users\lisah\Documents\ZuLa\tutor-core\target\test-classes;C:\Users\lisah\Documents\ZuLa\tutor-core\target\classes;C:\Users\lisah\.m2\repository\org\junit\jupiter\junit-jupiter\5.10.2\junit-jupiter-5.10.2.jar;C:\Users\lisah\.m2\repository\org\junit\jupiter\junit-jupiter-api\5.10.2\junit-jupiter-api-5.10.2.jar;C:\Users\lisah\.m2\repository\org\opentest4j\opentest4j\1.3.0\opentest4j-1.3.0.jar;C:\Users\lisah\.m2\repository\org\junit\platform\junit-platform-commons\1.10.2\junit-platform-commons-1.10.2.jar;C:\Users\lisah\.m2\repository\org\apiguardian\apiguardian-api\1.1.2\apiguardian-api-1.1.2.jar;C:\Users\lisah\.m2\repository\org\junit\jupiter\junit-jupiter-params\5.10.2\junit-jupiter-params-5.10.2.jar;C:\Users\lisah\.m2\repository\org\junit\jupiter\junit-jupiter-engine\5.10.2\junit-jupiter-engine-5.10.2.jar;C:\Users\lisah\.m2\repository\org\junit\platform\junit-platform-engine\1.10.2\junit-platform-engine-1.10.2.jar;"/>
     <property name="sun.cpu.endian" value="little"/>
@@ -30,7 +30,7 @@
     <property name="line.separator" value="&#10;"/>
     <property name="java.vm.specification.vendor" value="Oracle Corporation"/>
     <property name="java.specification.name" value="Java Platform API Specification"/>
-    <property name="surefire.real.class.path" value="C:\Users\lisah\AppData\Local\Temp\surefire15886379773321799346\surefirebooter-20260802233127015_3.jar"/>
+    <property name="surefire.real.class.path" value="C:\Users\lisah\AppData\Local\Temp\surefire14647364867813089460\surefirebooter-20260813130439154_3.jar"/>
     <property name="user.script" value=""/>
     <property name="sun.management.compiler" value="HotSpot 64-Bit Tiered Compilers"/>
     <property name="java.runtime.version" value="21.0.2+13-58"/>
@@ -58,15 +58,15 @@
     <property name="sun.io.unicode.encoding" value="UnicodeLittle"/>
     <property name="java.class.version" value="65.0"/>
   </properties>
-  <testcase name="mehrFehlerSenktErfolgswahrscheinlichkeit" classname="de.lmu.tutor.buglib.BugLibraryTest" time="0.004"/>
-  <testcase name="b09IstEnthalten" classname="de.lmu.tutor.buglib.BugLibraryTest" time="0.002"/>
-  <testcase name="naechsteKategorieIstDieSchwaechste" classname="de.lmu.tutor.buglib.BugLibraryTest" time="0.001"/>
-  <testcase name="laedtGenau14Kategorien" classname="de.lmu.tutor.buglib.BugLibraryTest" time="0.002"/>
-  <testcase name="ohneDatenIstWahrscheinlichkeitEinHalb" classname="de.lmu.tutor.buglib.BugLibraryTest" time="0.003"/>
-  <testcase name="mehrErfolgErhoehtErfolgswahrscheinlichkeit" classname="de.lmu.tutor.buglib.BugLibraryTest" time="0.001"/>
-  <testcase name="unbekannteKategorieWirftFehler" classname="de.lmu.tutor.buglib.BugLibraryTest" time="0.008"/>
-  <testcase name="jedeKategorieHatPflichtfelder" classname="de.lmu.tutor.buglib.BugLibraryTest" time="0.003"/>
-  <testcase name="alleIdsB01BisB14Vorhanden" classname="de.lmu.tutor.buglib.BugLibraryTest" time="0.009"/>
-  <testcase name="b05HatUntertyp" classname="de.lmu.tutor.buglib.BugLibraryTest" time="0.002"/>
-  <testcase name="jedeKategorieHatMindestensDreiFeedbackStufen" classname="de.lmu.tutor.buglib.BugLibraryTest" time="0.001"/>
+  <testcase name="mehrFehlerSenktErfolgswahrscheinlichkeit" classname="de.lmu.tutor.buglib.BugLibraryTest" time="0.011"/>
+  <testcase name="b09IstEnthalten" classname="de.lmu.tutor.buglib.BugLibraryTest" time="0.038"/>
+  <testcase name="naechsteKategorieIstDieSchwaechste" classname="de.lmu.tutor.buglib.BugLibraryTest" time="0.007"/>
+  <testcase name="laedtGenau14Kategorien" classname="de.lmu.tutor.buglib.BugLibraryTest" time="0.007"/>
+  <testcase name="ohneDatenIstWahrscheinlichkeitEinHalb" classname="de.lmu.tutor.buglib.BugLibraryTest" time="0.004"/>
+  <testcase name="mehrErfolgErhoehtErfolgswahrscheinlichkeit" classname="de.lmu.tutor.buglib.BugLibraryTest" time="0.004"/>
+  <testcase name="unbekannteKategorieWirftFehler" classname="de.lmu.tutor.buglib.BugLibraryTest" time="0.013"/>
+  <testcase name="jedeKategorieHatPflichtfelder" classname="de.lmu.tutor.buglib.BugLibraryTest" time="0.017"/>
+  <testcase name="alleIdsB01BisB14Vorhanden" classname="de.lmu.tutor.buglib.BugLibraryTest" time="0.037"/>
+  <testcase name="b05HatUntertyp" classname="de.lmu.tutor.buglib.BugLibraryTest" time="0.008"/>
+  <testcase name="jedeKategorieHatMindestensDreiFeedbackStufen" classname="de.lmu.tutor.buglib.BugLibraryTest" time="0.007"/>
 </testsuite>

@@ -19,7 +19,7 @@ public final class BugLibraryDemo {
     public static void main(String[] args) {
         BugLibrary lib = BugLibrary.loadDefault();
 
-        System.out.println("=== Bug Library geladen ===");
+        System.out.println("Bug Library geladen");
         System.out.println("Anzahl Kategorien: " + lib.size());
         System.out.println();
 
