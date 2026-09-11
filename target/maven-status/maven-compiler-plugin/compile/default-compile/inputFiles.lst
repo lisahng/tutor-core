@@ -8,8 +8,15 @@ C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\buglib\Misco
 C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\buglib\Subtype.java
 C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\demo\AstDemo.java
 C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\demo\BugLibraryDemo.java
+C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\demo\DiagnoseDemo.java
 C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\demo\EvaluatorDemo.java
 C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\demo\GeneratorDemo.java
+C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\diagnose\Diagnose.java
+C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\diagnose\Fehlerklassifikator.java
+C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\diagnose\Fehlersimulator.java
+C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\diagnose\NutzerAntwort.java
+C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\diagnose\Vergleichsergebnis.java
+C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\diagnose\Vergleichsmodul.java
 C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\eval\EvaluationContext.java
 C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\eval\EvaluationResult.java
 C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\eval\EvaluationStep.java
