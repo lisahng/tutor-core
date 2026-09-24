@@ -128,6 +128,12 @@ public final class BugLibrary {
      * <p>Steht in der JSON ein Feld {@code beta}, wird es direkt uebernommen. Fehlt es,
      * gilt {@link #BETA_PLATZHALTER} fuer alle Kategorien gleichermassen.</p>
      *
+     * <p>Der Platzhalter ist bewusst neutral gewaehlt und wird ausdruecklich <em>nicht</em>
+     * aus dem Feld {@code basisgewicht} abgeleitet. Eine solche Umrechnung waere frei
+     * erfunden: {@code basisgewicht} ist eine grobe Haeufigkeitseinschaetzung, beta dagegen
+     * ein aus Loesungsquoten geschaetzter Modellparameter. Aus der einen Groesse die andere
+     * zu rechnen, wuerde eine Kalibrierung vortaeuschen, die es nicht gibt.</p>
+     *
      * <p>Solange beta fehlt, startet jede Kategorie bei einer Erfolgswahrscheinlichkeit von
      * 0,5. Die Aufgabenauswahl richtet sich dann allein nach der Fehlerhistorie der Person,
      * nicht nach angenommenen Schwierigkeitsunterschieden. Das ist die zurueckhaltendere
@@ -141,12 +147,6 @@ public final class BugLibrary {
             return n.doubleValue();
         }
         return BETA_PLATZHALTER;
-    }
-
-    /** Liest ein Zahlenfeld; fehlt es oder ist es keine Zahl, wird der Standardwert genutzt. */
-    private static double numOrDefault(Map<String, Object> o, String key, double standard) {
-        Object v = o.get(key);
-        return (v instanceof Number n) ? n.doubleValue() : standard;
     }
 
     // ---------------------------------------------------------------

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report-3.0.xsd" version="3.0" name="de.lmu.tutor.eval.KlausurTest" time="0.064" tests="26" errors="0" skipped="0" failures="0">
+<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report-3.0.xsd" version="3.0" name="de.lmu.tutor.eval.KlausurTest" time="0.239" tests="26" errors="0" skipped="0" failures="0">
   <properties>
     <property name="java.specification.version" value="21"/>
     <property name="sun.cpu.isalist" value="amd64"/>
@@ -15,7 +15,7 @@
     <property name="sun.java.launcher" value="SUN_STANDARD"/>
     <property name="user.country" value="DE"/>
     <property name="sun.boot.library.path" value="C:\Users\lisah\Downloads\OpenJDK-21\bin"/>
-    <property name="sun.java.command" value="C:\Users\lisah\AppData\Local\Temp\surefire9437786115526631896\surefirebooter-20260924165330207_3.jar C:\Users\lisah\AppData\Local\Temp\surefire9437786115526631896 2026-09-24T16-53-29_661-jvmRun1 surefire-20260924165330207_1tmp surefire_0-20260924165330207_2tmp"/>
+    <property name="sun.java.command" value="C:\Users\lisah\AppData\Local\Temp\surefire2175305698667550483\surefirebooter-20260924181030587_3.jar C:\Users\lisah\AppData\Local\Temp\surefire2175305698667550483 2026-09-24T18-10-29_921-jvmRun1 surefire-20260924181030587_1tmp surefire_0-20260924181030587_2tmp"/>
     <property name="jdk.debug" value="release"/>
     <property name="surefire.test.class.path" value="C:\Users\lisah\Documents\ZuLa\tutor-core\target\test-classes;C:\Users\lisah\Documents\ZuLa\tutor-core\target\classes;C:\Users\lisah\.m2\repository\org\junit\jupiter\junit-jupiter\5.10.2\junit-jupiter-5.10.2.jar;C:\Users\lisah\.m2\repository\org\junit\jupiter\junit-jupiter-api\5.10.2\junit-jupiter-api-5.10.2.jar;C:\Users\lisah\.m2\repository\org\opentest4j\opentest4j\1.3.0\opentest4j-1.3.0.jar;C:\Users\lisah\.m2\repository\org\junit\platform\junit-platform-commons\1.10.2\junit-platform-commons-1.10.2.jar;C:\Users\lisah\.m2\repository\org\apiguardian\apiguardian-api\1.1.2\apiguardian-api-1.1.2.jar;C:\Users\lisah\.m2\repository\org\junit\jupiter\junit-jupiter-params\5.10.2\junit-jupiter-params-5.10.2.jar;C:\Users\lisah\.m2\repository\org\junit\jupiter\junit-jupiter-engine\5.10.2\junit-jupiter-engine-5.10.2.jar;C:\Users\lisah\.m2\repository\org\junit\platform\junit-platform-engine\1.10.2\junit-platform-engine-1.10.2.jar;"/>
     <property name="sun.cpu.endian" value="little"/>
@@ -26,11 +26,11 @@
     <property name="java.home" value="C:\Users\lisah\Downloads\OpenJDK-21"/>
     <property name="file.separator" value="\"/>
     <property name="basedir" value="C:\Users\lisah\Documents\ZuLa\tutor-core"/>
-    <property name="java.vm.compressedOopsMode" value="Zero based"/>
+    <property name="java.vm.compressedOopsMode" value="32-bit"/>
     <property name="line.separator" value="&#10;"/>
     <property name="java.vm.specification.vendor" value="Oracle Corporation"/>
     <property name="java.specification.name" value="Java Platform API Specification"/>
-    <property name="surefire.real.class.path" value="C:\Users\lisah\AppData\Local\Temp\surefire9437786115526631896\surefirebooter-20260924165330207_3.jar"/>
+    <property name="surefire.real.class.path" value="C:\Users\lisah\AppData\Local\Temp\surefire2175305698667550483\surefirebooter-20260924181030587_3.jar"/>
     <property name="user.script" value=""/>
     <property name="sun.management.compiler" value="HotSpot 64-Bit Tiered Compilers"/>
     <property name="java.runtime.version" value="21.0.2+13-58"/>
@@ -58,30 +58,30 @@
     <property name="sun.io.unicode.encoding" value="UnicodeLittle"/>
     <property name="java.class.version" value="65.0"/>
   </properties>
-  <testcase name="k1a" classname="de.lmu.tutor.eval.KlausurTest" time="0.004"/>
-  <testcase name="k1b" classname="de.lmu.tutor.eval.KlausurTest" time="0.003"/>
-  <testcase name="k1c" classname="de.lmu.tutor.eval.KlausurTest" time="0.002"/>
-  <testcase name="k1d" classname="de.lmu.tutor.eval.KlausurTest" time="0.002"/>
-  <testcase name="k1e" classname="de.lmu.tutor.eval.KlausurTest" time="0.002"/>
-  <testcase name="k1f" classname="de.lmu.tutor.eval.KlausurTest" time="0.002"/>
-  <testcase name="k2a" classname="de.lmu.tutor.eval.KlausurTest" time="0.0"/>
-  <testcase name="k2b" classname="de.lmu.tutor.eval.KlausurTest" time="0.001"/>
-  <testcase name="k2c" classname="de.lmu.tutor.eval.KlausurTest" time="0.001"/>
-  <testcase name="k2d" classname="de.lmu.tutor.eval.KlausurTest" time="0.001"/>
-  <testcase name="k2e" classname="de.lmu.tutor.eval.KlausurTest" time="0.001"/>
-  <testcase name="k2f" classname="de.lmu.tutor.eval.KlausurTest" time="0.001"/>
-  <testcase name="k3a" classname="de.lmu.tutor.eval.KlausurTest" time="0.001"/>
-  <testcase name="k3b" classname="de.lmu.tutor.eval.KlausurTest" time="0.002"/>
-  <testcase name="k3c" classname="de.lmu.tutor.eval.KlausurTest" time="0.002"/>
+  <testcase name="k1a" classname="de.lmu.tutor.eval.KlausurTest" time="0.006"/>
+  <testcase name="k1b" classname="de.lmu.tutor.eval.KlausurTest" time="0.008"/>
+  <testcase name="k1c" classname="de.lmu.tutor.eval.KlausurTest" time="0.01"/>
+  <testcase name="k1d" classname="de.lmu.tutor.eval.KlausurTest" time="0.006"/>
+  <testcase name="k1e" classname="de.lmu.tutor.eval.KlausurTest" time="0.01"/>
+  <testcase name="k1f" classname="de.lmu.tutor.eval.KlausurTest" time="0.011"/>
+  <testcase name="k2a" classname="de.lmu.tutor.eval.KlausurTest" time="0.003"/>
+  <testcase name="k2b" classname="de.lmu.tutor.eval.KlausurTest" time="0.004"/>
+  <testcase name="k2c" classname="de.lmu.tutor.eval.KlausurTest" time="0.004"/>
+  <testcase name="k2d" classname="de.lmu.tutor.eval.KlausurTest" time="0.011"/>
+  <testcase name="k2e" classname="de.lmu.tutor.eval.KlausurTest" time="0.014"/>
+  <testcase name="k2f" classname="de.lmu.tutor.eval.KlausurTest" time="0.007"/>
+  <testcase name="k3a" classname="de.lmu.tutor.eval.KlausurTest" time="0.003"/>
+  <testcase name="k3b" classname="de.lmu.tutor.eval.KlausurTest" time="0.003"/>
+  <testcase name="k3c" classname="de.lmu.tutor.eval.KlausurTest" time="0.008"/>
   <testcase name="k3d" classname="de.lmu.tutor.eval.KlausurTest" time="0.002"/>
   <testcase name="k3e" classname="de.lmu.tutor.eval.KlausurTest" time="0.002"/>
-  <testcase name="k4a" classname="de.lmu.tutor.eval.KlausurTest" time="0.001"/>
-  <testcase name="k4b" classname="de.lmu.tutor.eval.KlausurTest" time="0.001"/>
-  <testcase name="k4d" classname="de.lmu.tutor.eval.KlausurTest" time="0.001"/>
-  <testcase name="k5a" classname="de.lmu.tutor.eval.KlausurTest" time="0.001"/>
-  <testcase name="k5b" classname="de.lmu.tutor.eval.KlausurTest" time="0.001"/>
-  <testcase name="k5c" classname="de.lmu.tutor.eval.KlausurTest" time="0.002"/>
-  <testcase name="k6_3" classname="de.lmu.tutor.eval.KlausurTest" time="0.001"/>
-  <testcase name="k6_4" classname="de.lmu.tutor.eval.KlausurTest" time="0.001"/>
-  <testcase name="k6_5" classname="de.lmu.tutor.eval.KlausurTest" time="0.001"/>
+  <testcase name="k4a" classname="de.lmu.tutor.eval.KlausurTest" time="0.003"/>
+  <testcase name="k4b" classname="de.lmu.tutor.eval.KlausurTest" time="0.004"/>
+  <testcase name="k4d" classname="de.lmu.tutor.eval.KlausurTest" time="0.002"/>
+  <testcase name="k5a" classname="de.lmu.tutor.eval.KlausurTest" time="0.009"/>
+  <testcase name="k5b" classname="de.lmu.tutor.eval.KlausurTest" time="0.003"/>
+  <testcase name="k5c" classname="de.lmu.tutor.eval.KlausurTest" time="0.006"/>
+  <testcase name="k6_3" classname="de.lmu.tutor.eval.KlausurTest" time="0.004"/>
+  <testcase name="k6_4" classname="de.lmu.tutor.eval.KlausurTest" time="0.002"/>
+  <testcase name="k6_5" classname="de.lmu.tutor.eval.KlausurTest" time="0.002"/>
 </testsuite>

@@ -1,4 +1,4 @@
 -------------------------------------------------------------------------------
 Test set: de.lmu.tutor.student.StudentenmodellTest
 -------------------------------------------------------------------------------
-Tests run: 17, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.063 s -- in de.lmu.tutor.student.StudentenmodellTest
+Tests run: 17, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.160 s -- in de.lmu.tutor.student.StudentenmodellTest

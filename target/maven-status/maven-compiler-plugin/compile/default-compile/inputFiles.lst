@@ -10,7 +10,9 @@ C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\demo\AstDemo
 C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\demo\BugLibraryDemo.java
 C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\demo\DiagnoseDemo.java
 C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\demo\EvaluatorDemo.java
+C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\demo\FeedbackDemo.java
 C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\demo\GeneratorDemo.java
+C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\demo\StudentenmodellDemo.java
 C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\diagnose\Diagnose.java
 C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\diagnose\Fehlerklassifikator.java
 C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\diagnose\Fehlersimulator.java
@@ -27,6 +29,9 @@ C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\feedback\Fee
 C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\feedback\Rueckmeldung.java
 C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\gen\Aufgabe.java
 C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\gen\AufgabenGenerator.java
+C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\session\Antwortergebnis.java
+C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\session\Protokolleintrag.java
+C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\session\Uebungssitzung.java
 C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\student\Kategoriestatistik.java
 C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\student\PfaParameter.java
 C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\student\Studentenmodell.java

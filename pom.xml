@@ -15,6 +15,7 @@
     <properties>
         <maven.compiler.release>21</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <junit.version>5.10.2</junit.version>
     </properties>
 
@@ -30,15 +31,43 @@
 
     <build>
         <plugins>
+            <!--
+                Version bewusst festgelegt: Ohne Angabe waehlt Maven je nach eigener
+                Version ein anderes Compiler-Plugin, und derselbe Quelltext koennte auf
+                einem anderen Rechner anders uebersetzt werden.
+            -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.13.0</version>
+            </plugin>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.2.5</version>
+                <configuration>
+                    <!--
+                        Surefire startet die Tests in einer eigenen JVM, die sich
+                        standardmaessig ein Viertel des Arbeitsspeichers reserviert. Laeuft
+                        daneben eine Entwicklungsumgebung, schlaegt das fehl ("insufficient
+                        memory ... to map ... bytes for G1 virtual space"). Die Tests dieses
+                        Projekts brauchen sehr wenig Speicher, deshalb die feste Obergrenze.
+                    -->
+                    <argLine>-Xmx256m</argLine>
+                </configuration>
             </plugin>
+
+            <!--
+                Version 3.2.0 baut einen eigenen Classloader, der Ressourcen aus
+                target/classes nicht zuverlaessig findet. Die Bug Library wird als
+                Ressource geladen, weshalb die Demos dort mit "Ressource nicht gefunden"
+                abbrechen. 3.1.1 verhaelt sich korrekt.
+            -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
-                <version>3.2.0</version>
+                <version>3.1.1</version>
             </plugin>
         </plugins>
     </build>

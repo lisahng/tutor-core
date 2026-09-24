@@ -1,6 +1,7 @@
 de\lmu\tutor\eval\NotEvaluableException.class
 de\lmu\tutor\ast\Expr$Index.class
 de\lmu\tutor\feedback\Rueckmeldung.class
+de\lmu\tutor\demo\StudentenmodellDemo.class
 de\lmu\tutor\eval\StepEvaluator$1.class
 de\lmu\tutor\diagnose\Diagnose.class
 de\lmu\tutor\ast\Expr$Var.class
@@ -18,6 +19,7 @@ de\lmu\tutor\buglib\Difficulty.class
 de\lmu\tutor\diagnose\Fehlersimulator.class
 de\lmu\tutor\student\PfaParameter.class
 de\lmu\tutor\ast\Expr.class
+de\lmu\tutor\demo\FeedbackDemo.class
 de\lmu\tutor\diagnose\Diagnose$Konfidenz.class
 de\lmu\tutor\ast\AST.class
 de\lmu\tutor\ast\Expr$Unary.class
@@ -35,14 +37,17 @@ de\lmu\tutor\demo\GeneratorDemo.class
 de\lmu\tutor\gen\Aufgabe.class
 de\lmu\tutor\eval\StepEvaluator.class
 de\lmu\tutor\eval\Value.class
+de\lmu\tutor\session\Antwortergebnis.class
 de\lmu\tutor\diagnose\Vergleichsmodul.class
 de\lmu\tutor\student\Studentenmodell.class
 de\lmu\tutor\ast\Expr$IncDec.class
+de\lmu\tutor\session\Uebungssitzung.class
 de\lmu\tutor\diagnose\Fehlerklassifikator.class
 de\lmu\tutor\eval\EvaluationResult.class
 de\lmu\tutor\diagnose\Fehlersimulator$Treffer.class
 de\lmu\tutor\eval\EvaluationContext.class
 de\lmu\tutor\eval\Value$1.class
+de\lmu\tutor\session\Protokolleintrag.class
 de\lmu\tutor\feedback\Feedbackgenerator.class
 de\lmu\tutor\demo\BugLibraryDemo.class
 de\lmu\tutor\gen\AufgabenGenerator.class
