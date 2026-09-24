@@ -1,0 +1,251 @@
+{
+  "version": "1.0",
+  "misconceptions": [
+    {
+      "id": "B01",
+      "name": "Operatorpraezedenz missachtet",
+      "beschreibung": "Der Ausdruck wird von links nach rechts statt nach den Vorrangregeln ausgewertet.",
+      "beispiel": "3 + 4 * 2",
+      "typischerFehler": "3 + 4 = 7, dann 7 * 2 = 14 statt 4 * 2 = 8, dann 3 + 8 = 11",
+      "schwierigkeit": "MITTEL",
+      "basisgewicht": 5,
+      "konzept": "OPERATOR_PRECEDENCE",
+      "feedback": [
+        "Achte auf die Reihenfolge der Operatoren.",
+        "Nicht jede Operation wird von links nach rechts ausgefuehrt.",
+        "Punkt-Rechnung (* /) bindet staerker als Strich-Rechnung (+ -): zuerst 4 * 2, dann + 3."
+      ],
+      "untertypen": []
+    },
+    {
+      "id": "B02",
+      "name": "Ganzzahldivision",
+      "beschreibung": "Die Division zweier int-Werte ergibt einen int (Nachkommastellen entfallen).",
+      "beispiel": "7 / 2",
+      "typischerFehler": "Ergebnis 3.5 statt 3",
+      "schwierigkeit": "LEICHT",
+      "basisgewicht": 4,
+      "konzept": "INTEGER_DIVISION",
+      "feedback": [
+        "Welche Datentypen stehen links und rechts vom Divisionszeichen?",
+        "int geteilt durch int ergibt wieder einen int.",
+        "7 / 2 ergibt 3 (int), nicht 3.5 - die Nachkommastellen werden abgeschnitten."
+      ],
+      "untertypen": []
+    },
+    {
+      "id": "B03",
+      "name": "Implizite Typkonversion",
+      "beschreibung": "Bei gemischten Typen wird der kleinere Typ automatisch erweitert (z. B. int zu double).",
+      "beispiel": "5 / 2.0",
+      "typischerFehler": "Ergebnis 2 statt 2.5, weil die Promotion zu double uebersehen wird",
+      "schwierigkeit": "MITTEL",
+      "basisgewicht": 3,
+      "konzept": "TYPE_CONVERSION",
+      "feedback": [
+        "Sind beide Operanden vom gleichen Typ?",
+        "Ist ein Operand ein double, wird der andere automatisch zu double erweitert.",
+        "5 / 2.0 ist also double-Division und ergibt 2.5 (double)."
+      ],
+      "untertypen": []
+    },
+    {
+      "id": "B04",
+      "name": "Modulo-Operator",
+      "beschreibung": "Der Rest-Operator % liefert den Rest einer Ganzzahldivision.",
+      "beispiel": "17 % 5",
+      "typischerFehler": "Ergebnis 3 (Quotient) statt 2 (Rest)",
+      "schwierigkeit": "LEICHT",
+      "basisgewicht": 2,
+      "konzept": "MODULO",
+      "feedback": [
+        "Der Operator % berechnet nicht den Quotienten, sondern den Rest.",
+        "Wie oft passt 5 ganz in 17, und was bleibt uebrig?",
+        "17 = 3 * 5 + 2, der Rest ist also 2."
+      ],
+      "untertypen": []
+    },
+    {
+      "id": "B05",
+      "name": "Array-Index falsch berechnet",
+      "beschreibung": "Der Index-Ausdruck wird nicht zuerst ausgewertet.",
+      "beispiel": "a[k + 1]",
+      "typischerFehler": "Zugriff auf a[k] statt a[k + 1]",
+      "schwierigkeit": "MITTEL",
+      "basisgewicht": 4,
+      "konzept": "ARRAY_INDEX",
+      "feedback": [
+        "Schau dir den Index in den eckigen Klammern genau an.",
+        "Der Index ist selbst ein Ausdruck und muss zuerst berechnet werden.",
+        "Bei k = 2 ergibt k + 1 den Wert 3 - zugegriffen wird also auf a[3]."
+      ],
+      "untertypen": [
+        {
+          "id": "B05a",
+          "name": "Array-Index ausserhalb der Grenzen",
+          "beispiel": "a[a.length]"
+        }
+      ]
+    },
+    {
+      "id": "B06",
+      "name": "Method-Chaining",
+      "beschreibung": "Verkettete Methodenaufrufe werden von links nach rechts ausgewertet; der Rueckgabetyp bestimmt den naechsten Schritt.",
+      "beispiel": "s.trim().length()",
+      "typischerFehler": "Reihenfolge oder Rueckgabetyp der Methoden falsch eingeschaetzt",
+      "schwierigkeit": "MITTEL",
+      "basisgewicht": 3,
+      "konzept": "METHOD_CALL",
+      "feedback": [
+        "Welche Methode wird zuerst ausgefuehrt?",
+        "Zuerst der linke Aufruf; sein Ergebnis ist der Empfaenger des naechsten Aufrufs.",
+        "length() liefert einen int - das bestimmt den Datentyp des Gesamtausdrucks."
+      ],
+      "untertypen": []
+    },
+    {
+      "id": "B07",
+      "name": "Datentyp des Ergebnisses",
+      "beschreibung": "Der Datentyp des Gesamtausdrucks wird falsch bestimmt.",
+      "beispiel": "3 + 4 * 2",
+      "typischerFehler": "Wert richtig (11), aber Datentyp nicht als int angegeben",
+      "schwierigkeit": "LEICHT",
+      "basisgewicht": 5,
+      "konzept": "RESULT_TYPE",
+      "feedback": [
+        "Nenne neben dem Wert immer auch den Datentyp.",
+        "Welchen Typ haben die beteiligten Operanden und Operatoren?",
+        "Nur ganzzahlige Operanden und Operatoren ergeben hier einen int."
+      ],
+      "untertypen": []
+    },
+    {
+      "id": "B08",
+      "name": "Nicht-auswertbarer Ausdruck nicht erkannt",
+      "beschreibung": "Ein Ausdruck, der nicht auswertbar ist, wird trotzdem mit einem Wert beantwortet.",
+      "beispiel": "\"5\" - 2",
+      "typischerFehler": "Ergebnis 3 statt Erkennen, dass String minus int nicht erlaubt ist",
+      "schwierigkeit": "SCHWER",
+      "basisgewicht": 3,
+      "konzept": "NOT_EVALUABLE",
+      "feedback": [
+        "Pruefe, ob die Operanden ueberhaupt zueinander passen.",
+        "Nicht jede Kombination von Typen und Operatoren ist erlaubt.",
+        "Auf einen String ist der Operator - nicht definiert - der Ausdruck ist nicht auswertbar."
+      ],
+      "untertypen": [
+        {
+          "id": "B08a",
+          "name": "Typinkompatibilitaet",
+          "beispiel": "true + 1"
+        },
+        {
+          "id": "B08b",
+          "name": "Unbekannte Variable",
+          "beispiel": "x + 1  // x nicht definiert"
+        },
+        {
+          "id": "B08c",
+          "name": "Laufzeitfehler",
+          "beispiel": "5 / 0"
+        }
+      ]
+    },
+    {
+      "id": "B09",
+      "name": "Kurzschlussauswertung",
+      "beschreibung": "Bei && und || wird der rechte Operand nur ausgewertet, wenn das Ergebnis noch nicht feststeht.",
+      "beispiel": "false && (1 / 0 == 0)",
+      "typischerFehler": "Annahme eines Laufzeitfehlers, obwohl der rechte Teil gar nicht ausgewertet wird",
+      "schwierigkeit": "SCHWER",
+      "basisgewicht": 2,
+      "konzept": "SHORT_CIRCUIT",
+      "feedback": [
+        "Muss der rechte Operand ueberhaupt ausgewertet werden?",
+        "Bei && steht das Ergebnis schon fest, sobald links false ist.",
+        "false && ... ergibt false, ohne dass der rechte Teil ausgefuehrt wird - kein Fehler."
+      ],
+      "untertypen": []
+    },
+    {
+      "id": "B10",
+      "name": "String-Konkatenation",
+      "beschreibung": "Der Operator + verbindet Strings, statt zu addieren, sobald ein Operand ein String ist.",
+      "beispiel": "\"Ergebnis: \" + 3 + 4",
+      "typischerFehler": "Ergebnis \"Ergebnis: 7\" statt \"Ergebnis: 34\"",
+      "schwierigkeit": "LEICHT",
+      "basisgewicht": 2,
+      "konzept": "STRING_CONCAT",
+      "feedback": [
+        "Ist einer der Operanden ein String?",
+        "Sobald ein String beteiligt ist, verbindet + die Werte als Text.",
+        "Von links nach rechts: \"Ergebnis: \" + 3 wird zu \"Ergebnis: 3\", dann + 4 zu \"Ergebnis: 34\"."
+      ],
+      "untertypen": []
+    },
+    {
+      "id": "B11",
+      "name": "Logische vs. bitweise Operatoren",
+      "beschreibung": "Die logischen Operatoren && und || werden mit den bitweisen & und | verwechselt.",
+      "beispiel": "a && b",
+      "typischerFehler": "Verwendung von & statt && (keine Kurzschlussauswertung)",
+      "schwierigkeit": "MITTEL",
+      "basisgewicht": 2,
+      "konzept": "LOGICAL_BITWISE",
+      "feedback": [
+        "Achte auf die Anzahl der Zeichen: & oder &&?",
+        "Fuer logische Verknuepfungen von boolean-Werten nutzt man && und ||.",
+        "Ein einzelnes & wertet immer beide Seiten aus - es gibt keine Kurzschlussauswertung."
+      ],
+      "untertypen": []
+    },
+    {
+      "id": "B12",
+      "name": "Unaere Operatoren",
+      "beschreibung": "Unaere Operatoren wie ! oder das unaere Minus werden falsch gebunden oder uebersehen.",
+      "beispiel": "!(x == 0)",
+      "typischerFehler": "Negation nicht auf den gesamten Klammerausdruck angewendet",
+      "schwierigkeit": "LEICHT",
+      "basisgewicht": 2,
+      "konzept": "UNARY",
+      "feedback": [
+        "Worauf bezieht sich der Operator ! genau?",
+        "Unaere Operatoren binden sehr stark und beziehen sich auf den direkt folgenden Ausdruck.",
+        "!(x == 0) kehrt das Ergebnis des gesamten Klammerausdrucks um."
+      ],
+      "untertypen": []
+    },
+    {
+      "id": "B13",
+      "name": "char-Datentyp und charAt",
+      "beschreibung": "Ein char ist ein eigener Datentyp; charAt liefert ein char, nicht einen String.",
+      "beispiel": "\"Java\".charAt(0)",
+      "typischerFehler": "Ergebnis \"J\" (String) statt 'J' (char)",
+      "schwierigkeit": "MITTEL",
+      "basisgewicht": 2,
+      "konzept": "CHAR_TYPE",
+      "feedback": [
+        "Welchen Datentyp liefert charAt zurueck?",
+        "charAt gibt ein einzelnes Zeichen zurueck - einen char, keinen String.",
+        "Das Ergebnis ist 'J' vom Typ char (in einfachen Anfuehrungszeichen)."
+      ],
+      "untertypen": []
+    },
+    {
+      "id": "B14",
+      "name": "Referenzvergleich statt Inhaltsvergleich",
+      "beschreibung": "Bei Strings vergleicht == die Referenzen, nicht den Inhalt; dafuer dient equals.",
+      "beispiel": "s1 == s2",
+      "typischerFehler": "Annahme, == vergleiche den Textinhalt zweier Strings",
+      "schwierigkeit": "MITTEL",
+      "basisgewicht": 3,
+      "konzept": "EQUALITY_REFERENCE",
+      "feedback": [
+        "Vergleichst du den Inhalt oder die Objektreferenz?",
+        "Bei Objekten wie String prueft == die Identitaet, nicht den Inhalt.",
+        "Fuer den Inhaltsvergleich zweier Strings verwendet man equals."
+      ],
+      "untertypen": []
+    }
+  ]
+}

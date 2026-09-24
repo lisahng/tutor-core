@@ -24,6 +24,13 @@ public final class BugLibrary {
 
     public static final String RESOURCE = "/bug-library.json";
 
+    /**
+     * Vorlaeufiges beta fuer Kategorien, fuer die noch kein Wert geschaetzt wurde.
+     * Neutral, das heisst ohne Vorannahme ueber die Schwierigkeit: eine Kategorie
+     * startet damit bei einer Erfolgswahrscheinlichkeit von 0,5.
+     */
+    public static final double BETA_PLATZHALTER = 0.0;
+
     private final List<Misconception> eintraege;
     private final Map<String, Misconception> nachId;
 
@@ -104,7 +111,7 @@ public final class BugLibrary {
                 str(o, "beschreibung"),
                 str(o, "beispiel"),
                 str(o, "typischerFehler"),
-                numOrDefault(o, "beta", 0.0),
+                leseBeta(o),
                 str(o, "konzept"),
                 List.copyOf(feedback),
                 List.copyOf(untertypen));
@@ -113,6 +120,27 @@ public final class BugLibrary {
     private static String str(Map<String, Object> o, String key) {
         Object v = o.get(key);
         return v == null ? "" : String.valueOf(v);
+    }
+
+    /**
+     * Liefert die PFA-Leichtigkeit beta einer Kategorie.
+     *
+     * <p>Steht in der JSON ein Feld {@code beta}, wird es direkt uebernommen. Fehlt es,
+     * gilt {@link #BETA_PLATZHALTER} fuer alle Kategorien gleichermassen.</p>
+     *
+     * <p>Solange beta fehlt, startet jede Kategorie bei einer Erfolgswahrscheinlichkeit von
+     * 0,5. Die Aufgabenauswahl richtet sich dann allein nach der Fehlerhistorie der Person,
+     * nicht nach angenommenen Schwierigkeitsunterschieden. Das ist die zurueckhaltendere
+     * Annahme. Sobald aus der Studie Loesungsquoten je Kategorie vorliegen, wird beta daraus
+     * geschaetzt und als Feld {@code beta} in die JSON geschrieben; dieser Zweig greift
+     * dann nicht mehr.</p>
+     */
+    private static double leseBeta(Map<String, Object> o) {
+        Object explizit = o.get("beta");
+        if (explizit instanceof Number n) {
+            return n.doubleValue();
+        }
+        return BETA_PLATZHALTER;
     }
 
     /** Liest ein Zahlenfeld; fehlt es oder ist es keine Zahl, wird der Standardwert genutzt. */
