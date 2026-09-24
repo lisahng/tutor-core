@@ -2,6 +2,7 @@ de\lmu\tutor\eval\NotEvaluableException.class
 de\lmu\tutor\ast\Expr$StaticCall.class
 de\lmu\tutor\ast\Expr$Index.class
 de\lmu\tutor\ast\Expr$Bin.class
+de\lmu\tutor\feedback\Rueckmeldung.class
 de\lmu\tutor\diagnose\NutzerAntwort.class
 de\lmu\tutor\ast\Expr$Lit.class
 de\lmu\tutor\eval\StepEvaluator$1.class
@@ -36,6 +37,7 @@ de\lmu\tutor\eval\Value$1.class
 de\lmu\tutor\ast\AST.class
 de\lmu\tutor\ast\Expr$Unary.class
 de\lmu\tutor\eval\EvaluationStep.class
+de\lmu\tutor\feedback\Feedbackgenerator.class
 de\lmu\tutor\demo\EvaluatorDemo.class
 de\lmu\tutor\demo\BugLibraryDemo.class
 de\lmu\tutor\gen\AufgabenGenerator.class

@@ -23,5 +23,7 @@ C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\eval\Evaluat
 C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\eval\NotEvaluableException.java
 C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\eval\StepEvaluator.java
 C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\eval\Value.java
+C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\feedback\Feedbackgenerator.java
+C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\feedback\Rueckmeldung.java
 C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\gen\Aufgabe.java
 C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\gen\AufgabenGenerator.java
