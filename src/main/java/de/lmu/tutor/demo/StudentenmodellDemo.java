@@ -49,7 +49,7 @@ public final class StudentenmodellDemo {
     private static void zeigeStartzustand() {
         System.out.println("-- Ausgangslage --");
         System.out.println("   Solange beta nicht aus Daten geschaetzt ist, gilt fuer alle");
-        System.out.println("   Kategorien derselbe Platzhalter. Jede startet bei P = 0,5.");
+        System.out.println("   Kategorien derselbe Platzhalter. Jede startet bei P = 0.");
         System.out.println();
 
         Studentenmodell modell = new Studentenmodell(LIB);

@@ -27,7 +27,7 @@ public final class BugLibrary {
     /**
      * Vorlaeufiges beta fuer Kategorien, fuer die noch kein Wert geschaetzt wurde.
      * Neutral, das heisst ohne Vorannahme ueber die Schwierigkeit: eine Kategorie
-     * startet damit bei einer Erfolgswahrscheinlichkeit von 0,5.
+     * startet damit bei einer Erfolgswahrscheinlichkeit von 0.
      */
     public static final double BETA_PLATZHALTER = 0.0;
 
@@ -135,7 +135,7 @@ public final class BugLibrary {
      * zu rechnen, wuerde eine Kalibrierung vortaeuschen, die es nicht gibt.</p>
      *
      * <p>Solange beta fehlt, startet jede Kategorie bei einer Erfolgswahrscheinlichkeit von
-     * 0,5. Die Aufgabenauswahl richtet sich dann allein nach der Fehlerhistorie der Person,
+     * 0. Die Aufgabenauswahl richtet sich dann allein nach der Fehlerhistorie der Person,
      * nicht nach angenommenen Schwierigkeitsunterschieden. Das ist die zurueckhaltendere
      * Annahme. Sobald aus der Studie Loesungsquoten je Kategorie vorliegen, wird beta daraus
      * geschaetzt und als Feld {@code beta} in die JSON geschrieben; dieser Zweig greift
