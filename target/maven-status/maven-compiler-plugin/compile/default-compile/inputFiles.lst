@@ -12,6 +12,7 @@ C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\demo\Diagnos
 C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\demo\EvaluatorDemo.java
 C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\demo\FeedbackDemo.java
 C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\demo\GeneratorDemo.java
+C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\demo\SitzungsDemo.java
 C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\demo\StudentenmodellDemo.java
 C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\diagnose\Diagnose.java
 C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\diagnose\Fehlerklassifikator.java
@@ -26,6 +27,7 @@ C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\eval\NotEval
 C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\eval\StepEvaluator.java
 C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\eval\Value.java
 C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\feedback\Feedbackgenerator.java
+C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\feedback\Platzhalter.java
 C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\feedback\Rueckmeldung.java
 C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\gen\Aufgabe.java
 C:\Users\lisah\Documents\ZuLa\tutor-core\src\main\java\de\lmu\tutor\gen\AufgabenGenerator.java

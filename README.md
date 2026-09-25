@@ -41,7 +41,7 @@ threadsicher und gehört pro Nutzer in die HTTP-Session.
 
 ```bash
 mvn clean test
-mvn compile exec:java "-Dexec.mainClass=de.lmu.tutor.demo.SitzungsDemo
+mvn compile exec:java "-Dexec.mainClass=de.lmu.tutor.demo.SitzungsDemo"
 ```
 
 Weitere Demos unter `de.lmu.tutor.demo`: `BugLibraryDemo`, `AstDemo`,

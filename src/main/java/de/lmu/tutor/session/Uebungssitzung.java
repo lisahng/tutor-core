@@ -183,7 +183,8 @@ public final class Uebungssitzung {
         int wiederholungen = studentenmodell.erfasseUndGibWiederholungen(
                 kategorieFuerHistorie, diagnose.korrekt());
 
-        Rueckmeldung rueckmeldung = feedbackgenerator.erstelle(diagnose, wiederholungen);
+        Rueckmeldung rueckmeldung = feedbackgenerator.erstelle(
+                diagnose, wiederholungen, aktuelleAufgabe, aktuelleReferenz);
         protokolliere(antwort, diagnose, rueckmeldung);
 
         return new Antwortergebnis(diagnose.korrekt(), rueckmeldung, diagnose,
@@ -192,6 +193,14 @@ public final class Uebungssitzung {
 
     private void protokolliere(NutzerAntwort antwort, Diagnose diagnose, Rueckmeldung rueckmeldung) {
         Instant jetzt = uhr.instant();
+        String kategorie = diagnose.misconception().map(Misconception::id).orElse("");
+
+        // Nur begruendete Diagnosen stehen in der Diagnose-Spalte. Konnte keine Fehlregel
+        // den Wert erklaeren, wandert die Kategorie in die Vermutungs-Spalte, damit die
+        // Trefferquote in Strang 3 nicht durch Zufallstreffer geschoent wird.
+        String diagnoseId = diagnose.erklaert() ? kategorie : "";
+        String vermutung = diagnose.erklaert() || diagnose.korrekt() ? "" : kategorie;
+
         protokoll.add(new Protokolleintrag(
                 jetzt,
                 aktuelleAufgabe.kategorieId(),
@@ -201,7 +210,9 @@ public final class Uebungssitzung {
                 antwortAlsText(antwort),
                 versucheAnAktuellerAufgabe,
                 diagnose.korrekt(),
-                diagnose.misconception().map(Misconception::id).orElse(""),
+                diagnoseId,
+                vermutung,
+                diagnose.erklaert(),
                 diagnose.konfidenz(),
                 rueckmeldung.stufe(),
                 jetzt.toEpochMilli() - aufgabeGestelltUm.toEpochMilli()));
@@ -260,6 +271,27 @@ public final class Uebungssitzung {
     /** Anzahl richtig beantworteter Versuche in dieser Sitzung. */
     public int richtigeAntworten() {
         return (int) protokoll.stream().filter(Protokolleintrag::korrekt).count();
+    }
+
+    /**
+     * Die Fehler, die keine Fehlregel erklaeren konnte.
+     *
+     * <p>Fuer die Auswertung der Studie die aufschlussreichste Teilmenge: Sie zeigt,
+     * welche Fehlvorstellungen die Bug Library noch nicht abbildet. In der strengen
+     * Trefferquote bleiben diese Faelle aussen vor.</p>
+     */
+    public List<Protokolleintrag> unerklaerteFehler() {
+        return protokoll.stream().filter(Protokolleintrag::unerklaert).toList();
+    }
+
+    /** Anteil der Fehler, zu denen eine begruendete Diagnose vorliegt; ohne Fehler 0. */
+    public double anteilErklaerterFehler() {
+        long fehler = protokoll.stream().filter(e -> !e.korrekt()).count();
+        if (fehler == 0) {
+            return 0.0;
+        }
+        long erklaert = protokoll.stream().filter(e -> !e.korrekt() && e.erklaert()).count();
+        return (double) erklaert / fehler;
     }
 
     /** Das Studentenmodell der Sitzung, etwa fuer eine Fortschrittsanzeige. */

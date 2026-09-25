@@ -6,22 +6,29 @@ import de.lmu.tutor.buglib.Misconception;
 import de.lmu.tutor.buglib.Subtype;
 
 /**
- * Ergebnis des Fehlerklassifikators: entweder "korrekt", oder eine (moeglichst
- * konkrete) diagnostizierte Fehlvorstellung samt Begruendung und Konfidenz-Stufe.
+ * Ergebnis des Fehlerklassifikators: entweder korrekt, oder eine diagnostizierte
+ * Fehlvorstellung samt Begruendung und Konfidenzstufe.
  *
- * <p>{@code Konfidenz} spiegelt wider, wie sicher die Diagnose ist - siehe
- * {@link Fehlerklassifikator} fuer die Herleitung:</p>
+ * <p>Die Konfidenz sagt, wie gut das System seine eigene Diagnose belegen kann:</p>
+ *
  * <ul>
- *   <li>{@code EXAKT} - die Antwort passt zu einer eindeutig erkennbaren Signatur
- *       eines Fehlertyps (z. B. Wert korrekt, Typ falsch -> B07).</li>
- *   <li>{@code SIMULIERT} - eine der bekannten Fehlregeln wurde auf den Ausdruck
- *       angewendet ("Perturbationsmodell", Brown &amp; VanLehn 1980) und hat genau
- *       den abgegebenen Wert reproduziert.</li>
- *   <li>{@code ZIELKATEGORIE} - keine Fehlregel passt exakt, aber die Aufgabe wurde
- *       gezielt fuer diese Kategorie generiert; sie ist die plausibelste Vermutung.</li>
- *   <li>{@code VERMUTET} - grober struktureller Treffer (z. B. anhand des
- *       Wurzeloperators), ohne dass ein konkreter Fehlwert reproduziert werden konnte.</li>
+ *   <li>{@code EXAKT} - die Antwort hat eine eindeutige Signatur, etwa ein richtiger Wert
+ *       bei falschem Datentyp.</li>
+ *   <li>{@code SIMULIERT} - eine bekannte Fehlregel wurde auf den Ausdruck angewendet und
+ *       hat genau den abgegebenen Wert reproduziert (Perturbationsmodell nach Brown und
+ *       VanLehn 1980).</li>
+ *   <li>{@code ZIELKATEGORIE} - keine Regel erklaert den Wert. Es bleibt die Kategorie,
+ *       fuer die die Aufgabe erzeugt wurde.</li>
+ *   <li>{@code VERMUTET} - grober Treffer anhand der Ausdrucksstruktur.</li>
+ *   <li>{@code UNBEKANNT} - nichts passt.</li>
  * </ul>
+ *
+ * <p>Nur die ersten beiden Stufen sind erklaerte Diagnosen, siehe {@link #erklaert()}.
+ * Die uebrigen sind Vermutungen und werden im Systemprotokoll gesondert gefuehrt. Der
+ * Grund: Aufgaben einer Kategorie provozieren meist Fehler eben dieser Kategorie. Wuerde
+ * man die Zielkategorie als Diagnose zaehlen, traefe das System oft zufaellig richtig,
+ * ohne den Fehler erklaert zu haben, und die Trefferquote in Strang 3 der Studie waere
+ * geschoent.</p>
  */
 public record Diagnose(
         boolean korrekt,
@@ -33,11 +40,27 @@ public record Diagnose(
     public enum Konfidenz { KEINE, EXAKT, SIMULIERT, ZIELKATEGORIE, VERMUTET, UNBEKANNT }
 
     /**
+     * Ob die Diagnose begruendet ist, also auf einer eindeutigen Signatur oder einer
+     * nachgerechneten Fehlregel beruht. Nur solche Diagnosen zaehlen in der strengen
+     * Trefferquote.
+     */
+    public boolean erklaert() {
+        return konfidenz == Konfidenz.EXAKT || konfidenz == Konfidenz.SIMULIERT;
+    }
+
+    /**
+     * Ob eine Kategorie vermutet, aber nicht begruendet wurde. Diese Faelle zeigen
+     * Luecken in der Bug Library und werden gesondert ausgewertet.
+     */
+    public boolean nurVermutet() {
+        return !korrekt && !erklaert();
+    }
+
+    /**
      * Fabrikmethode fuer eine richtige Antwort.
      *
-     * <p>Sie heisst bewusst nicht {@code korrekt()}: Die Record-Komponente
-     * {@code korrekt} erzeugt bereits einen Accessor dieses Namens, und ein
-     * zweites parameterloses {@code korrekt()} waere ein Konflikt mit ihm.</p>
+     * <p>Sie heisst bewusst nicht {@code korrekt()}: Die Record-Komponente erzeugt
+     * bereits einen Accessor dieses Namens.</p>
      */
     public static Diagnose korrekteAntwort() {
         return new Diagnose(true, Optional.empty(), Optional.empty(), Konfidenz.KEINE, "Antwort korrekt.");
@@ -51,7 +74,7 @@ public record Diagnose(
         return new Diagnose(false, Optional.of(m), Optional.ofNullable(s), konfidenz, begruendung);
     }
 
-    /** Keine Fehlregel und keine Zielkategorie passen - Kandidat fuer die Kommentarspalte (vgl. Besprechung 1). */
+    /** Keine Fehlregel und keine Zielkategorie passen. */
     public static Diagnose unbekannt(String begruendung) {
         return new Diagnose(false, Optional.empty(), Optional.empty(), Konfidenz.UNBEKANNT, begruendung);
     }

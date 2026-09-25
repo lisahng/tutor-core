@@ -1,5 +1,5 @@
 {
-  "version": "2.0",
+  "version": "2.1",
   "misconceptions": [
     {
       "id": "B01",
@@ -13,7 +13,7 @@
       "feedback": [
         "Schau dir die Reihenfolge der Operatoren in diesem Ausdruck an. Werden alle gleich behandelt?",
         "In Java hat nicht jeder Operator dieselbe Bindungsstaerke. Multiplikation, Division und Modulo binden staerker als Addition und Subtraktion und werden daher zuerst ausgewertet.",
-        "In 3 + 4 * 2 wird zuerst 4 * 2 = 8 berechnet, danach 3 + 8 = 11."
+        "In {ausdruck} wird zuerst die Punktrechnung ausgewertet, danach die Strichrechnung. Das korrekte Ergebnis ist {ergebnis}."
       ],
       "untertypen": []
     },
@@ -29,7 +29,7 @@
       "feedback": [
         "Achte auf die Datentypen der beiden Operanden.",
         "Sind beide Operanden vom Typ int, fuehrt / eine ganzzahlige Division durch. Die Nachkommastellen werden abgeschnitten, das Ergebnis bleibt ein int.",
-        "20 und 3 sind beide int. Daher ergibt 20 / 3 den Wert 6 vom Typ int, die Nachkommastellen entfallen."
+        "{links} und {rechts} sind beide int. Daher ergibt {ausdruck} den Wert {wert} vom Typ {typ}, die Nachkommastellen entfallen."
       ],
       "untertypen": []
     },
@@ -45,7 +45,7 @@
       "feedback": [
         "Pruefe den Datentyp jedes einzelnen Operanden. Verhaelt sich + immer gleich?",
         "Sobald ein Operand ein String ist, wird + zur Konkatenation und liefert wieder einen String. Die Auswertung erfolgt dabei von links nach rechts.",
-        "\"17\" + 4 ergibt den String \"174\", nicht die Zahl 21."
+        "In {ausdruck} ist einer der Operanden ein String. Deshalb wird verkettet statt addiert, das Ergebnis ist {ergebnis}."
       ],
       "untertypen": []
     },
@@ -61,7 +61,7 @@
       "feedback": [
         "Was macht der Operator (int) genau mit einem double-Wert?",
         "Der Cast (int) schneidet die Nachkommastellen ab. Es findet keine Rundung statt, auch nicht bei Werten ab .5. Umgekehrt wird ein Ausdruck zu double, sobald ein Operand double ist.",
-        "Bei (int) 2.1 werden die Nachkommastellen entfernt. Das Ergebnis ist 2 vom Typ int."
+        "Bei {ausdruck} werden die Nachkommastellen von {operandWert} abgeschnitten. Das Ergebnis ist {ergebnis}."
       ],
       "untertypen": []
     },
@@ -77,7 +77,7 @@
       "feedback": [
         "Schau dir den Ausdruck in den eckigen Klammern genau an.",
         "Der Index ist selbst eine Berechnung und muss vollstaendig ausgewertet werden, bevor auf das Array zugegriffen wird. Array-Indizes beginnen in Java bei 0.",
-        "Bei k = 1 ergibt k + 1 den Wert 2. Der Zugriff erfolgt also auf a[2], nicht auf a[1]."
+        "Der Indexausdruck {index} ergibt {indexWert}. Zugegriffen wird also auf {array}[{indexWert}], das Ergebnis ist {ergebnis}."
       ],
       "untertypen": [
         {
@@ -90,7 +90,7 @@
     {
       "id": "B06",
       "name": "Method-Chaining falsch",
-      "beschreibung": "Bei verketteten Methodenaufrufen wird ein Glied der Kette uebersehen oder die Reihenfolge vertauscht.",
+      "beschreibung": "Bei verketteten Methodenaufrufen wird ein Glied uebersehen oder die Reihenfolge vertauscht.",
       "beispiel": "\"HEY\".substring(1).toLowerCase()",
       "typischerFehler": "Ergebnis \"EY\" oder \"hey\" statt \"ey\"",
       "schwierigkeit": "MITTEL",
@@ -99,7 +99,7 @@
       "feedback": [
         "Achte darauf, wie viele Methoden hier nacheinander aufgerufen werden.",
         "Beim Method-Chaining wird die Methode links zuerst ausgefuehrt. Ihr Rueckgabewert dient als Empfaenger fuer den naechsten Aufruf rechts davon. Jedes Glied der Kette wirkt sich aus.",
-        "Zuerst ergibt \"HEY\".substring(1) den Wert \"EY\". Darauf wird toLowerCase() angewendet, was \"ey\" ergibt."
+        "Zuerst wird {innereMethode} angewendet, das ergibt {zwischenwert}. Darauf wird {aeussereMethode} angewendet, das Gesamtergebnis ist {ergebnis}."
       ],
       "untertypen": []
     },
@@ -115,7 +115,7 @@
       "feedback": [
         "Welche Datentypen haben die Operanden, und welchen Typ hat das Ergebnis dann?",
         "Der Datentyp des Ergebnisses ergibt sich aus den Operandentypen. Sind beide Operanden int, ist auch das Ergebnis int. Eine Umwandlung nach double findet nur statt, wenn mindestens ein Operand bereits double ist.",
-        "5 und 2 sind beide int. Daher ist auch 5 / 2 vom Typ int und ergibt den Wert 2."
+        "{ausdruck} ergibt den Wert {wert} vom Typ {typ}."
       ],
       "untertypen": []
     },
@@ -131,7 +131,7 @@
       "feedback": [
         "Passen die Datentypen der Operanden ueberhaupt zu diesem Operator zusammen?",
         "Java ist streng typisiert. Jeder Operator ist nur fuer bestimmte Typkombinationen definiert. Passt keine davon, laesst sich der Ausdruck gar nicht auswerten.",
-        "5 ist int, true ist boolean. Fuer diese Kombination ist + nicht definiert, der Ausdruck ist also nicht auswertbar."
+        "{ausdruck} laesst sich nicht auswerten: {grund}."
       ],
       "untertypen": [
         {
@@ -163,7 +163,7 @@
       "feedback": [
         "Wird der rechte Operand von && in jedem Fall ausgewertet?",
         "&& wertet den linken Operanden zuerst aus. Steht das Ergebnis dadurch schon fest, wird der rechte Operand gar nicht mehr ausgewertet. Bei || gilt das entsprechend.",
-        "Der linke Operand ist false, damit steht das Ergebnis bereits fest. Der rechte Operand wird nicht ausgewertet, das Ergebnis ist false."
+        "Der linke Operand {links} ergibt {linksWert}. Damit steht das Ergebnis bereits fest, {rechts} wird nicht mehr ausgewertet. {ausdruck} ergibt {ergebnis}."
       ],
       "untertypen": []
     },
@@ -179,7 +179,7 @@
       "feedback": [
         "Der Operator % hat eine andere Bedeutung als /.",
         "% liefert nicht den Quotienten, sondern den Rest einer ganzzahligen Division.",
-        "20 laesst sich als 6 * 3 + 2 schreiben. Der Rest ist 2, also ergibt 20 % 3 den Wert 2 vom Typ int."
+        "Teilt man {links} durch {rechts}, bleibt der Rest {wert}. Also ergibt {ausdruck} den Wert {ergebnis}."
       ],
       "untertypen": []
     },
@@ -195,7 +195,7 @@
       "feedback": [
         "Welcher Teil des Ausdrucks wird zuerst ausgewertet, und was steuert die weitere Auswertung?",
         "Der ternaere Operator ? : wertet zuerst die Bedingung vor dem ? aus. Ergibt sie true, wird der Ausdruck vor dem : genommen, sonst der danach. Nur einer der beiden Zweige wird ausgewertet.",
-        "Die Bedingung x > 0 ist bei x = -3 gleich false. Also wird der Zweig nach dem : genommen, das Ergebnis ist 7."
+        "Die Bedingung {bedingung} ergibt {bedingungWert}. Deshalb wird der zugehoerige Zweig ausgewertet, {ausdruck} ergibt {ergebnis}."
       ],
       "untertypen": []
     },
@@ -211,7 +211,7 @@
       "feedback": [
         "Steht das ++ vor oder nach der Variable? Das macht einen Unterschied.",
         "Beim Praefix ++x wird die Variable zuerst erhoeht, dann liefert der Ausdruck den neuen Wert. Beim Postfix x++ liefert der Ausdruck erst den alten Wert, danach wird die Variable erhoeht.",
-        "Bei int x = 2; int y = x++; ist y zunaechst 2, danach ist x gleich 3. Bei ++x waeren beide 3."
+        "{ausdruck} liefert {ergebnis}. Anschliessend steht {variable} auf {neuerWert}."
       ],
       "untertypen": []
     },
@@ -227,7 +227,7 @@
       "feedback": [
         "Welchen Datentyp liefert der Methodenaufruf charAt zurueck?",
         "charAt liefert ein einzelnes Zeichen vom Typ char, keinen String. Ein char wird in einfachen Anfuehrungszeichen geschrieben, ein String in doppelten.",
-        "\"Java\".charAt(0) liefert das erste Zeichen. Das Ergebnis ist 'J' vom Typ char."
+        "{ausdruck} liefert das Zeichen {wert} vom Typ {typ}, geschrieben in einfachen Anfuehrungszeichen."
       ],
       "untertypen": []
     },
@@ -243,7 +243,7 @@
       "feedback": [
         "Vergleicht == bei Objekten wirklich den Inhalt?",
         "Bei Objekten wie String prueft == nur, ob es sich um dieselbe Referenz handelt, nicht ob der Inhalt gleich ist. Fuer den Inhaltsvergleich dient die Methode equals.",
-        "s.equals(\"a\") vergleicht den Inhalt und liefert true, wenn s den Text \"a\" enthaelt. s == \"a\" prueft dagegen die Referenzidentitaet."
+        "{ausdruck} vergleicht den Inhalt und ergibt {ergebnis}. Mit == wuerde stattdessen die Referenzidentitaet geprueft."
       ],
       "untertypen": []
     }

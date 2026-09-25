@@ -216,6 +216,43 @@ class UebungssitzungTest {
     // ---- Protokoll ----
 
     @Test
+    void unerklaerteFehlerStehenNichtInDerDiagnoseSpalte() {
+        // Die Eingabe -987654 passt zu keiner Fehlregel. Das System vermutet dann die
+        // Zielkategorie, darf sie aber nicht als begruendete Diagnose ausweisen.
+        Uebungssitzung s = sitzung();
+        s.aufgabeZu("B01");
+        s.antworte(falscheAntwort());
+
+        Protokolleintrag eintrag = s.protokoll().get(0);
+        assertFalse(eintrag.erklaert());
+        assertTrue(eintrag.diagnose().isBlank(), "Diagnose-Spalte muesste leer sein");
+        assertEquals("B01", eintrag.vermutung());
+        assertEquals(1, s.unerklaerteFehler().size());
+    }
+
+    @Test
+    void diagnoseUndVermutungSindNiemalsBeideGefuellt() {
+        // Die zentrale Invariante: Ein Eintrag ist entweder begruendet oder geraten,
+        // niemals beides. Sonst liessen sich die beiden Trefferquoten nicht trennen.
+        Uebungssitzung s = sitzung();
+        for (int i = 0; i < 20; i++) {
+            Aufgabe a = s.naechsteAufgabe();
+            s.antworte(i % 3 == 0 ? korrekteAntwort(s) : falscheAntwort());
+        }
+        for (Protokolleintrag e : s.protokoll()) {
+            assertFalse(!e.diagnose().isBlank() && !e.vermutung().isBlank(),
+                    "Beide Spalten gefuellt: " + e.alsCsvZeile());
+            assertEquals(e.erklaert(), !e.diagnose().isBlank(),
+                    "erklaert passt nicht zur Diagnose-Spalte: " + e.alsCsvZeile());
+            if (e.korrekt()) {
+                assertTrue(e.vermutung().isBlank(), "Richtige Antwort mit Vermutung: " + e.alsCsvZeile());
+            }
+        }
+        assertEquals(s.unerklaerteFehler().size(),
+                s.protokoll().stream().filter(e -> !e.korrekt() && !e.erklaert()).count());
+    }
+
+    @Test
     void protokollHaeltDieDatenFuerDieAuswertung() {
         Uebungssitzung s = sitzung();
         Aufgabe a = s.aufgabeZu("B05");
@@ -258,8 +295,8 @@ class UebungssitzungTest {
         s.antworte(falscheAntwort());
 
         String zeile = s.protokoll().get(0).alsCsvZeile();
-        assertEquals(12, zaehleSpalten(zeile),
-                "Die Zeile hat nicht 12 Spalten: " + zeile);
+        assertEquals(14, zaehleSpalten(zeile),
+                "Die Zeile hat nicht 14 Spalten: " + zeile);
     }
 
     /** Zaehlt Spalten unter Beachtung von Anfuehrungszeichen. */

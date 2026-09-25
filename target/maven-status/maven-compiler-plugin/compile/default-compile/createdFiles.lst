@@ -23,6 +23,7 @@ de\lmu\tutor\demo\FeedbackDemo.class
 de\lmu\tutor\diagnose\Diagnose$Konfidenz.class
 de\lmu\tutor\ast\AST.class
 de\lmu\tutor\ast\Expr$Unary.class
+de\lmu\tutor\demo\SitzungsDemo.class
 de\lmu\tutor\eval\EvaluationStep.class
 de\lmu\tutor\student\Kategoriestatistik.class
 de\lmu\tutor\demo\EvaluatorDemo.class
@@ -47,6 +48,7 @@ de\lmu\tutor\eval\EvaluationResult.class
 de\lmu\tutor\diagnose\Fehlersimulator$Treffer.class
 de\lmu\tutor\eval\EvaluationContext.class
 de\lmu\tutor\eval\Value$1.class
+de\lmu\tutor\feedback\Platzhalter.class
 de\lmu\tutor\session\Protokolleintrag.class
 de\lmu\tutor\feedback\Feedbackgenerator.class
 de\lmu\tutor\demo\BugLibraryDemo.class

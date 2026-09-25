@@ -33,7 +33,6 @@ public final class SitzungsDemo {
         Uebungssitzung sitzung = new Uebungssitzung(BugLibrary.loadDefault(), 2026L);
 
         System.out.println("Uebungssitzung - Demo");
-        System.out.println("=".repeat(70));
 
         for (int nummer = 1; nummer <= ANZAHL_AUFGABEN; nummer++) {
             Aufgabe aufgabe = sitzung.naechsteAufgabe();
