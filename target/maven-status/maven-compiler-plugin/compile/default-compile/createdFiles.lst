@@ -33,6 +33,7 @@ de\lmu\tutor\ast\Expr$StaticCall.class
 de\lmu\tutor\ast\Expr$Bin.class
 de\lmu\tutor\diagnose\NutzerAntwort.class
 de\lmu\tutor\ast\Expr$Lit.class
+de\lmu\tutor\demo\SitzungsDemo$Verhalten.class
 de\lmu\tutor\ast\Expr$Cast.class
 de\lmu\tutor\demo\GeneratorDemo.class
 de\lmu\tutor\gen\Aufgabe.class

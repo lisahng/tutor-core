@@ -168,7 +168,7 @@ public final class Feedbackgenerator {
     private Rueckmeldung modellabgleich(int fehlversuche, Platzhalter platzhalter, boolean auswertbar) {
         int stufe = begrenze(fehlversuche, 3);
         if (platzhalter == null) {
-            return Rueckmeldung.unbekannterFehler(TRACING_OHNE_AUFGABE);
+            return Rueckmeldung.modellabgleich(TRACING_OHNE_AUFGABE, stufe);
         }
         String text = switch (stufe) {
             case 0 -> TRACING_0;
@@ -179,7 +179,7 @@ public final class Feedbackgenerator {
                     ? platzhalter.fuelle(TRACING_2_AUSWERTBAR).orElse(AUSWEICHTEXT)
                     : platzhalter.fuelle(TRACING_2_NICHT_AUSWERTBAR).orElse(AUSWEICHTEXT);
         };
-        return Rueckmeldung.unbekannterFehler(text);
+        return Rueckmeldung.modellabgleich(text, stufe);
     }
 
     private int begrenze(int fehlversuche, int anzahlStufen) {

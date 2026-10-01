@@ -1,6 +1,12 @@
 package de.lmu.tutor.demo;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+
 import de.lmu.tutor.buglib.BugLibrary;
+import de.lmu.tutor.diagnose.Fehlersimulator;
 import de.lmu.tutor.diagnose.NutzerAntwort;
 import de.lmu.tutor.eval.EvaluationResult;
 import de.lmu.tutor.eval.EvaluationStep;
@@ -11,37 +17,55 @@ import de.lmu.tutor.session.Uebungssitzung;
 import de.lmu.tutor.student.Kategoriestatistik;
 
 /**
- * Spielt eine komplette Uebungssitzung durch und zeigt damit das Zusammenspiel aller
+ * Spielt eine komplette Uebungssitzung durch und zeigt das Zusammenspiel aller
  * Komponenten: Aufgabenauswahl, Generierung, Auswertung, Diagnose, Feedback,
  * Studentenmodell und Protokoll.
  *
- * <p>Der Ablauf simuliert eine Lernende, die jede zweite Aufgabe richtig loest. Bei den
- * falschen Antworten wird bewusst dreimal hintereinander geantwortet, damit die
- * Scaffolding-Stufen sichtbar werden.</p>
+ * <p>Drei Faelle wechseln sich ab, weil sich das Feedback jeweils grundlegend
+ * unterscheidet:</p>
+ *
+ * <ul>
+ *   <li><b>Typischer Fehler.</b> Die Eingabe stammt aus dem {@link Fehlersimulator},
+ *       entspricht also genau dem, was jemand mit einer bestimmten Fehlvorstellung
+ *       rechnen wuerde. Das System kann die Kategorie benennen und gibt die drei
+ *       Scaffolding-Stufen aus der Bug Library aus.</li>
+ *   <li><b>Vertipper.</b> Ein Wert, den nachweislich keine Fehlregel reproduziert. Hier
+ *       behauptet das System keine Fehlvorstellung, sondern gleicht den Loesungsweg ab.
+ *       Nach VanLehn ist ein einzelner unerklaerbarer Wert eher ein Ausrutscher als eine
+ *       systematisch falsche Regel.</li>
+ *   <li><b>Richtige Antwort.</b></li>
+ * </ul>
  *
  * <p>Ausfuehren mit:
- * <pre>
- *   mvn clean compile
- *   java -cp target\classes de.lmu.tutor.demo.SitzungsDemo
- * </pre>
+ * <pre>  mvn compile exec:java "-Dexec.mainClass=de.lmu.tutor.demo.SitzungsDemo"  </pre>
  */
 public final class SitzungsDemo {
 
-    private static final int ANZAHL_AUFGABEN = 6;
+    /** Was die simulierte Lernende bei einer Aufgabe tut. */
+    private enum Verhalten { TYPISCHER_FEHLER, VERTIPPER, RICHTIG }
+
+    /** Reihum, damit in einem Durchlauf alle drei Faelle vorkommen. */
+    private static final Verhalten[] ABLAUF = {
+            Verhalten.TYPISCHER_FEHLER, Verhalten.VERTIPPER, Verhalten.RICHTIG,
+            Verhalten.TYPISCHER_FEHLER, Verhalten.VERTIPPER, Verhalten.RICHTIG
+    };
+
+    private static final Fehlersimulator SIMULATOR = new Fehlersimulator();
 
     public static void main(String[] args) {
         Uebungssitzung sitzung = new Uebungssitzung(BugLibrary.loadDefault(), 2026L);
 
         System.out.println("Uebungssitzung - Demo");
+        System.out.println("=".repeat(74));
 
-        for (int nummer = 1; nummer <= ANZAHL_AUFGABEN; nummer++) {
+        for (int i = 0; i < ABLAUF.length; i++) {
             Aufgabe aufgabe = sitzung.naechsteAufgabe();
-            zeigeAufgabe(nummer, aufgabe);
+            zeigeAufgabe(i + 1, aufgabe);
 
-            if (nummer % 2 == 1) {
+            if (ABLAUF[i] == Verhalten.RICHTIG) {
                 antworteRichtig(sitzung);
             } else {
-                antworteDreimalFalsch(sitzung);
+                antworteDreimalFalsch(sitzung, aufgabe, ABLAUF[i]);
             }
             System.out.println();
         }
@@ -53,14 +77,14 @@ public final class SitzungsDemo {
     // ---- Aufgabe stellen ----
 
     private static void zeigeAufgabe(int nummer, Aufgabe aufgabe) {
-        System.out.printf("Aufgabe %d  [%s]%n", nummer, aufgabe.kategorieId());
+        System.out.printf("Aufgabe %d  [Zielkategorie %s]%n", nummer, aufgabe.kategorieId());
         if (!aufgabe.belegung().isBlank()) {
             System.out.println("  Gegeben:   " + aufgabe.belegung());
         }
         System.out.println("  Ausdruck:  " + aufgabe.render());
     }
 
-    // ---- Antworten ----
+    // ---- Richtige Antwort ----
 
     private static void antworteRichtig(Uebungssitzung sitzung) {
         EvaluationResult loesung = sitzung.musterloesung().orElseThrow();
@@ -68,37 +92,88 @@ public final class SitzungsDemo {
                 ? NutzerAntwort.wert(loesung.wert())
                 : NutzerAntwort.nichtAuswertbar();
 
+        System.out.println("  Verhalten: richtige Antwort");
         System.out.println("  Eingabe:   " + beschreibe(antwort));
-        Antwortergebnis ergebnis = sitzung.antworte(antwort);
-        System.out.println("  Feedback:  " + ergebnis.text());
+        System.out.println("  Feedback:  " + sitzung.antworte(antwort).text());
     }
 
-    /**
-     * Dreimal dieselbe falsche Antwort. Dadurch wird sichtbar, wie die Hinweise von Stufe 0
-     * ueber Stufe 1 bis zur Loesungshilfe auf Stufe 2 konkreter werden.
-     */
-    private static void antworteDreimalFalsch(Uebungssitzung sitzung) {
-        NutzerAntwort falsch = NutzerAntwort.wert(Value.ofInt(-1));
-        System.out.println("  Eingabe:   " + beschreibe(falsch) + "  (dreimal)");
+    // ---- Falsche Antwort, dreimal ----
+
+    /** Dreimal dieselbe falsche Antwort, damit die Stufung sichtbar wird. */
+    private static void antworteDreimalFalsch(Uebungssitzung sitzung, Aufgabe aufgabe,
+                                              Verhalten verhalten) {
+        EvaluationResult loesung = sitzung.musterloesung().orElseThrow();
+        NutzerAntwort antwort = eingabeFuer(verhalten, aufgabe, loesung);
+
+        System.out.println("  Verhalten: " + beschreibe(verhalten));
+        System.out.println("  Eingabe:   " + beschreibe(antwort) + "  (dreimal)");
+        System.out.println("  Loesung:   " + loesung.ergebnisText());
 
         for (int versuch = 1; versuch <= 3; versuch++) {
-            Antwortergebnis ergebnis = sitzung.antworte(falsch);
+            Antwortergebnis ergebnis = sitzung.antworte(antwort);
 
             if (versuch == 1) {
-                System.out.println("  Loesung:   " + ergebnis.referenzText());
+                // Die Einordnung stammt aus der tatsaechlichen Diagnose, nicht aus der
+                // Absicht der Demo. So zeigt die Ausgabe, was das System wirklich kann.
                 System.out.println("  Diagnose:  "
                         + ergebnis.diagnose().misconception()
                                 .map(m -> m.id() + " " + m.name()).orElse("keine")
-                        + "  [" + ergebnis.diagnose().konfidenz() + "]");
+                        + "  [" + ergebnis.diagnose().konfidenz()
+                        + (ergebnis.diagnose().erklaert() ? "" : ", nur vermutet") + "]");
+                System.out.println("  Modus:     " + (ergebnis.diagnose().erklaert()
+                        ? "Scaffolding aus der Bug Library"
+                        : "Abgleich des Loesungswegs, keine Kategorie genannt"));
             }
             System.out.printf("  Stufe %d:   %s%n",
                     ergebnis.rueckmeldung().stufe(), ergebnis.text());
         }
-        zeigeZwischenschritte(sitzung);
+        zeigeZwischenschritte(loesung);
     }
 
-    private static void zeigeZwischenschritte(Uebungssitzung sitzung) {
-        EvaluationResult loesung = sitzung.musterloesung().orElseThrow();
+    /** Die Eingabe, die zum gewuenschten Verhalten passt. */
+    private static NutzerAntwort eingabeFuer(Verhalten verhalten, Aufgabe aufgabe,
+                                             EvaluationResult loesung) {
+        if (verhalten == Verhalten.TYPISCHER_FEHLER) {
+            Optional<Fehlersimulator.Treffer> treffer = typischerFehler(aufgabe);
+            if (treffer.isPresent()) {
+                return NutzerAntwort.wert(treffer.get().wert());
+            }
+            // Keine Regel fuer diese Aufgabenform vorhanden: dann eben ein Vertipper.
+        }
+        return vertipper(aufgabe, loesung);
+    }
+
+    /** Der erste simulierte Fehlwert, bevorzugt zur Zielkategorie der Aufgabe. */
+    private static Optional<Fehlersimulator.Treffer> typischerFehler(Aufgabe aufgabe) {
+        List<Fehlersimulator.Treffer> alle =
+                SIMULATOR.simuliereAlle(aufgabe.ausdruck(), aufgabe.kontext());
+        return alle.stream()
+                .filter(t -> t.bugId().equals(aufgabe.kategorieId()))
+                .findFirst()
+                .or(() -> alle.stream().findFirst());
+    }
+
+    /**
+     * Ein Wert, der nachweislich weder die Loesung ist noch von einer Fehlregel erzeugt
+     * wird. Nur so ist sicher, dass die Demo wirklich den Abgleich des Loesungswegs zeigt
+     * und nicht zufaellig doch eine Kategorie trifft.
+     */
+    private static NutzerAntwort vertipper(Aufgabe aufgabe, EvaluationResult loesung) {
+        Set<String> belegt = new HashSet<>();
+        if (loesung.auswertbar()) {
+            belegt.add(loesung.wert().render());
+        }
+        for (Fehlersimulator.Treffer t : SIMULATOR.simuliereAlle(aufgabe.ausdruck(), aufgabe.kontext())) {
+            belegt.add(t.wert().render());
+        }
+        int kandidat = -1;
+        while (belegt.contains(Value.ofInt(kandidat).render())) {
+            kandidat--;
+        }
+        return NutzerAntwort.wert(Value.ofInt(kandidat));
+    }
+
+    private static void zeigeZwischenschritte(EvaluationResult loesung) {
         if (loesung.schritte().isEmpty()) {
             return;
         }
@@ -112,24 +187,33 @@ public final class SitzungsDemo {
         return antwort.auswertbar() ? antwort.wert().mitTyp() : "nicht auswertbar";
     }
 
+    private static String beschreibe(Verhalten verhalten) {
+        return switch (verhalten) {
+            case TYPISCHER_FEHLER -> "typischer Fehler, laesst sich nachrechnen";
+            case VERTIPPER -> "Vertipper, keine Regel erklaert den Wert";
+            case RICHTIG -> "richtige Antwort";
+        };
+    }
+
     // ---- Auswertung am Ende ----
 
     private static void zeigeKenntnisstand(Uebungssitzung sitzung) {
-        System.out.println("=".repeat(70));
+        System.out.println("=".repeat(74));
         System.out.printf("Kenntnisstand nach %d Versuchen (%d richtig)%n",
                 sitzung.protokoll().size(), sitzung.richtigeAntworten());
 
-        // Nur die tatsaechlich geuebten Kategorien; die uebrigen stehen alle bei 0.
         for (Kategoriestatistik stand : sitzung.kenntnisstand()) {
             if (stand.versuche() > 0) {
                 System.out.println("  " + stand);
             }
         }
+        System.out.printf("  Anteil erklaerter Fehler: %.0f%%%n",
+                sitzung.anteilErklaerterFehler() * 100);
         System.out.println();
     }
 
     private static void zeigeProtokoll(Uebungssitzung sitzung) {
-        System.out.println("=".repeat(70));
+        System.out.println("=".repeat(74));
         System.out.println("Systemprotokoll als CSV (Auszug)");
         System.out.println();
 
