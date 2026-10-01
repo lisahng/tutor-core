@@ -140,7 +140,7 @@ class UebungssitzungTest {
     }
 
     @Test
-    void hinweiseWerdenBeiWiederholungKonkreter() {
+    void hinweiseWerdenAnDerselbenAufgabeKonkreter() {
         Uebungssitzung s = sitzung();
         s.aufgabeZu("B01");
 
@@ -148,19 +148,53 @@ class UebungssitzungTest {
         Antwortergebnis zweit = s.antworte(falscheAntwort());
         Antwortergebnis dritt = s.antworte(falscheAntwort());
 
-        assertEquals(0, erst.rueckmeldung().stufe());
-        assertEquals(1, zweit.rueckmeldung().stufe());
-        assertEquals(2, dritt.rueckmeldung().stufe());
         assertNotEquals(erst.text(), zweit.text());
+        assertNotEquals(zweit.text(), dritt.text());
     }
 
     @Test
-    void ersterFehlerBekommtDieAllgemeineStufe() {
-        // Haeufiger Reihenfolgefehler: Wird das Studentenmodell vor dem Feedback
-        // aktualisiert, zaehlt der aktuelle Fehler schon mit und Stufe 0 entfaellt.
+    void jedeNeueAufgabeBeginntWiederBeimAllgemeinenHinweis() {
+        // Vorgabe aus der Besprechung: Das Scaffolding gilt innerhalb einer Aufgabe.
+        // Eine neue Aufgabe ist eine neue Gelegenheit und startet wieder bei Stufe 0,
+        // auch wenn dieselbe Kategorie vorher schon mehrfach danebenging.
+        Uebungssitzung s = sitzung();
+
+        s.aufgabeZu("B01");
+        s.antworte(falscheAntwort());
+        s.antworte(falscheAntwort());
+        Antwortergebnis letzterVersuch = s.antworte(falscheAntwort());
+
+        s.aufgabeZu("B01");
+        Antwortergebnis neueAufgabe = s.antworte(falscheAntwort());
+
+        assertNotEquals(letzterVersuch.text(), neueAufgabe.text(),
+                "Die neue Aufgabe muesste wieder beim allgemeinen Hinweis beginnen");
+    }
+
+    @Test
+    void unerklaerterFehlerNenntKeineKategorie() {
+        // Die Eingabe passt zu keiner Fehlregel. Statt eine Fehlvorstellung zu behaupten,
+        // soll das Feedback den Loesungsweg abgleichen.
         Uebungssitzung s = sitzung();
         s.aufgabeZu("B01");
-        assertEquals(0, s.antworte(falscheAntwort()).rueckmeldung().stufe());
+        Antwortergebnis ergebnis = s.antworte(falscheAntwort());
+
+        assertFalse(ergebnis.korrekt());
+        assertTrue(ergebnis.rueckmeldung().kategorieId().isEmpty(),
+                "Eine unbegruendete Diagnose darf keine Kategorie im Feedback nennen");
+        assertFalse(ergebnis.text().isBlank());
+    }
+
+    @Test
+    void dasStudentenmodellZaehltWeiterhinUeberDieGanzeSitzung() {
+        // Die Scaffolding-Stufe wird je Aufgabe zurueckgesetzt, die Fehlerhistorie nicht.
+        // Fuer die Aufgabenauswahl ueber PFA ist die Historie der ganzen Sitzung noetig.
+        Uebungssitzung s = sitzung();
+        s.aufgabeZu("B01");
+        s.antworte(falscheAntwort());
+        s.aufgabeZu("B01");
+        s.antworte(falscheAntwort());
+        assertEquals(2, s.studentenmodell().versucheGesamt());
     }
 
     // ---- Studentenmodell ----

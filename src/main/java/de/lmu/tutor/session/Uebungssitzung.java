@@ -4,8 +4,10 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
@@ -72,6 +74,18 @@ public final class Uebungssitzung {
     private EvaluationResult aktuelleReferenz;
     private Instant aufgabeGestelltUm;
     private int versucheAnAktuellerAufgabe;
+
+    /**
+     * Fehlversuche je Kategorie <em>an der aktuellen Aufgabe</em>. Steuert die
+     * Scaffolding-Stufe und wird mit jeder neuen Aufgabe geleert.
+     *
+     * <p>Bewusst getrennt von der Fehlerhistorie im Studentenmodell: Jede neue Aufgabe ist
+     * eine neue Gelegenheit, den Fehler selbst zu bemerken, und beginnt deshalb wieder beim
+     * allgemeinen Hinweis. Nur wer an derselben Aufgabe mehrfach danebenliegt, bekommt
+     * zunehmend konkretere Hilfe. Das Studentenmodell zaehlt weiterhin ueber die ganze
+     * Sitzung, denn fuer die Aufgabenauswahl ist genau das die richtige Grundlage.</p>
+     */
+    private final Map<String, Integer> fehlversucheAnAufgabe = new HashMap<>();
 
     /** Sitzung mit Standardeinstellungen und zufaelligen Aufgaben. */
     public Uebungssitzung(BugLibrary bibliothek) {
@@ -154,6 +168,7 @@ public final class Uebungssitzung {
         this.aktuelleReferenz = evaluator.evaluate(aufgabe.ausdruck(), aufgabe.kontext());
         this.aufgabeGestelltUm = uhr.instant();
         this.versucheAnAktuellerAufgabe = 0;
+        this.fehlversucheAnAufgabe.clear();
     }
 
     /**
@@ -180,11 +195,19 @@ public final class Uebungssitzung {
         String kategorieFuerHistorie = diagnose.misconception()
                 .map(Misconception::id)
                 .orElse(aktuelleAufgabe.kategorieId());
-        int wiederholungen = studentenmodell.erfasseUndGibWiederholungen(
-                kategorieFuerHistorie, diagnose.korrekt());
+        studentenmodell.erfasseErgebnis(kategorieFuerHistorie, diagnose.korrekt());
+
+        // Die Scaffolding-Stufe richtet sich nach den Fehlversuchen an DIESER Aufgabe,
+        // nicht nach der Fehlerhistorie der ganzen Sitzung.
+        int fehlversuche = 0;
+        if (!diagnose.korrekt()) {
+            String schluessel = diagnose.erklaert() ? kategorieFuerHistorie : "";
+            fehlversuche = fehlversucheAnAufgabe.getOrDefault(schluessel, 0);
+            fehlversucheAnAufgabe.put(schluessel, fehlversuche + 1);
+        }
 
         Rueckmeldung rueckmeldung = feedbackgenerator.erstelle(
-                diagnose, wiederholungen, aktuelleAufgabe, aktuelleReferenz);
+                diagnose, fehlversuche, aktuelleAufgabe, aktuelleReferenz);
         protokolliere(antwort, diagnose, rueckmeldung);
 
         return new Antwortergebnis(diagnose.korrekt(), rueckmeldung, diagnose,

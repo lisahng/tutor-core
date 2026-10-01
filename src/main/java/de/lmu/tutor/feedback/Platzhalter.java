@@ -1,12 +1,15 @@
 package de.lmu.tutor.feedback;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import de.lmu.tutor.ast.Expr;
 import de.lmu.tutor.eval.EvaluationContext;
 import de.lmu.tutor.eval.EvaluationResult;
+import de.lmu.tutor.eval.EvaluationStep;
 import de.lmu.tutor.eval.StepEvaluator;
 import de.lmu.tutor.eval.Value;
 import de.lmu.tutor.gen.Aufgabe;
@@ -17,30 +20,30 @@ import de.lmu.tutor.gen.Aufgabe;
  * <p>Hintergrund: Die dritte Scaffolding-Stufe soll den Auswertungsschritt konkret
  * vorrechnen. Steht sie als fester Text in der Bug Library, nennt sie immer dasselbe
  * Beispiel. Bei einer generierten Aufgabe passt das nie, und die Lernende sieht bei
- * {@code 25 / 6} eine Erklaerung ueber {@code 20 / 3}. Die Stufe verfehlt damit genau
- * das, wofuer sie gedacht ist.</p>
+ * {@code 25 / 6} eine Erklaerung ueber {@code 20 / 3}.</p>
  *
- * <p>Deshalb enthalten die Texte Platzhalter in geschweiften Klammern, die hier gefuellt
- * werden. Immer verfuegbar sind:</p>
+ * <p>Immer verfuegbar sind:</p>
  *
  * <ul>
  *   <li>{@code {ausdruck}} - der Ausdruck als Java-Quelltext</li>
- *   <li>{@code {wert}} - der korrekte Wert</li>
- *   <li>{@code {typ}} - dessen Datentyp</li>
- *   <li>{@code {ergebnis}} - Wert und Typ zusammen, etwa {@code 4 : int}</li>
+ *   <li>{@code {wert}}, {@code {typ}}, {@code {ergebnis}} - die korrekte Loesung</li>
  *   <li>{@code {belegung}} - die Variablenbelegung, falls vorhanden</li>
  *   <li>{@code {grund}} - warum der Ausdruck nicht auswertbar ist</li>
  * </ul>
  *
+ * <p>Fuer das Model Tracing kommen die protokollierten Zwischenschritte hinzu:
+ * {@code {schritte}} als vollstaendiger Auswertungspfad sowie
+ * {@code {innererTeilausdruck}} und {@code {innererTeilwert}} fuer den ersten Schritt,
+ * der noch nicht der ganze Ausdruck ist. Damit laesst sich gezielt nach einem
+ * Zwischenwert fragen, statt eine Fehlvorstellung zu behaupten.</p>
+ *
  * <p>Je nach Form des Ausdrucks kommen weitere hinzu, etwa {@code {links}} und
  * {@code {rechts}} bei einem binaeren Operator oder {@code {index}} bei einem
- * Array-Zugriff. Welche das sind, steht bei den jeweiligen Methoden weiter unten.</p>
+ * Array-Zugriff.</p>
  *
  * <p>Laesst sich ein Platzhalter nicht aufloesen, liefert {@link #fuelle(String)} ein
  * leeres Optional. Der {@link Feedbackgenerator} weicht dann auf einen allgemeinen Text
- * aus, statt eine Rueckmeldung mit sichtbaren Klammern auszugeben. Das kann vorkommen,
- * wenn die diagnostizierte Kategorie nicht zur Form der Aufgabe passt, etwa wenn bei
- * einer Array-Aufgabe ein Praezedenzfehler erkannt wird.</p>
+ * aus, statt eine Rueckmeldung mit sichtbaren Klammern auszugeben.</p>
  */
 public final class Platzhalter {
 
@@ -48,6 +51,7 @@ public final class Platzhalter {
 
     public Platzhalter(Aufgabe aufgabe, EvaluationResult referenz) {
         allgemeines(aufgabe, referenz);
+        schritte(aufgabe, referenz);
         nachAusdrucksform(aufgabe.ausdruck(), aufgabe.kontext());
     }
 
@@ -58,8 +62,8 @@ public final class Platzhalter {
     /**
      * Ersetzt alle Platzhalter im Text.
      *
-     * @return der gefuellte Text, oder ein leeres Optional, sobald ein Platzhalter
-     *         nicht aufloesbar ist
+     * @return der gefuellte Text, oder ein leeres Optional, sobald ein Platzhalter nicht
+     *         aufloesbar ist
      */
     public Optional<String> fuelle(String vorlage) {
         StringBuilder ergebnis = new StringBuilder();
@@ -76,8 +80,7 @@ public final class Platzhalter {
                 break;
             }
             ergebnis.append(vorlage, position, auf);
-            String name = vorlage.substring(auf + 1, zu);
-            String wert = werte.get(name);
+            String wert = werte.get(vorlage.substring(auf + 1, zu));
             if (wert == null || wert.isBlank()) {
                 return Optional.empty();
             }
@@ -111,14 +114,41 @@ public final class Platzhalter {
     }
 
     /**
+     * Die Zwischenschritte der korrekten Auswertung.
+     *
+     * <p>{@code {innererTeilausdruck}} ist der erste Schritt, der noch nicht der ganze
+     * Ausdruck ist. Nur nach so einem Teilschritt zu fragen ergibt Sinn: Bei
+     * {@code 20 / 8} waere der einzige Schritt die Aufgabe selbst, und die Frage nach
+     * seinem Wert liefe auf die Aufgabenstellung hinaus.</p>
+     */
+    private void schritte(Aufgabe aufgabe, EvaluationResult referenz) {
+        List<EvaluationStep> schritte = referenz.schritte();
+        if (schritte.isEmpty()) {
+            return;
+        }
+        setze("schritte", schritte.stream()
+                .map(s -> s.teilausdruck() + " ergibt " + s.ergebnis())
+                .collect(Collectors.joining(", dann ")));
+
+        String ganzerAusdruck = aufgabe.render();
+        for (EvaluationStep s : schritte) {
+            if (!s.teilausdruck().equals(ganzerAusdruck)) {
+                setze("innererTeilausdruck", s.teilausdruck());
+                setze("innererTeilwert", s.ergebnis());
+                return;
+            }
+        }
+    }
+
+    /**
      * Ergaenzt die Platzhalter, die von der Form des Ausdrucks abhaengen.
      *
-     * <p>Binaerer Operator: {@code {links}}, {@code {rechts}} als Quelltext sowie
-     * {@code {linksWert}}, {@code {rechtsWert}} als berechnete Werte.<br>
+     * <p>Binaerer Operator: {@code {links}}, {@code {rechts}}, {@code {linksWert}},
+     * {@code {rechtsWert}}.<br>
      * Cast: {@code {operand}}, {@code {operandWert}}.<br>
      * Array-Zugriff: {@code {array}}, {@code {index}}, {@code {indexWert}}.<br>
      * Methodenaufruf: {@code {empfaenger}}, {@code {methode}}; bei einer Kette
-     * zusaetzlich {@code {innereMethode}}, {@code {aeussereMethode}} und
+     * zusaetzlich {@code {innereMethode}}, {@code {aeussereMethode}},
      * {@code {zwischenwert}}.<br>
      * Ternaerer Operator: {@code {bedingung}}, {@code {bedingungWert}}, {@code {dann}},
      * {@code {sonst}}.<br>
@@ -167,7 +197,6 @@ public final class Platzhalter {
         }
     }
 
-    /** Wertet einen Teilausdruck aus; leer, wenn er nicht auswertbar ist. */
     private Optional<Value> werte(Expr e, EvaluationContext ctx) {
         EvaluationResult r = new StepEvaluator().evaluate(e, ctx);
         return r.auswertbar() ? Optional.of(r.wert()) : Optional.empty();
