@@ -1,7 +1,9 @@
 package de.lmu.tutor.feedback;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 import de.lmu.tutor.buglib.Misconception;
 import de.lmu.tutor.buglib.Subtype;
@@ -13,25 +15,25 @@ import de.lmu.tutor.gen.Aufgabe;
  * Schritt 6 der Systemarchitektur: gibt kontextadaptives Feedback auf Basis des erkannten
  * Fehlertyps.
  *
- * <p><b>Zwei Modi.</b> Welche Rueckmeldung erscheint, haengt davon ab, ob die Diagnose
- * begruendet ist.</p>
+ * <p><b>Drei Modi.</b> Welche Rueckmeldung erscheint, haengt davon ab, was die Diagnose
+ * hergibt.</p>
  *
- * <p><i>Begruendete Diagnose.</i> Eine Fehlregel hat den eingegebenen Wert nachgerechnet
- * oder die Signatur der Antwort ist eindeutig. Dann greift das Scaffolding nach Bruner
- * (1960) mit den Texten aus der Bug Library: erst Aufmerksamkeit lenken, dann die
- * Java-Regel nennen, dann den Schritt am vorliegenden Ausdruck vorrechnen.</p>
+ * <p><i>Begruendete Einzeldiagnose.</i> Eine Fehlregel hat den eingegebenen Wert
+ * nachgerechnet oder die Signatur der Antwort ist eindeutig. Dann greift das Scaffolding
+ * nach Bruner (1960) mit den Texten aus der Bug Library: erst Aufmerksamkeit lenken, dann
+ * die Java-Regel nennen, dann den Schritt am vorliegenden Ausdruck vorrechnen.</p>
  *
- * <p><i>Unerklaerter Fehler.</i> Keine Regel passt. Dann wird <b>keine Kategorie
- * behauptet</b>. Stattdessen arbeitet das Feedback mit den Zwischenschritten, die der
- * Evaluator ohnehin protokolliert: Es fragt zuerst nach einem Tippfehler, dann nach einem
- * konkreten Zwischenwert und zeigt zuletzt den vollstaendigen Auswertungspfad. Das ist
- * Model Tracing im eigentlichen Sinn, also ein Abgleich des Loesungswegs statt einer
- * Zuschreibung.</p>
+ * <p><i>Fehlerkombination.</i> Der Wert laesst sich nur erklaeren, wenn zwei
+ * Fehlvorstellungen zusammenkommen. Die Stufung bleibt dieselbe, spricht aber beide an.
+ * Stufe 0 weist darauf hin, dass mehr als eine Sache zusammenkommt, ohne sie zu benennen.
+ * Stufe 1 nennt beide Regeln, Stufe 2 rechnet beide am Ausdruck vor.</p>
  *
- * <p>Der Grund fuer diese Trennung: Ein einzelner unerklaerbarer Wert ist nach VanLehn
- * eher ein Ausrutscher als eine systematisch falsche Regel. Wer sich vertippt hat,
- * bekaeme sonst eine Belehrung ueber ein Konzept, das er laengst beherrscht. In der
- * ersten Besprechung war das als "nicht auf die falsche Faehrte locken" festgehalten.</p>
+ * <p><i>Unerklaerter Fehler.</i> Keine Regel passt. Dann wird keine Kategorie behauptet.
+ * Stattdessen arbeitet das Feedback mit den Zwischenschritten: Es fragt zuerst nach einem
+ * Tippfehler, dann nach einem konkreten Zwischenwert und zeigt zuletzt den vollstaendigen
+ * Auswertungspfad. Nach VanLehn ist ein einzelner unerklaerbarer Wert eher ein
+ * Ausrutscher als eine systematisch falsche Regel. Wer sich vertippt hat, bekaeme sonst
+ * eine Belehrung ueber ein Konzept, das er laengst beherrscht.</p>
  *
  * <p><b>Scaffolding-Stufe.</b> Der Generator zaehlt nicht selbst mit, er bekommt die Zahl
  * der bisherigen Fehlversuche uebergeben. Diese Zahl bezieht sich auf die aktuelle
@@ -49,7 +51,17 @@ public final class Feedbackgenerator {
             "Werte den Ausdruck Schritt fuer Schritt von innen nach aussen aus und achte dabei "
                     + "auf die Datentypen der Teilergebnisse.";
 
-    // ---- Model Tracing: Stufen fuer unerklaerte Fehler ----
+    // ---- Kombination mehrerer Fehlvorstellungen ----
+
+    private static final String KOMBI_0 =
+            "Das stimmt noch nicht, und es haengt an mehr als einer Stelle. Geh {ausdruck} "
+                    + "noch einmal von vorn durch und achte auf jeden Teilschritt einzeln.";
+
+    private static final String KOMBI_0_OHNE_AUSDRUCK =
+            "Das stimmt noch nicht, und es haengt an mehr als einer Stelle. Geh den Ausdruck "
+                    + "noch einmal von vorn durch und achte auf jeden Teilschritt einzeln.";
+
+    // ---- Model Tracing fuer unerklaerte Fehler ----
 
     private static final String TRACING_0 =
             "Das Ergebnis stimmt noch nicht. Dein Wert laesst sich keinem typischen "
@@ -93,11 +105,11 @@ public final class Feedbackgenerator {
      * Erstellt die Rueckmeldung mit Bezug auf die gestellte Aufgabe. Diese Fassung ist der
      * Normalfall, weil nur sie Platzhalter fuellen und den Auswertungspfad zeigen kann.
      *
-     * @param diagnose                Ergebnis des Fehlerklassifikators
-     * @param fehlversucheAnAufgabe   wie oft an dieser Aufgabe schon falsch geantwortet
-     *                                wurde, 0 beim ersten Mal
-     * @param aufgabe                 die gestellte Aufgabe
-     * @param referenz                deren vorab berechnete Loesung
+     * @param diagnose              Ergebnis des Fehlerklassifikators
+     * @param fehlversucheAnAufgabe wie oft an dieser Aufgabe schon falsch geantwortet
+     *                              wurde, 0 beim ersten Mal
+     * @param aufgabe               die gestellte Aufgabe
+     * @param referenz              deren vorab berechnete Loesung
      */
     public Rueckmeldung erstelle(Diagnose diagnose, int fehlversucheAnAufgabe,
                                  Aufgabe aufgabe, EvaluationResult referenz) {
@@ -105,18 +117,12 @@ public final class Feedbackgenerator {
                 referenz.auswertbar());
     }
 
-    /**
-     * Erstellt die Rueckmeldung ohne Bezug auf eine Aufgabe. Texte mit Platzhaltern werden
-     * dabei durch allgemeine Formulierungen ersetzt.
-     */
+    /** Erstellt die Rueckmeldung ohne Bezug auf eine Aufgabe. */
     public Rueckmeldung erstelle(Diagnose diagnose, int fehlversucheAnAufgabe) {
         return erstelle(diagnose, fehlversucheAnAufgabe, null, true);
     }
 
-    /**
-     * Letzte Scaffolding-Stufe unabhaengig von der Zahl der Fehlversuche, etwa fuer einen
-     * Knopf "Loesung zeigen".
-     */
+    /** Letzte Scaffolding-Stufe unabhaengig von der Zahl der Fehlversuche. */
     public Rueckmeldung erstelleLoesungshilfe(Misconception m, Aufgabe aufgabe, EvaluationResult referenz) {
         int letzte = m.anzahlFeedbackStufen() - 1;
         String text = aufloesen(m.feedbackStufe(letzte), new Platzhalter(aufgabe, referenz));
@@ -141,10 +147,13 @@ public final class Feedbackgenerator {
         if (!diagnose.erklaert()) {
             return modellabgleich(fehlversuche, platzhalter, auswertbar);
         }
+        if (diagnose.istKombination()) {
+            return ausKombination(diagnose, fehlversuche, platzhalter);
+        }
         return ausBugLibrary(diagnose, fehlversuche, platzhalter);
     }
 
-    /** Scaffolding mit den Texten der Bug Library, nur bei begruendeter Diagnose. */
+    /** Scaffolding mit den Texten der Bug Library, bei einer einzelnen Fehlvorstellung. */
     private Rueckmeldung ausBugLibrary(Diagnose diagnose, int fehlversuche, Platzhalter platzhalter) {
         Misconception m = diagnose.misconception().orElseThrow();
         int stufe = begrenze(fehlversuche, m.anzahlFeedbackStufen());
@@ -158,12 +167,34 @@ public final class Feedbackgenerator {
     }
 
     /**
-     * Model Tracing fuer unerklaerte Fehler: Es wird keine Kategorie genannt, sondern
-     * der Loesungsweg schrittweise abgeglichen.
+     * Scaffolding bei einer Fehlerkombination.
      *
-     * <p>Die Rueckmeldung traegt deshalb auch keine Kategorie-ID. Im Systemprotokoll
-     * bleibt die vermutete Kategorie trotzdem erhalten, dort allerdings in einer eigenen
-     * Spalte und als Vermutung gekennzeichnet.</p>
+     * <p>Die Stufung bleibt dieselbe, nur spricht sie beide Fehlvorstellungen an. Stufe 0
+     * nennt bewusst noch keine der beiden, sondern weist nur darauf hin, dass es an mehr
+     * als einer Stelle haengt. Das soll die Aufmerksamkeit lenken, ohne gleich zwei
+     * Regeln auf einmal zu erklaeren.</p>
+     */
+    private Rueckmeldung ausKombination(Diagnose diagnose, int fehlversuche, Platzhalter platzhalter) {
+        List<Misconception> kategorien = diagnose.kategorien();
+        int stufen = kategorien.stream().mapToInt(Misconception::anzahlFeedbackStufen).min().orElse(1);
+        int stufe = begrenze(fehlversuche, stufen);
+
+        String text;
+        if (stufe == 0) {
+            text = platzhalter == null
+                    ? KOMBI_0_OHNE_AUSDRUCK
+                    : platzhalter.fuelle(KOMBI_0).orElse(KOMBI_0_OHNE_AUSDRUCK);
+        } else {
+            text = kategorien.stream()
+                    .map(m -> aufloesen(m.feedbackStufe(stufe), platzhalter))
+                    .collect(Collectors.joining(" "));
+        }
+        return Rueckmeldung.fehler(text, diagnose.kategorieIds(), stufe);
+    }
+
+    /**
+     * Model Tracing fuer unerklaerte Fehler: Es wird keine Kategorie genannt, sondern der
+     * Loesungsweg schrittweise abgeglichen.
      */
     private Rueckmeldung modellabgleich(int fehlversuche, Platzhalter platzhalter, boolean auswertbar) {
         int stufe = begrenze(fehlversuche, 3);

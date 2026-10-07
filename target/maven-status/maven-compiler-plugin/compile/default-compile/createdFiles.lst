@@ -49,6 +49,7 @@ de\lmu\tutor\eval\EvaluationResult.class
 de\lmu\tutor\diagnose\Fehlersimulator$Treffer.class
 de\lmu\tutor\eval\EvaluationContext.class
 de\lmu\tutor\eval\Value$1.class
+de\lmu\tutor\diagnose\Fehlersimulator$Annahmen.class
 de\lmu\tutor\feedback\Platzhalter.class
 de\lmu\tutor\session\Protokolleintrag.class
 de\lmu\tutor\feedback\Feedbackgenerator.class

@@ -10,7 +10,8 @@ import de.lmu.tutor.student.PfaParameter;
 import de.lmu.tutor.student.Studentenmodell;
 
 /**
- * Zeigt das Studentenmodell: Fehlerhistorie, PFA-Schaetzung und Aufgabenauswahl.
+ * Zeigt das Studentenmodell: feste erste Runde, Fehlerhistorie, PFA-Schaetzung und
+ * Aufgabenauswahl.
  *
  * <p>Das Modell schaetzt fuer jede Kategorie, wie wahrscheinlich die naechste Aufgabe
  * richtig geloest wird:</p>
@@ -20,9 +21,9 @@ import de.lmu.tutor.student.Studentenmodell;
  *   P(richtig) = 1 / (1 + e^(-m))
  * </pre>
  *
- * <p>Geuebt wird immer die Kategorie mit dem kleinsten P. Weil ein Fehler P weiter senkt,
- * waere dieselbe Kategorie sonst sofort wieder an der Reihe. Dagegen gibt es die
- * Wiederholungssperre, deren Wirkung dieser Demo im dritten Abschnitt zeigt.</p>
+ * <p>Geuebt wird die Kategorie mit dem kleinsten P. Weil ein Fehler P weiter senkt, waere
+ * dieselbe Kategorie sonst sofort wieder an der Reihe. Dagegen gibt es die
+ * Wiederholungssperre, deren Wirkung der vierte Abschnitt zeigt.</p>
  *
  * <p>Ausfuehren mit:
  * <pre>  mvn compile exec:java "-Dexec.mainClass=de.lmu.tutor.demo.StudentenmodellDemo"  </pre>
@@ -31,12 +32,16 @@ public final class StudentenmodellDemo {
 
     private static final BugLibrary LIB = BugLibrary.loadDefault();
 
+    /** Fuer die Abschnitte zur Sperre: ohne feste erste Runde, damit PFA sofort greift. */
+    private static final List<String> OHNE_ERSTE_RUNDE = List.of();
+
     public static void main(String[] args) {
         System.out.println("Studentenmodell - Demo");
-        System.out.println("=".repeat(70));
+        System.out.println("=".repeat(74));
         System.out.println();
 
         zeigeStartzustand();
+        zeigeErsteRunde();
         zeigeWirkungVonErfolgUndFehler();
         zeigeWiederholungenFuerDasFeedback();
         zeigeAuswahlOhneSperre();
@@ -49,7 +54,7 @@ public final class StudentenmodellDemo {
     private static void zeigeStartzustand() {
         System.out.println("-- Ausgangslage --");
         System.out.println("   Solange beta nicht aus Daten geschaetzt ist, gilt fuer alle");
-        System.out.println("   Kategorien derselbe Platzhalter. Jede startet bei P = 0.");
+        System.out.println("   Kategorien derselbe Platzhalter. Jede startet bei P = 0,5.");
         System.out.println();
 
         Studentenmodell modell = new Studentenmodell(LIB);
@@ -58,6 +63,32 @@ public final class StudentenmodellDemo {
                     m.id(), m.beta(), modell.erfolgswahrscheinlichkeit(m.id()));
         }
         System.out.println("  ... (alle uebrigen ebenso)");
+        System.out.println();
+    }
+
+    // ---- Feste erste Runde ----
+
+    private static void zeigeErsteRunde() {
+        System.out.println("-- Feste erste Runde --");
+        System.out.println("   Bei gleichem P waere die erste Aufgabe willkuerlich. Fuer einen");
+        System.out.println("   fairen Gruppenvergleich arbeitet das Modell deshalb zuerst eine");
+        System.out.println("   feste Reihenfolge ab. Ab der zweiten Runde greift die Historie.");
+        System.out.println();
+
+        Studentenmodell modell = new Studentenmodell(LIB);
+        System.out.println("  Reihenfolge: " + String.join(" -> ", modell.startreihenfolge()));
+        System.out.println();
+
+        List<String> gestellt = new ArrayList<>();
+        int runde = modell.startreihenfolge().size();
+        for (int i = 0; i < runde + 3; i++) {
+            boolean warErsteRunde = modell.inErsterRunde();
+            String id = modell.naechsteKategorie().orElseThrow().id();
+            gestellt.add(warErsteRunde ? id : id + "*");
+            modell.erfasseErgebnis(id, i % 2 == 0);
+        }
+        System.out.println("  Gestellt:    " + String.join(" ", gestellt));
+        System.out.println("  (* ab hier entscheidet die Fehlerhistorie, nicht die Reihenfolge)");
         System.out.println();
     }
 
@@ -90,20 +121,20 @@ public final class StudentenmodellDemo {
     // ---- Schnittstelle zum Feedback-Generator ----
 
     private static void zeigeWiederholungenFuerDasFeedback() {
-        System.out.println("-- Wiederholungszahl fuer die Scaffolding-Stufe --");
+        System.out.println("-- Fehlerhistorie --");
         System.out.println("   erfasseUndGibWiederholungen liefert den Stand VOR dem Versuch.");
-        System.out.println("   Sonst zaehlte der aktuelle Fehler schon mit und Stufe 0 entfiele.");
+        System.out.println("   Die Scaffolding-Stufe richtet sich allerdings nach den Versuchen");
+        System.out.println("   an der aktuellen Aufgabe, nicht nach dieser Historie.");
         System.out.println();
 
         Studentenmodell modell = new Studentenmodell(LIB);
         for (int versuch = 1; versuch <= 4; versuch++) {
-            int stufe = modell.erfasseUndGibWiederholungen("B05", false);
-            System.out.printf("  %d. Fehler  -> Feedback-Stufe %d%n", versuch, stufe);
+            int vorher = modell.erfasseUndGibWiederholungen("B05", false);
+            System.out.printf("  %d. Fehler  -> vorher %d Fehler in B05%n", versuch, vorher);
         }
-        System.out.println("  Ein Erfolg dazwischen aendert die Stufe nicht:");
         modell.erfasseErgebnis("B05", true);
-        System.out.printf("  nach einem Erfolg -> Stufe %d, Erfolge: %d, Fehler: %d%n",
-                modell.wiederholungen("B05"), modell.erfolge("B05"), modell.fehler("B05"));
+        System.out.printf("  nach einem Erfolg: Erfolge %d, Fehler %d%n",
+                modell.erfolge("B05"), modell.fehler("B05"));
         System.out.println();
     }
 
@@ -114,7 +145,8 @@ public final class StudentenmodellDemo {
         System.out.println("   Jeder Fehler senkt P, also bleibt dieselbe Kategorie vorn.");
         System.out.println();
 
-        Studentenmodell modell = new Studentenmodell(LIB, PfaParameter.STANDARD, 0);
+        Studentenmodell modell = new Studentenmodell(
+                LIB, PfaParameter.STANDARD, 0, OHNE_ERSTE_RUNDE);
         System.out.println("  Gestellt: " + zehnAufgaben(modell));
         System.out.println();
     }
@@ -124,7 +156,8 @@ public final class StudentenmodellDemo {
     private static void zeigeAuswahlMitSperre() {
         for (int sperre : new int[]{1, 3}) {
             System.out.println("-- Auswahl mit Sperre von " + sperre + " --");
-            Studentenmodell modell = new Studentenmodell(LIB, PfaParameter.STANDARD, sperre);
+            Studentenmodell modell = new Studentenmodell(
+                    LIB, PfaParameter.STANDARD, sperre, OHNE_ERSTE_RUNDE);
             System.out.println("  Gestellt: " + zehnAufgaben(modell));
             System.out.println("  Aktuell gesperrt: " + modell.gesperrteKategorien());
             System.out.println();
@@ -145,13 +178,13 @@ public final class StudentenmodellDemo {
     // ---- Adaptivitaet ----
 
     private static void zeigeAdaptivitaet() {
-        System.out.println("=".repeat(70));
+        System.out.println("=".repeat(74));
         System.out.println("Adaptivitaet: eine Person, die nur bei B05 scheitert");
         System.out.println();
 
-        Studentenmodell modell = new Studentenmodell(LIB, PfaParameter.STANDARD, 1);
+        Studentenmodell modell = new Studentenmodell(
+                LIB, PfaParameter.STANDARD, 1, OHNE_ERSTE_RUNDE);
 
-        // Ueberall Erfolge sammeln, nur bei B05 nicht.
         for (Misconception m : LIB.all()) {
             if (m.id().equals("B05")) {
                 modell.erfasseErgebnis("B05", false);

@@ -216,7 +216,9 @@ public final class Uebungssitzung {
 
     private void protokolliere(NutzerAntwort antwort, Diagnose diagnose, Rueckmeldung rueckmeldung) {
         Instant jetzt = uhr.instant();
-        String kategorie = diagnose.misconception().map(Misconception::id).orElse("");
+        // Bei einer Kombination stehen alle beteiligten IDs in der Spalte, verbunden
+        // mit einem Pluszeichen, etwa B01+B02.
+        String kategorie = diagnose.kategorieIds();
 
         // Nur begruendete Diagnosen stehen in der Diagnose-Spalte. Konnte keine Fehlregel
         // den Wert erklaeren, wandert die Kategorie in die Vermutungs-Spalte, damit die

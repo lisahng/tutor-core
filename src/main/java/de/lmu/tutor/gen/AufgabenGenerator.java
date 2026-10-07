@@ -1,12 +1,22 @@
 package de.lmu.tutor.gen;
 
+import java.util.Random;
+
+import static de.lmu.tutor.ast.AST.bin;
+import static de.lmu.tutor.ast.AST.boolLit;
+import static de.lmu.tutor.ast.AST.call;
+import static de.lmu.tutor.ast.AST.cast;
+import static de.lmu.tutor.ast.AST.doubleLit;
+import static de.lmu.tutor.ast.AST.index;
+import static de.lmu.tutor.ast.AST.intLit;
+import static de.lmu.tutor.ast.AST.postInc;
+import static de.lmu.tutor.ast.AST.preInc;
+import static de.lmu.tutor.ast.AST.stringLit;
+import static de.lmu.tutor.ast.AST.ternary;
+import static de.lmu.tutor.ast.AST.var;
 import de.lmu.tutor.ast.Expr;
 import de.lmu.tutor.ast.JType;
 import de.lmu.tutor.eval.EvaluationContext;
-
-import java.util.Random;
-
-import static de.lmu.tutor.ast.AST.*;
 
 /**
  * Erzeugt zu einer Bug-Kategorie (B01-B14) einen zufaelligen, typkonformen
@@ -50,8 +60,66 @@ public final class AufgabenGenerator {
 
     // ---- Vorlagen je Kategorie ----
 
-    private Aufgabe b01() { // Operatorpraezedenz: x + y * z
-        return ohneVars("B01", bin("+", intLit(rnd(2, 9)), bin("*", intLit(rnd(2, 9)), intLit(rnd(2, 9)))));
+    /**
+     * Operatorpraezedenz. Drei Formen wechseln sich ab:
+     * {@code x + y * z}, {@code x + y / z} und {@code x + y % z}.
+     *
+     * <p>Die beiden letzten Formen sind noetig, damit <em>Fehlerkombinationen</em>
+     * ueberhaupt auftreten koennen. Wer die Praezedenz missachtet, wendet beim Rechnen von
+     * links nach rechts zugleich seine eigene Vorstellung von Division oder Modulo an. Bei
+     * {@code 12 + 9 / 2} etwa ergibt die korrekte Auswertung 16, links nach rechts
+     * gerechnet 10, und mit zusaetzlich angenommener Fliesskommadivision 10.5. Nur der
+     * letzte Wert laesst sich allein durch zwei gleichzeitige Fehlvorstellungen erklaeren.</p>
+     *
+     * <p>Mit der reinen Form {@code x + y * z} gaebe es keinen solchen Fall, denn ohne
+     * Division oder Modulo wirkt sich nur die Reihenfolge aus.</p>
+     */
+    private Aufgabe b01() {
+        return switch (random.nextInt(3)) {
+            case 1 -> b01MitDivision();
+            case 2 -> b01MitModulo();
+            default -> ohneVars("B01",
+                    bin("+", intLit(rnd(2, 9)), bin("*", intLit(rnd(2, 9)), intLit(rnd(2, 9)))));
+        };
+    }
+
+    /**
+     * {@code x + y / z}, so gewaehlt, dass sich drei Ergebnisse unterscheiden: die korrekte
+     * Loesung, die Links-nach-rechts-Rechnung und deren Fliesskomma-Variante. Nur dann ist
+     * die Kombination diagnostisch brauchbar.
+     */
+    private Aufgabe b01MitDivision() {
+        for (int versuch = 0; versuch < 50; versuch++) {
+            int z = rnd(2, 6);
+            int y = rnd(4, 30);
+            int x = rnd(2, 12);
+            int korrekt = x + y / z;
+            int linksNachRechts = (x + y) / z;
+            boolean restBleibt = (x + y) % z != 0;
+            if (korrekt != linksNachRechts && restBleibt) {
+                return ohneVars("B01", bin("+", intLit(x), bin("/", intLit(y), intLit(z))));
+            }
+        }
+        return ohneVars("B01", bin("+", intLit(5), bin("/", intLit(9), intLit(2))));
+    }
+
+    /**
+     * {@code x + y % z}, so gewaehlt, dass korrekte Loesung, Links-nach-rechts-Rechnung und
+     * die Variante mit Modulo als Division jeweils verschieden ausfallen.
+     */
+    private Aufgabe b01MitModulo() {
+        for (int versuch = 0; versuch < 50; versuch++) {
+            int z = rnd(3, 7);
+            int y = rnd(10, 30);
+            int x = rnd(2, 12);
+            int korrekt = x + y % z;
+            int linksNachRechts = (x + y) % z;
+            int moduloAlsDivision = (x + y) / z;
+            if (korrekt != linksNachRechts && linksNachRechts != moduloAlsDivision) {
+                return ohneVars("B01", bin("+", intLit(x), bin("%", intLit(y), intLit(z))));
+            }
+        }
+        return ohneVars("B01", bin("+", intLit(7), bin("%", intLit(20), intLit(6))));
     }
 
     private Aufgabe b02() { // Ganzzahldivision: x / y (nicht glatt teilbar)

@@ -1,5 +1,7 @@
 package de.lmu.tutor.diagnose;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -13,25 +15,29 @@ import de.lmu.tutor.eval.Value;
 import de.lmu.tutor.gen.Aufgabe;
 
 /**
- * Schritt 5 der Systemarchitektur (Tabelle 4 der Zulassungsarbeit): identifiziert den
- * Fehlertyp durch Abgleich mit der Bug Library. Baut auf dem {@link Vergleichsmodul} auf
- * und geht in drei Stufen vor, von der sichersten zur unsichersten Diagnose:
+ * Schritt 5 der Systemarchitektur: identifiziert den Fehlertyp durch Abgleich mit der Bug
+ * Library. Baut auf dem {@link Vergleichsmodul} auf und geht in drei Stufen vor, von der
+ * sichersten zur unsichersten Diagnose:
  *
  * <ol>
  *   <li><b>Exakte Signaturen</b> - Faelle, die sich allein am Vergleichsergebnis
  *       festmachen lassen, etwa ein richtiger Wert bei falschem Datentyp.</li>
- *   <li><b>Simulierte Fehlregeln</b> ({@link Fehlersimulator}) - reproduziert eine
- *       bekannte gestoerte Regel genau den abgegebenen Wert, ist das die plausibelste
- *       Erklaerung. Passen mehrere, gewinnt zuerst die Zielkategorie der Aufgabe, sonst
- *       die haeufigere Fehlvorstellung.</li>
+ *   <li><b>Simulierte Fehlregeln</b> ({@link Fehlersimulator}) - reproduziert eine Regel
+ *       genau den abgegebenen Wert, ist das die plausibelste Erklaerung.</li>
  *   <li><b>Zielkategorie, Strukturvermutung, unbekannt</b> - reproduziert keine Regel den
  *       Wert, gilt die Kategorie, fuer die die Aufgabe erzeugt wurde. Danach ein grober
  *       Treffer anhand des Wurzelknotens. Bleibt auch das erfolglos, wird der Fall als
- *       unbekannt markiert, statt eine falsche Kategorie zu behaupten.</li>
+ *       unbekannt markiert.</li>
  * </ol>
  *
- * <p>Die IDs folgen der Nummerierung aus Anhang A.1 der Arbeit, ebenso wie
- * {@code bug-library.json} und der {@code AufgabenGenerator}.</p>
+ * <p><b>Mehrere passende Regeln.</b> Treffen mehrere Erklaerungen zu, gewinnt in dieser
+ * Reihenfolge: die einfachere Erklaerung vor der zusammengesetzten, dann die
+ * Zielkategorie der Aufgabe, dann die laut Bug Library haeufigere Fehlvorstellung. Der
+ * erste Punkt ist wichtig, weil eine Kombination zweier Annahmen immer unwahrscheinlicher
+ * ist als eine einzelne. Nur wenn keine einzelne Regel den Wert trifft, wird eine
+ * Kombination gemeldet.</p>
+ *
+ * <p>Die IDs folgen der Nummerierung aus Anhang A.1 der Arbeit.</p>
  */
 public final class Fehlerklassifikator {
 
@@ -72,8 +78,8 @@ public final class Fehlerklassifikator {
             return vermutet.get();
         }
 
-        return Diagnose.unbekannt("Kein passendes Fehlermuster gefunden. Kandidat fuer die "
-                + "Kommentarspalte und eine moegliche Erweiterung der Bug Library.");
+        return Diagnose.unbekannt("Kein passendes Fehlermuster gefunden. Kandidat fuer eine "
+                + "Erweiterung der Bug Library.");
     }
 
     // ================================================================
@@ -82,7 +88,7 @@ public final class Fehlerklassifikator {
 
     private Optional<Diagnose> exakteSignatur(Aufgabe aufgabe, EvaluationResult referenz,
                                               NutzerAntwort antwort, Vergleichsergebnis vergleich) {
-        // B08: Der Ausdruck ist nicht auswertbar, wurde aber mit einem Wert beantwortet.
+        // B08: nicht auswertbarer Ausdruck mit einem Wert beantwortet
         if (!referenz.auswertbar() && antwort.auswertbar()) {
             Optional<Misconception> b08 = bibliothek.byId("B08");
             if (b08.isPresent()) {
@@ -94,7 +100,7 @@ public final class Fehlerklassifikator {
             }
         }
 
-        // B09: Dank Kurzschlussauswertung auswertbar, aber als nicht auswertbar markiert.
+        // B09: dank Kurzschluss auswertbar, aber als nicht auswertbar markiert
         if (referenz.auswertbar() && !antwort.auswertbar() && enthaeltKurzschlussOperator(aufgabe.ausdruck())) {
             Optional<Misconception> b09 = bibliothek.byId("B09");
             if (b09.isPresent()) {
@@ -108,9 +114,8 @@ public final class Fehlerklassifikator {
             Value ref = referenz.wert();
             Value nutzer = antwort.wert();
 
-            // B13: das richtige Zeichen, aber als String statt als char.
-            // Das zaehlt im Vergleichsmodul nicht als richtiger Wert, weil char und String
-            // verschiedene Typen sind. Deshalb steht dieser Fall vor der wertKorrekt-Pruefung.
+            // B13: richtiges Zeichen, aber als String statt als char. Das zaehlt im
+            // Vergleichsmodul nicht als richtiger Wert, deshalb vor der wertKorrekt-Pruefung.
             if (ref.typ() == JType.CHAR && nutzer.typ() == JType.STRING
                     && nutzer.asString().length() == 1 && nutzer.asString().charAt(0) == ref.asChar()) {
                 Optional<Misconception> b13 = bibliothek.byId("B13");
@@ -121,7 +126,7 @@ public final class Fehlerklassifikator {
                 }
             }
 
-            // B07: Wert stimmt, nur der Datentyp ist falsch.
+            // B07: Wert stimmt, nur der Datentyp ist falsch
             if (vergleich.wertKorrekt() && !vergleich.typKorrekt()) {
                 Optional<Misconception> b07 = bibliothek.byId("B07");
                 if (b07.isPresent()) {
@@ -134,10 +139,6 @@ public final class Fehlerklassifikator {
         return Optional.empty();
     }
 
-    /**
-     * Ordnet den vom Evaluator gemeldeten Grund einem B08-Untertyp zu. Die Schluesselwoerter
-     * entsprechen den dort formulierten Meldungen.
-     */
     private Optional<Subtype> untertypAusGrund(Misconception b08, String grund) {
         if (!b08.hatUntertypen() || grund == null) {
             return Optional.empty();
@@ -182,40 +183,50 @@ public final class Fehlerklassifikator {
         if (!antwort.auswertbar()) {
             return Optional.empty(); // Simulationen liefern stets einen Wert
         }
-        List<Fehlersimulator.Treffer> alle = simulator.simuliereAlle(aufgabe.ausdruck(), aufgabe.kontext());
-        List<Fehlersimulator.Treffer> passende = alle.stream()
-                .filter(t -> Vergleichsmodul.werteGleich(t.wert(), antwort.wert()))
-                .toList();
+        List<Fehlersimulator.Treffer> passende =
+                simulator.simuliereAlle(aufgabe.ausdruck(), aufgabe.kontext()).stream()
+                        .filter(t -> Vergleichsmodul.werteGleich(t.wert(), antwort.wert()))
+                        .toList();
         if (passende.isEmpty()) {
             return Optional.empty();
         }
         Fehlersimulator.Treffer gewaehlt = waehleWahrscheinlichsten(passende, aufgabe.kategorieId());
-        return bibliothek.byId(gewaehlt.bugId())
-                .map(m -> Diagnose.von(m, Diagnose.Konfidenz.SIMULIERT, gewaehlt.erklaerung()));
+        List<Misconception> kategorien = nachschlagen(gewaehlt.bugIds());
+        if (kategorien.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(Diagnose.vonKombination(kategorien, Diagnose.Konfidenz.SIMULIERT,
+                gewaehlt.erklaerung()));
+    }
+
+    private List<Misconception> nachschlagen(List<String> ids) {
+        List<Misconception> gefunden = new ArrayList<>();
+        for (String id : ids) {
+            bibliothek.byId(id).ifPresent(gefunden::add);
+        }
+        return gefunden;
     }
 
     /**
-     * Priorisierung bei mehreren passenden Fehlregeln: zuerst die Zielkategorie der
-     * Aufgabe, sonst die Regel mit dem hoeheren Basisgewicht, also die laut Literatur
-     * haeufigere Fehlvorstellung.
+     * Priorisierung bei mehreren passenden Regeln.
+     *
+     * <p>Zuerst zaehlt die Zahl der beteiligten Fehlvorstellungen: Eine einzelne Annahme
+     * ist immer wahrscheinlicher als zwei gleichzeitige, eine Kombination wird also nur
+     * gemeldet, wenn keine einzelne Regel den Wert trifft. Bei gleicher Zahl gewinnt die
+     * Zielkategorie der Aufgabe, sonst die laut Bug Library haeufigere Fehlvorstellung.</p>
      */
     private Fehlersimulator.Treffer waehleWahrscheinlichsten(List<Fehlersimulator.Treffer> passende,
                                                              String zielKategorieId) {
-        for (Fehlersimulator.Treffer t : passende) {
-            if (t.bugId().equals(zielKategorieId)) {
-                return t;
-            }
-        }
-        Fehlersimulator.Treffer bester = passende.get(0);
-        double bestesGewicht = bibliothek.byId(bester.bugId()).map(Misconception::beta).orElse(0.0);
-        for (Fehlersimulator.Treffer t : passende) {
-            double gewicht = bibliothek.byId(t.bugId()).map(Misconception::beta).orElse(0.0);
-            if (gewicht > bestesGewicht) {
-                bester = t;
-                bestesGewicht = gewicht;
-            }
-        }
-        return bester;
+        return passende.stream()
+                .min(Comparator
+                        .comparingInt((Fehlersimulator.Treffer t) -> t.bugIds().size())
+                        .thenComparing(t -> t.bugIds().contains(zielKategorieId) ? 0 : 1)
+                        .thenComparing(t -> -gewicht(t.bugId())))
+                .orElse(passende.get(0));
+    }
+
+    private double gewicht(String bugId) {
+        return bibliothek.byId(bugId).map(Misconception::beta).orElse(0.0);
     }
 
     // ================================================================

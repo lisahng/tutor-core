@@ -12,69 +12,107 @@ import de.lmu.tutor.buglib.BugLibrary;
 import de.lmu.tutor.buglib.Misconception;
 
 /**
- * Das Studentenmodell (Tabelle 4 der Zulassungsarbeit): "Speichert Fehlerhistorie und
- * Schwierigkeitsgrad pro Lernender fuer adaptive Aufgabengenerierung".
+ * Das Studentenmodell (Tabelle 4 der Zulassungsarbeit): speichert Fehlerhistorie und
+ * Schwierigkeitsgrad pro Lernender fuer die adaptive Aufgabengenerierung.
  *
  * <p>Ein Modell gehoert zu genau einer Person. Es haelt je Bug-Kategorie zwei Zaehler,
  * Erfolge und Fehler, und leitet daraus zwei Dinge ab:</p>
  *
  * <ol>
- *   <li><b>Die Scaffolding-Stufe.</b> {@link #wiederholungen(String)} liefert, wie oft
- *       diese Person in dieser Kategorie schon falsch lag. Genau diese Zahl erwartet der
- *       Feedbackgenerator aus Schritt 6, um zwischen allgemeinem Hinweis, Regel und
- *       Loesungsschritt zu waehlen.</li>
+ *   <li><b>Die Fehlerhistorie.</b> {@link #wiederholungen(String)} liefert, wie oft diese
+ *       Person in dieser Kategorie schon falsch lag.</li>
  *   <li><b>Die naechste Aufgabe.</b> {@link #naechsteKategorie()} waehlt ueber die
  *       Performance Factors Analysis die Kategorie mit der niedrigsten geschaetzten
  *       Erfolgswahrscheinlichkeit, uebt also gezielt die Schwaechen.</li>
  * </ol>
  *
+ * <p><b>Erste Runde mit fester Reihenfolge.</b> Solange kein kategorienspezifisches beta
+ * geschaetzt ist, startet jede Kategorie bei einer Erfolgswahrscheinlichkeit von 0,5. Die
+ * erste Aufgabe waere damit faktisch willkuerlich, sie ergaebe sich allein aus der
+ * Reihenfolge in der Bug Library. Fuer einen fairen Gruppenvergleich ist das unbrauchbar,
+ * weil sich zwei Teilnehmende sonst schon in der Aufgabenfolge unterscheiden koennten.</p>
+ *
+ * <p>Deshalb arbeitet das Modell die {@link #standardStartreihenfolge(BugLibrary)} ab,
+ * bevor PFA greift. Sie folgt der Nummerierung aus Anhang A.1 der Arbeit und damit dem
+ * Weg von den Grundlagen zu den Sonderfaellen. Ab der zweiten Runde liegt eine Historie
+ * vor und die Auswahl richtet sich nach ihr.</p>
+ *
  * <p><b>Wiederholungssperre.</b> Ohne Gegenmassnahme wuerde PFA dieselbe Kategorie
  * mehrfach hintereinander waehlen, denn ein Fehler senkt ihre Wahrscheinlichkeit weiter.
  * Das Modell merkt sich deshalb die zuletzt gestellten Kategorien und ueberspringt sie,
- * solange es Alternativen gibt. Sind alle uebrigen Kategorien gesperrt, faellt die Sperre
- * weg, damit immer eine Aufgabe zustande kommt.</p>
+ * solange es Alternativen gibt. Sind alle uebrigen gesperrt, faellt die Sperre weg, damit
+ * immer eine Aufgabe zustande kommt.</p>
  *
- * <p><b>Speicherung.</b> Diese Fassung haelt alles im Arbeitsspeicher, die Daten leben
- * also nur so lange wie das Objekt. Fuer den Prototyp und die Sitzungen der Studie
- * reicht das. Eine spaetere Ablage in H2 kann dieselbe Schnittstelle bedienen, weil nach
- * aussen nur {@code erfasseErgebnis}, {@code wiederholungen} und {@code naechsteKategorie}
- * sichtbar sind.</p>
+ * <p><b>Speicherung.</b> Diese Fassung haelt alles im Arbeitsspeicher. Eine spaetere
+ * Ablage in einer Datenbank kann dieselbe Schnittstelle bedienen.</p>
  *
  * <p><b>Reihenfolge im Ablauf.</b> {@link #wiederholungen(String)} muss vor
- * {@link #erfasseErgebnis(String, boolean)} abgefragt werden. Sonst zaehlt der gerade
- * gemachte Fehler bereits mit und die Person ueberspringt beim ersten Fehler die Stufe 0.
- * {@link #erfasseUndGibWiederholungen(String, boolean)} nimmt einem diese Reihenfolge ab.</p>
+ * {@link #erfasseErgebnis(String, boolean)} abgefragt werden, sonst zaehlt der gerade
+ * gemachte Fehler bereits mit.</p>
  */
 public final class Studentenmodell {
 
     /** Zaehlerstaende je Kategorie: Index 0 = Erfolge, Index 1 = Fehler. */
     private final Map<String, int[]> statistik = new LinkedHashMap<>();
 
-    /** Die zuletzt gestellten Kategorien, juengste zuerst. Laenge begrenzt durch sperreLaenge. */
+    /** Die zuletzt gestellten Kategorien, juengste zuerst. */
     private final Deque<String> zuletztGestellt = new ArrayDeque<>();
 
     private final BugLibrary bibliothek;
     private final PfaParameter parameter;
     private final int sperreLaenge;
 
-    /** Standardmodell: PFA-Standardparameter, keine direkte Wiederholung derselben Kategorie. */
+    /** Die feste Reihenfolge der ersten Runde. */
+    private final List<String> startreihenfolge;
+
+    /** Wie viele Kategorien der Startreihenfolge schon gestellt wurden. */
+    private int startPosition = 0;
+
+    /** Standardmodell: PFA-Standardparameter, Sperre von 1, feste erste Runde. */
     public Studentenmodell(BugLibrary bibliothek) {
-        this(bibliothek, PfaParameter.STANDARD, 1);
+        this(bibliothek, PfaParameter.STANDARD, 1, standardStartreihenfolge(bibliothek));
+    }
+
+    public Studentenmodell(BugLibrary bibliothek, PfaParameter parameter, int sperreLaenge) {
+        this(bibliothek, parameter, sperreLaenge, standardStartreihenfolge(bibliothek));
     }
 
     /**
-     * @param bibliothek   die Bug Library, liefert beta je Kategorie
-     * @param parameter    die PFA-Lernraten
-     * @param sperreLaenge wie viele zuletzt gestellte Kategorien gesperrt bleiben
-     *                     (0 schaltet die Sperre ab)
+     * @param bibliothek       die Bug Library, liefert beta je Kategorie
+     * @param parameter        die PFA-Lernraten
+     * @param sperreLaenge     wie viele zuletzt gestellte Kategorien gesperrt bleiben
+     *                         (0 schaltet die Sperre ab)
+     * @param startreihenfolge die Kategorien der ersten Runde, in dieser Reihenfolge;
+     *                         eine leere Liste schaltet die feste Runde ab
      */
-    public Studentenmodell(BugLibrary bibliothek, PfaParameter parameter, int sperreLaenge) {
+    public Studentenmodell(BugLibrary bibliothek, PfaParameter parameter, int sperreLaenge,
+                           List<String> startreihenfolge) {
         if (sperreLaenge < 0) {
             throw new IllegalArgumentException("sperreLaenge darf nicht negativ sein");
         }
         this.bibliothek = bibliothek;
         this.parameter = parameter;
         this.sperreLaenge = sperreLaenge;
+        this.startreihenfolge = List.copyOf(startreihenfolge);
+    }
+
+    /**
+     * Alle Kategorien in der Reihenfolge der Bug Library.
+     *
+     * <p>Diese Reihenfolge ist nicht frei gewaehlt, sondern entspricht der Nummerierung
+     * aus Anhang A.1 der Zulassungsarbeit. Sie fuehrt von den Grundlagen zu den
+     * Sonderfaellen: erst Operatorpraezedenz und Ganzzahldivision, zuletzt
+     * Referenzvergleich und char-Datentyp.</p>
+     *
+     * <p>Eine Sortierung nach einem Schwierigkeitsgrad waere hier nicht moeglich. Die
+     * Bug Library fuehrt zwar ein solches Feld, der {@code Misconception}-Record liest es
+     * aber nicht ein, und beta steht ueberall auf null. Es gibt also keine Angabe, nach
+     * der sich sortieren liesse, ohne eine zu erfinden.</p>
+     */
+    public static List<String> standardStartreihenfolge(BugLibrary bibliothek) {
+        return bibliothek.all().stream()
+                .map(Misconception::id)
+                .toList();
     }
 
     // ---------------------------------------------------------------
@@ -87,31 +125,25 @@ public final class Studentenmodell {
         zaehler[korrekt ? 0 : 1]++;
     }
 
-    /**
-     * Verbucht das Ergebnis und liefert die Wiederholungszahl <em>vor</em> diesem Versuch.
-     * Das ist der bequeme Weg, weil der zurueckgegebene Wert direkt an den
-     * Feedbackgenerator weitergereicht werden kann.
-     */
+    /** Verbucht das Ergebnis und liefert die Wiederholungszahl vor diesem Versuch. */
     public int erfasseUndGibWiederholungen(String kategorieId, boolean korrekt) {
         int vorher = wiederholungen(kategorieId);
         erfasseErgebnis(kategorieId, korrekt);
         return vorher;
     }
 
-    /** Setzt alle Zaehler und die Sperre zurueck, etwa zwischen zwei Sitzungen. */
+    /** Setzt Zaehler, Sperre und die feste Startreihenfolge zurueck. */
     public void zuruecksetzen() {
         statistik.clear();
         zuletztGestellt.clear();
+        startPosition = 0;
     }
 
     // ---------------------------------------------------------------
     // Abfragen
     // ---------------------------------------------------------------
 
-    /**
-     * Wie oft diese Person in dieser Kategorie bisher falsch lag. Steuert die
-     * Scaffolding-Stufe des Feedbackgenerators (0 = erster Fehler).
-     */
+    /** Wie oft diese Person in dieser Kategorie bisher falsch lag. */
     public int wiederholungen(String kategorieId) {
         return fehler(kategorieId);
     }
@@ -146,10 +178,7 @@ public final class Studentenmodell {
                 erfolgswahrscheinlichkeit(kategorieId));
     }
 
-    /**
-     * Momentaufnahme aller Kategorien der Bug Library, auch der noch nicht geuebten.
-     * Fuer das Systemprotokoll der Studie gedacht.
-     */
+    /** Momentaufnahme aller Kategorien, auch der noch nicht geuebten. */
     public List<Kategoriestatistik> alleStatistiken() {
         List<Kategoriestatistik> ergebnis = new ArrayList<>();
         for (Misconception m : bibliothek.all()) {
@@ -163,22 +192,35 @@ public final class Studentenmodell {
         return List.copyOf(zuletztGestellt);
     }
 
+    /** Die feste Reihenfolge der ersten Runde. */
+    public List<String> startreihenfolge() {
+        return startreihenfolge;
+    }
+
+    /** Ob die feste erste Runde noch laeuft. */
+    public boolean inErsterRunde() {
+        return startPosition < startreihenfolge.size();
+    }
+
     // ---------------------------------------------------------------
     // Aufgabenauswahl
     // ---------------------------------------------------------------
 
     /**
-     * Waehlt die naechste zu uebende Kategorie: die mit der niedrigsten geschaetzten
-     * Erfolgswahrscheinlichkeit, unter Auslassung der zuletzt gestellten.
+     * Waehlt die naechste zu uebende Kategorie.
      *
-     * <p>Die gewaehlte Kategorie wandert in die Sperre. Bei Gleichstand gewinnt die
-     * Kategorie, die in der Bug Library zuerst steht, damit die Auswahl reproduzierbar
-     * bleibt.</p>
+     * <p>In der ersten Runde ist das die naechste Kategorie der festen Startreihenfolge.
+     * Danach die mit der niedrigsten geschaetzten Erfolgswahrscheinlichkeit, unter
+     * Auslassung der zuletzt gestellten. Bei Gleichstand gewinnt die Kategorie, die in der
+     * Bug Library zuerst steht, damit die Auswahl reproduzierbar bleibt.</p>
      *
      * @return die Kategorie, oder ein leeres Optional bei leerer Bug Library
      */
     public Optional<Misconception> naechsteKategorie() {
-        Optional<Misconception> gewaehlt = waehleAus(true);
+        Optional<Misconception> gewaehlt = ausStartreihenfolge();
+        if (gewaehlt.isEmpty()) {
+            gewaehlt = waehleAus(true);
+        }
         if (gewaehlt.isEmpty()) {
             // Alle Kategorien gesperrt: Sperre fuer diesen Zug ignorieren.
             gewaehlt = waehleAus(false);
@@ -187,16 +229,30 @@ public final class Studentenmodell {
         return gewaehlt;
     }
 
+    /** Die naechste Kategorie der festen Runde, sofern sie noch laeuft. */
+    private Optional<Misconception> ausStartreihenfolge() {
+        while (startPosition < startreihenfolge.size()) {
+            String id = startreihenfolge.get(startPosition);
+            startPosition++;
+            Optional<Misconception> m = bibliothek.byId(id);
+            if (m.isPresent()) {
+                return m;
+            }
+            // Eine ID aus der Reihenfolge, die es nicht mehr gibt, wird uebersprungen.
+        }
+        return Optional.empty();
+    }
+
     private Optional<Misconception> waehleAus(boolean sperreBeachten) {
         Misconception beste = null;
-        double kleinsteWahrscheinlichkeit = Double.MAX_VALUE;
+        double kleinste = Double.MAX_VALUE;
         for (Misconception m : bibliothek.all()) {
             if (sperreBeachten && zuletztGestellt.contains(m.id())) {
                 continue;
             }
             double p = erfolgswahrscheinlichkeit(m.id());
-            if (p < kleinsteWahrscheinlichkeit) {
-                kleinsteWahrscheinlichkeit = p;
+            if (p < kleinste) {
+                kleinste = p;
                 beste = m;
             }
         }
