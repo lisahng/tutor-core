@@ -65,6 +65,9 @@ public final class Uebungssitzung {
     private final Studentenmodell studentenmodell;
     private final Clock uhr;
 
+    /** Wer uebt und in welcher Bedingung. Steht in jeder Protokollzeile. */
+    private final Teilnehmer teilnehmer;
+
     private final List<Protokolleintrag> protokoll = new ArrayList<>();
 
     /** Kategorien, fuer die der Generator keine Vorlage hat. Wird zur Laufzeit gelernt. */
@@ -87,9 +90,20 @@ public final class Uebungssitzung {
      */
     private final Map<String, Integer> fehlversucheAnAufgabe = new HashMap<>();
 
-    /** Sitzung mit Standardeinstellungen und zufaelligen Aufgaben. */
+    /**
+     * Sitzung mit Standardeinstellungen und zufaelligen Aufgaben, ohne Teilnehmerbezug.
+     *
+     * <p>Fuer Demos und Tests gedacht. In der Studie immer die Form mit
+     * {@link Teilnehmer} nehmen, sonst traegt jede Protokollzeile nur das Pseudonym
+     * "anonym" und die Zeilen mehrerer Personen liessen sich nicht trennen.</p>
+     */
     public Uebungssitzung(BugLibrary bibliothek) {
-        this(bibliothek, new AufgabenGenerator(), new Feedbackgenerator(),
+        this(bibliothek, Teilnehmer.anonym());
+    }
+
+    /** Sitzung fuer eine bestimmte Person, mit Standardeinstellungen. */
+    public Uebungssitzung(BugLibrary bibliothek, Teilnehmer teilnehmer) {
+        this(bibliothek, teilnehmer, new AufgabenGenerator(), new Feedbackgenerator(),
                 new Studentenmodell(bibliothek), Clock.systemDefaultZone());
     }
 
@@ -100,17 +114,21 @@ public final class Uebungssitzung {
      *             Lobformulierungen
      */
     public Uebungssitzung(BugLibrary bibliothek, long seed) {
-        this(bibliothek, new AufgabenGenerator(seed), new Feedbackgenerator(new Random(seed)),
-                new Studentenmodell(bibliothek, PfaParameter.STANDARD, 1), Clock.systemDefaultZone());
+        this(bibliothek, Teilnehmer.anonym(), new AufgabenGenerator(seed),
+                new Feedbackgenerator(new Random(seed)),
+                new Studentenmodell(bibliothek, PfaParameter.STANDARD, 1),
+                Clock.systemDefaultZone());
     }
 
     /** Vollstaendig konfigurierbare Sitzung, etwa fuer abweichende PFA-Parameter. */
     public Uebungssitzung(BugLibrary bibliothek,
+                          Teilnehmer teilnehmer,
                           AufgabenGenerator generator,
                           Feedbackgenerator feedbackgenerator,
                           Studentenmodell studentenmodell,
                           Clock uhr) {
         this.bibliothek = bibliothek;
+        this.teilnehmer = teilnehmer;
         this.generator = generator;
         this.evaluator = new StepEvaluator();
         this.klassifikator = new Fehlerklassifikator(bibliothek);
@@ -195,6 +213,13 @@ public final class Uebungssitzung {
         String kategorieFuerHistorie = diagnose.misconception()
                 .map(Misconception::id)
                 .orElse(aktuelleAufgabe.kategorieId());
+
+        // Die Zaehlerstaende VOR dem Verbuchen festhalten. Genau diese beiden Zahlen
+        // braucht die spaetere Regression, mit der gamma und rho aus den Logdaten
+        // geschaetzt werden. Nach dem Verbuchen waere der aktuelle Versuch schon drin.
+        int erfolgeVorher = studentenmodell.erfolge(kategorieFuerHistorie);
+        int fehlerVorher = studentenmodell.fehler(kategorieFuerHistorie);
+
         studentenmodell.erfasseErgebnis(kategorieFuerHistorie, diagnose.korrekt());
 
         // Die Scaffolding-Stufe richtet sich nach den Fehlversuchen an DIESER Aufgabe,
@@ -208,13 +233,15 @@ public final class Uebungssitzung {
 
         Rueckmeldung rueckmeldung = feedbackgenerator.erstelle(
                 diagnose, fehlversuche, aktuelleAufgabe, aktuelleReferenz);
-        protokolliere(antwort, diagnose, rueckmeldung);
+        protokolliere(antwort, diagnose, rueckmeldung,
+                kategorieFuerHistorie, erfolgeVorher, fehlerVorher);
 
         return new Antwortergebnis(diagnose.korrekt(), rueckmeldung, diagnose,
                 aktuelleReferenz, versucheAnAktuellerAufgabe);
     }
 
-    private void protokolliere(NutzerAntwort antwort, Diagnose diagnose, Rueckmeldung rueckmeldung) {
+    private void protokolliere(NutzerAntwort antwort, Diagnose diagnose, Rueckmeldung rueckmeldung,
+                               String historieKategorie, int erfolgeVorher, int fehlerVorher) {
         Instant jetzt = uhr.instant();
         // Bei einer Kombination stehen alle beteiligten IDs in der Spalte, verbunden
         // mit einem Pluszeichen, etwa B01+B02.
@@ -228,6 +255,8 @@ public final class Uebungssitzung {
 
         protokoll.add(new Protokolleintrag(
                 jetzt,
+                teilnehmer.id(),
+                teilnehmer.gruppe(),
                 aktuelleAufgabe.kategorieId(),
                 aktuelleAufgabe.render(),
                 aktuelleAufgabe.belegung(),
@@ -240,6 +269,9 @@ public final class Uebungssitzung {
                 diagnose.erklaert(),
                 diagnose.konfidenz(),
                 rueckmeldung.stufe(),
+                historieKategorie,
+                erfolgeVorher,
+                fehlerVorher,
                 jetzt.toEpochMilli() - aufgabeGestelltUm.toEpochMilli()));
     }
 
@@ -317,6 +349,11 @@ public final class Uebungssitzung {
         }
         long erklaert = protokoll.stream().filter(e -> !e.korrekt() && e.erklaert()).count();
         return (double) erklaert / fehler;
+    }
+
+    /** Wer in dieser Sitzung uebt und in welcher Bedingung. */
+    public Teilnehmer teilnehmer() {
+        return teilnehmer;
     }
 
     /** Das Studentenmodell der Sitzung, etwa fuer eine Fortschrittsanzeige. */

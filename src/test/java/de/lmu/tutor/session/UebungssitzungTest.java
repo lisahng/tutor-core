@@ -1,16 +1,16 @@
 package de.lmu.tutor.session;
 
+import java.time.Clock;
+import java.util.HashSet;
+import java.util.Random;
+import java.util.Set;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
-
-import java.time.Clock;
-import java.util.HashSet;
-import java.util.Random;
-import java.util.Set;
 
 import de.lmu.tutor.buglib.BugLibrary;
 import de.lmu.tutor.diagnose.NutzerAntwort;
@@ -231,6 +231,7 @@ class UebungssitzungTest {
         // Sperre von drei Kategorien, damit die Abwechslung nicht vom Zufall abhaengt.
         // Prueft nebenbei den vollstaendig konfigurierbaren Konstruktor.
         Uebungssitzung s = new Uebungssitzung(lib,
+                Teilnehmer.anonym(),
                 new AufgabenGenerator(42L),
                 new Feedbackgenerator(new Random(42L)),
                 new Studentenmodell(lib, PfaParameter.STANDARD, 3),
@@ -329,8 +330,90 @@ class UebungssitzungTest {
         s.antworte(falscheAntwort());
 
         String zeile = s.protokoll().get(0).alsCsvZeile();
-        assertEquals(14, zaehleSpalten(zeile),
-                "Die Zeile hat nicht 14 Spalten: " + zeile);
+        assertEquals(19, zaehleSpalten(zeile),
+                "Die Zeile hat nicht 19 Spalten: " + zeile);
+    }
+
+    // ================================================================
+    // Teilnehmerbezug und Zaehlerstaende
+    // ================================================================
+
+    @Test
+    void jedeZeileTraegtPseudonymUndGruppe() {
+        // Ohne diese beiden Angaben liessen sich die Zeilen mehrerer Personen weder
+        // trennen noch zwischen den Bedingungen vergleichen.
+        Uebungssitzung s = new Uebungssitzung(lib,
+                new Teilnehmer("P07", Teilnehmer.Gruppe.KONTROLLE));
+        s.naechsteAufgabe();
+        s.antworte(falscheAntwort());
+
+        Protokolleintrag eintrag = s.protokoll().get(0);
+        assertEquals("P07", eintrag.teilnehmerId());
+        assertEquals(Teilnehmer.Gruppe.KONTROLLE, eintrag.gruppe());
+        assertEquals("P07", s.teilnehmer().id());
+    }
+
+    @Test
+    void ohneTeilnehmerBleibtEsBeimPlatzhalter() {
+        Uebungssitzung s = sitzung();
+        s.naechsteAufgabe();
+        s.antworte(falscheAntwort());
+        assertEquals("anonym", s.protokoll().get(0).teilnehmerId());
+    }
+
+    @Test
+    void leerePseudonymeWerdenAbgelehnt() {
+        assertThrows(IllegalArgumentException.class,
+                () -> new Teilnehmer("  ", Teilnehmer.Gruppe.TUTOR));
+    }
+
+    @Test
+    void zaehlerstaendeGeltenVorDemVersuch() {
+        // Der erste Versuch in einer Kategorie muss mit 0 und 0 protokolliert werden,
+        // nicht mit dem Stand nach dem Verbuchen. Sonst waere die spaetere Schaetzung
+        // von gamma und rho um einen Schritt verschoben.
+        Uebungssitzung s = sitzung();
+        s.aufgabeZu("B01");
+        s.antworte(falscheAntwort());
+
+        Protokolleintrag erster = s.protokoll().get(0);
+        assertEquals(0, erster.erfolgeVorher());
+        assertEquals(0, erster.fehlerVorher());
+        assertEquals(0, erster.versucheVorher());
+
+        s.antworte(falscheAntwort());
+        Protokolleintrag zweiter = s.protokoll().get(1);
+        assertEquals(1, zweiter.versucheVorher(),
+                "Der zweite Versuch muss einen vorherigen Versuch sehen");
+    }
+
+    @Test
+    void zaehlerstaendeGehoerenZurHistorieKategorie() {
+        // Die Historie laeuft ueber die diagnostizierte Kategorie, nicht ueber die
+        // Zielkategorie der Aufgabe. Die Spalte haelt fest, welche das war, damit die
+        // Regression spaeter eindeutig gruppieren kann.
+        Uebungssitzung s = sitzung();
+        s.naechsteAufgabe();
+        s.antworte(falscheAntwort());
+
+        Protokolleintrag eintrag = s.protokoll().get(0);
+        assertFalse(eintrag.historieKategorie().isBlank());
+        assertEquals(eintrag.erfolgeVorher() + eintrag.fehlerVorher(), eintrag.versucheVorher());
+    }
+
+    @Test
+    void zaehlerstaendeWachsenUeberDieSitzung() {
+        Uebungssitzung s = sitzung();
+        int hoechsterStand = 0;
+        for (int i = 0; i < 20; i++) {
+            s.aufgabeZu("B01");
+            s.antworte(falscheAntwort());
+            Protokolleintrag letzter = s.protokoll().get(s.protokoll().size() - 1);
+            assertTrue(letzter.versucheVorher() >= hoechsterStand,
+                    "Die Zaehlerstaende duerfen nicht zurueckspringen");
+            hoechsterStand = letzter.versucheVorher();
+        }
+        assertTrue(hoechsterStand > 0, "Nach 20 Versuchen muss die Historie gewachsen sein");
     }
 
     /** Zaehlt Spalten unter Beachtung von Anfuehrungszeichen. */

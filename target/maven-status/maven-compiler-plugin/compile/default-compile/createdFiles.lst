@@ -2,6 +2,7 @@ de\lmu\tutor\eval\NotEvaluableException.class
 de\lmu\tutor\ast\Expr$Index.class
 de\lmu\tutor\feedback\Rueckmeldung.class
 de\lmu\tutor\demo\StudentenmodellDemo.class
+de\lmu\tutor\session\Teilnehmer.class
 de\lmu\tutor\eval\StepEvaluator$1.class
 de\lmu\tutor\diagnose\Diagnose.class
 de\lmu\tutor\ast\Expr$Var.class
@@ -12,6 +13,7 @@ de\lmu\tutor\buglib\Subtype.class
 de\lmu\tutor\buglib\json\MiniJson.class
 de\lmu\tutor\ast\JType.class
 de\lmu\tutor\buglib\json\MiniJson$JsonException.class
+de\lmu\tutor\session\Teilnehmer$Gruppe.class
 de\lmu\tutor\buglib\Misconception.class
 de\lmu\tutor\demo\AstDemo.class
 de\lmu\tutor\ast\Expr$1.class

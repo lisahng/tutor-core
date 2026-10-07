@@ -19,28 +19,39 @@ import de.lmu.tutor.diagnose.Diagnose;
  * geschoent: Aufgaben einer Kategorie provozieren meist Fehler eben dieser Kategorie, das
  * System traefe also oft zufaellig richtig.</p>
  *
- * <p>Deshalb enthaelt {@code diagnose} nur begruendete Diagnosen. Alles andere steht in
- * {@code vermutung} und bleibt bei der strengen Auswertung aussen vor. Die so markierten
- * Faelle sind zugleich die aufschlussreichsten fuer eine spaetere Erweiterung der Bug
- * Library, weil sie zeigen, welche Fehler noch keine Regel abbildet.</p>
+ * <p><b>Wofuer die Zaehlerstaende gut sind.</b> {@code erfolgeVorher} und
+ * {@code fehlerVorher} halten fest, wie die Fehlerhistorie <em>vor</em> diesem Versuch
+ * aussah. Genau diese beiden Zahlen braucht die logistische Regression, mit der sich
+ * gamma und rho nach der Studie aus den Logdaten schaetzen lassen. Sie nachtraeglich aus
+ * der Reihenfolge der Zeilen zu rekonstruieren waere moeglich, aber fehleranfaellig.
+ * {@code historieKategorie} nennt dazu die Kategorie, unter der dieser Versuch verbucht
+ * wurde. Das ist nicht immer die Zielkategorie der Aufgabe, denn die Historie laeuft ueber
+ * die diagnostizierte Fehlvorstellung.</p>
  *
- * @param zeitpunkt     Zeitpunkt der Antwort
- * @param kategorieId   die Kategorie, fuer die die Aufgabe erzeugt wurde
- * @param ausdruck      der gestellte Ausdruck als Java-Quelltext
- * @param belegung      die Variablenbelegung, leer ohne Variablen
- * @param referenz      die korrekte Loesung als Text
- * @param antwort       die Eingabe der Person als Text
- * @param versuch       der wievielte Versuch an dieser Aufgabe, beginnend bei 1
- * @param korrekt       ob die Antwort richtig war
- * @param diagnose      die begruendete Diagnose, sonst leer
- * @param vermutung     die vermutete Kategorie, wenn keine Regel den Wert erklaert, sonst leer
- * @param erklaert      ob die Kategorie begruendet werden konnte
- * @param konfidenz     wie die Kategorie zustande kam
- * @param feedbackStufe die ausgegebene Scaffolding-Stufe, -1 ohne Kategorie
- * @param dauerMillis   Zeit zwischen Aufgabenstellung und dieser Antwort
+ * @param zeitpunkt         Zeitpunkt der Antwort
+ * @param teilnehmerId      Pseudonym der Person, etwa "P07"
+ * @param gruppe            die Versuchsbedingung
+ * @param kategorieId       die Kategorie, fuer die die Aufgabe erzeugt wurde
+ * @param ausdruck          der gestellte Ausdruck als Java-Quelltext
+ * @param belegung          die Variablenbelegung, leer ohne Variablen
+ * @param referenz          die korrekte Loesung als Text
+ * @param antwort           die Eingabe der Person als Text
+ * @param versuch           der wievielte Versuch an dieser Aufgabe, beginnend bei 1
+ * @param korrekt           ob die Antwort richtig war
+ * @param diagnose          die begruendete Diagnose, sonst leer
+ * @param vermutung         die vermutete Kategorie, wenn keine Regel den Wert erklaert, sonst leer
+ * @param erklaert          ob die Kategorie begruendet werden konnte
+ * @param konfidenz         wie die Kategorie zustande kam
+ * @param feedbackStufe     die ausgegebene Scaffolding-Stufe, -1 ohne Stufung
+ * @param historieKategorie unter welcher Kategorie dieser Versuch verbucht wurde
+ * @param erfolgeVorher     Erfolge in dieser Kategorie vor diesem Versuch
+ * @param fehlerVorher      Fehler in dieser Kategorie vor diesem Versuch
+ * @param dauerMillis       Zeit zwischen Aufgabenstellung und dieser Antwort
  */
 public record Protokolleintrag(
         Instant zeitpunkt,
+        String teilnehmerId,
+        Teilnehmer.Gruppe gruppe,
         String kategorieId,
         String ausdruck,
         String belegung,
@@ -53,6 +64,9 @@ public record Protokolleintrag(
         boolean erklaert,
         Diagnose.Konfidenz konfidenz,
         int feedbackStufe,
+        String historieKategorie,
+        int erfolgeVorher,
+        int fehlerVorher,
         long dauerMillis
 ) {
 
@@ -61,10 +75,16 @@ public record Protokolleintrag(
         return !korrekt && !erklaert;
     }
 
+    /** Gesamtzahl der Versuche in dieser Kategorie vor diesem Eintrag. */
+    public int versucheVorher() {
+        return erfolgeVorher + fehlerVorher;
+    }
+
     /** Kopfzeile fuer den CSV-Export, passend zu {@link #alsCsvZeile()}. */
     public static String csvKopfzeile() {
-        return "zeitpunkt;kategorie;ausdruck;belegung;referenz;antwort;versuch;korrekt;"
-                + "diagnose;vermutung;erklaert;konfidenz;feedbackStufe;dauerMillis";
+        return "zeitpunkt;teilnehmer;gruppe;kategorie;ausdruck;belegung;referenz;antwort;"
+                + "versuch;korrekt;diagnose;vermutung;erklaert;konfidenz;feedbackStufe;"
+                + "historieKategorie;erfolgeVorher;fehlerVorher;dauerMillis";
     }
 
     /**
@@ -78,6 +98,8 @@ public record Protokolleintrag(
     public String alsCsvZeile() {
         return String.join(";",
                 zitiere(zeitpunkt.toString()),
+                zitiere(teilnehmerId),
+                zitiere(gruppe.name()),
                 zitiere(kategorieId),
                 zitiere(ausdruck),
                 zitiere(belegung),
@@ -90,6 +112,9 @@ public record Protokolleintrag(
                 String.valueOf(erklaert),
                 zitiere(konfidenz.name()),
                 String.valueOf(feedbackStufe),
+                zitiere(historieKategorie),
+                String.valueOf(erfolgeVorher),
+                String.valueOf(fehlerVorher),
                 String.valueOf(dauerMillis));
     }
 
