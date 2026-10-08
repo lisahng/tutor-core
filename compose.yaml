@@ -1,0 +1,56 @@
+# Startet Oberflaeche und Datenbank zusammen.
+#
+#   docker compose up -d --build
+#
+# Danach ist die Oberflaeche auf Port 8080 erreichbar. Betreibt der Lehrstuhl die Datenbank
+# bereits, entfaellt der Dienst "datenbank" und TUTOR_DB_URL zeigt stattdessen dorthin.
+
+services:
+  tutor:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      # Schaltet die Speicherung in der Datenbank ein. Ohne dieses Profil laeuft die
+      # Anwendung ohne Datenbank und schreibt allein CSV-Dateien.
+      SPRING_PROFILES_ACTIVE: db
+      TUTOR_DB_URL: jdbc:mariadb://datenbank:3306/tutor
+      TUTOR_DB_USER: tutor
+      TUTOR_DB_PASSWORT: ${TUTOR_DB_PASSWORT:?bitte in .env setzen}
+      # Schuetzt /export/protokoll.csv und /export/bewertungen.csv. Die Uebungsseiten
+      # bleiben frei zugaenglich.
+      TUTOR_EXPORT_SCHLUESSEL: ${TUTOR_EXPORT_SCHLUESSEL:?bitte in .env setzen}
+      TZ: Europe/Berlin
+    volumes:
+      # Zweite, unabhaengige Kopie der Daten als CSV. Liegt ausserhalb des Containers und
+      # ueberlebt dessen Austausch.
+      - ./protokolle:/app/protokolle
+    depends_on:
+      datenbank:
+        condition: service_healthy
+    restart: unless-stopped
+
+  datenbank:
+    image: mariadb:11
+    environment:
+      MARIADB_DATABASE: tutor
+      MARIADB_USER: tutor
+      MARIADB_PASSWORD: ${TUTOR_DB_PASSWORT:?bitte in .env setzen}
+      MARIADB_ROOT_PASSWORD: ${TUTOR_DB_ROOT_PASSWORT:?bitte in .env setzen}
+      TZ: Europe/Berlin
+    command: >
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - datenbank-daten:/var/lib/mysql
+    healthcheck:
+      # Die Oberflaeche startet erst, wenn die Datenbank Anfragen beantwortet. Sonst
+      # scheitert das Anlegen der Tabellen beim ersten Start.
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+volumes:
+  datenbank-daten:

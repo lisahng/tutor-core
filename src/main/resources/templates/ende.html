@@ -48,10 +48,40 @@
                 <th>Bewertungen der Rückmeldung</th>
                 <td th:text="${bewertungen}">18</td>
             </tr>
+            <tr th:if="${datenbank}">
+                <th>Davon in der Datenbank</th>
+                <td th:text="${inDatenbank}">47</td>
+            </tr>
         </table>
 
-        <p class="konvention">
+        <!--
+            Die Bestätigung, dass nichts verloren ging. Steht in beiden Zeilen dieselbe
+            Zahl, ist die Sitzung vollständig gesichert.
+        -->
+        <p class="rueckmeldung richtig"
+           th:if="${datenbank and inDatenbank == zeilen and #strings.isEmpty(datenbankFehler)}">
+            <span class="marke">Gesichert</span>
+            Alle Zeilen stehen in der Datenbank.
+        </p>
+
+        <p class="rueckmeldung"
+           th:if="${datenbank and (inDatenbank != zeilen or !#strings.isEmpty(datenbankFehler))}">
+            <span class="marke">Achtung</span>
+            Die Datenbank hat nicht alles aufgenommen. Lade das Protokoll jetzt von Hand
+            herunter und sichere es, bevor du diese Sitzung schließt.
+            <br><span th:text="${datenbankFehler}"></span>
+        </p>
+
+        <p class="konvention" th:unless="${datenbank}">
+            Ohne Datenbank. Gesichert nur als Datei.
+        </p>
+
+        <p class="konvention" th:if="${csv}">
             Automatisch gesichert unter <code th:text="${datei}">…/protokolle/P01.csv</code>
+        </p>
+
+        <p class="konvention">
+            Sitzungskennung <code th:text="${sitzungId}">…</code>
         </p>
 
         <p>

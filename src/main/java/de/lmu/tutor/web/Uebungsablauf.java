@@ -6,6 +6,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import de.lmu.tutor.buglib.BugLibrary;
 import de.lmu.tutor.diagnose.NutzerAntwort;
@@ -64,6 +65,22 @@ public final class Uebungsablauf {
     private String letzterTyp = "";
     private String letzterWert = "";
     private final List<Feedbackbewertung> bewertungen = new ArrayList<>();
+
+    /**
+     * Kennung dieser einen Sitzung.
+     *
+     * <p>Das Pseudonym allein genuegt nicht, seit mehrere Sitzungen gleichzeitig laufen
+     * koennen. Wird versehentlich zweimal dasselbe Pseudonym vergeben, stehen die beiden
+     * Sitzungen unter verschiedenen Kennungen nebeneinander und lassen sich hinterher
+     * auseinanderhalten, statt sich gegenseitig zu ueberschreiben.</p>
+     */
+    private final String sitzungId = UUID.randomUUID().toString();
+
+    /** Wie viele Protokollzeilen bereits gespeichert wurden. */
+    private int gespeicherteZeilen;
+
+    /** Wie viele Bewertungen bereits gespeichert wurden. */
+    private int gespeicherteBewertungen;
 
     /**
      * @param bibliothek die Bug Library
@@ -217,6 +234,40 @@ public final class Uebungsablauf {
             return Feedbackbewertung.UEBERSPRUNGEN;
         }
         return bewertung;
+    }
+
+    /** Die Kennung dieser Sitzung. */
+    public String sitzungId() {
+        return sitzungId;
+    }
+
+    /**
+     * Gibt die Protokollzeilen heraus, die noch nicht gespeichert wurden, und merkt sie
+     * als gespeichert vor.
+     *
+     * <p>So wird nach jeder Antwort nur das Neue geschrieben und nicht jedes Mal das ganze
+     * Protokoll. Bei einer Datenbank, die ausschliesslich anhaengt, ist das notwendig,
+     * sonst stuende jede Zeile mehrfach darin.</p>
+     */
+    public List<Protokolleintrag> neueProtokollzeilen() {
+        List<Protokolleintrag> alle = sitzung.protokoll();
+        if (gespeicherteZeilen >= alle.size()) {
+            return List.of();
+        }
+        List<Protokolleintrag> neue = List.copyOf(alle.subList(gespeicherteZeilen, alle.size()));
+        gespeicherteZeilen = alle.size();
+        return neue;
+    }
+
+    /** Dasselbe fuer die Bewertungen der Rueckmeldung. */
+    public List<Feedbackbewertung> neueBewertungen() {
+        if (gespeicherteBewertungen >= bewertungen.size()) {
+            return List.of();
+        }
+        List<Feedbackbewertung> neue =
+                List.copyOf(bewertungen.subList(gespeicherteBewertungen, bewertungen.size()));
+        gespeicherteBewertungen = bewertungen.size();
+        return neue;
     }
 
     /** Die bisher abgegebenen Bewertungen, aelteste zuerst. */

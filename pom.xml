@@ -55,6 +55,21 @@
             <artifactId>spring-boot-starter-thymeleaf</artifactId>
         </dependency>
 
+        <!--
+            Zugriff auf die MariaDB des Lehrstuhls. Bewusst JDBC und nicht JPA: Es werden
+            nur Zeilen angehaengt und nie geaendert, dafuer braucht es keinen
+            Objekt-Relationen-Abbilder. Weniger Teile heisst weniger, das sich am
+            Studientag anders verhalten kann als erwartet.
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-jdbc</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.mariadb.jdbc</groupId>
+            <artifactId>mariadb-java-client</artifactId>
+        </dependency>
+
         <!-- Nur fuer die Tests. -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
@@ -133,10 +148,7 @@
             <!--
                 Startet die Weboberflaeche mit "mvn spring-boot:run".
 
-                Das Ziel repackage ist bewusst nicht eingebunden. Es wuerde beim
-                Paketieren eine startfaehige JAR-Datei bauen, die hier niemand braucht,
-                und es ist der haeufigste Ausloeser fuer die Meldung "Plugin execution
-                not covered by lifecycle configuration" in VS Code.
+                Startet die Weboberflaeche auch ohne Docker mit "mvn spring-boot:run".
             -->
             <plugin>
                 <groupId>org.springframework.boot</groupId>
@@ -145,6 +157,20 @@
                 <configuration>
                     <mainClass>de.lmu.tutor.web.TutorWebApplication</mainClass>
                 </configuration>
+                <!--
+                    Baut beim Paketieren eine startfaehige JAR-Datei. Die braucht das
+                    Docker-Abbild. VS Code meldet dazu "Plugin execution not covered by
+                    lifecycle configuration". Das ist eine Eigenheit der dort
+                    mitgelieferten Maven-Fassung und ohne Folgen fuer den Build auf der
+                    Kommandozeile.
+                -->
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

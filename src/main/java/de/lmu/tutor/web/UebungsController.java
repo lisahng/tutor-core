@@ -50,13 +50,16 @@ public class UebungsController {
     private final BugLibrary bibliothek;
     private final Sitzungseinstellungen einstellungen;
     private final Protokollschreiber schreiber;
+    private final Protokollspeicher speicher;
     private final Clock uhr;
 
     public UebungsController(BugLibrary bibliothek, Sitzungseinstellungen einstellungen,
-                             Protokollschreiber schreiber, Clock uhr) {
+                             Protokollschreiber schreiber, Protokollspeicher speicher,
+                             Clock uhr) {
         this.bibliothek = bibliothek;
         this.einstellungen = einstellungen;
         this.schreiber = schreiber;
+        this.speicher = speicher;
         this.uhr = uhr;
     }
 
@@ -197,6 +200,11 @@ public class UebungsController {
         model.addAttribute("richtig", ablauf.richtigeAntworten());
         model.addAttribute("zeilen", ablauf.protokoll().size());
         model.addAttribute("bewertungen", ablauf.bewertungen().size());
+        model.addAttribute("datenbank", speicher.aktiv());
+        model.addAttribute("inDatenbank", speicher.gespeicherteZeilen(ablauf.sitzungId()));
+        model.addAttribute("datenbankFehler", speicher.letzterFehler());
+        model.addAttribute("csv", einstellungen.isCsvSchreiben());
+        model.addAttribute("sitzungId", ablauf.sitzungId());
         model.addAttribute("datei", Path.of(einstellungen.getProtokollOrdner())
                 .resolve(Protokollschreiber.dateiname(ablauf.teilnehmer().id())).toAbsolutePath());
         return "ende";
@@ -272,6 +280,14 @@ public class UebungsController {
      * Protokoll, eine Zeile je Aufgabe bei den Bewertungen.</p>
      */
     private void sichere(Uebungsablauf ablauf) {
+        // Zuerst die Datenbank, denn sie ist die bleibende Kopie. Geschrieben wird nur das
+        // Neue, weil dort ausschliesslich angehaengt wird.
+        speicher.speichereProtokoll(ablauf.sitzungId(), ablauf.neueProtokollzeilen());
+        speicher.speichereBewertungen(ablauf.sitzungId(), ablauf.neueBewertungen());
+
+        if (!einstellungen.isCsvSchreiben()) {
+            return;
+        }
         Path ordner = Path.of(einstellungen.getProtokollOrdner());
         String id = ablauf.teilnehmer().id();
         schreiber.schreibe(ordner, id, ablauf.protokollAlsCsv());

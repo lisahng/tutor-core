@@ -50,11 +50,13 @@ de\lmu\tutor\gen\Aufgabe.class
 de\lmu\tutor\eval\StepEvaluator.class
 de\lmu\tutor\eval\Value.class
 de\lmu\tutor\session\Antwortergebnis.class
+de\lmu\tutor\web\ExportController.class
 de\lmu\tutor\diagnose\Vergleichsmodul.class
 de\lmu\tutor\student\Studentenmodell.class
 de\lmu\tutor\ast\Expr$IncDec.class
 de\lmu\tutor\session\Uebungssitzung.class
 de\lmu\tutor\diagnose\Fehlerklassifikator.class
+de\lmu\tutor\web\Protokollspeicher.class
 de\lmu\tutor\web\Skala.class
 de\lmu\tutor\eval\EvaluationResult.class
 de\lmu\tutor\diagnose\Fehlersimulator$Treffer.class

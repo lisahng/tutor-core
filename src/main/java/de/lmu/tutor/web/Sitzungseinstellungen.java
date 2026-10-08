@@ -36,6 +36,26 @@ public class Sitzungseinstellungen {
     /** Ordner fuer die CSV-Protokolle, relativ zum Projektverzeichnis. */
     private String protokollOrdner = "protokolle";
 
+    /**
+     * Ob zusaetzlich CSV-Dateien geschrieben werden.
+     *
+     * <p>Mit Datenbank bleibt das eingeschaltet, denn eine zweite, unabhaengige Kopie
+     * kostet nichts und rettet den Termin, falls die Datenbank ausfaellt. Im Docker-Betrieb
+     * muss der Ordner dann auf einem Volume liegen, sonst verschwindet er mit dem
+     * Container.</p>
+     */
+    private boolean csvSchreiben = true;
+
+    /**
+     * Schluessel fuer die Export-Adressen.
+     *
+     * <p>Die Uebungsseiten sind bewusst frei zugaenglich, jeder mit dem Link soll ueben
+     * koennen. Der Export aller Studiendaten ist etwas anderes: Ohne Schluessel koennte ihn
+     * jeder herunterladen, der die Adresse kennt. Ein leerer Wert gibt den Export frei, was
+     * nur auf dem eigenen Rechner sinnvoll ist.</p>
+     */
+    private String exportSchluessel = "";
+
     public Sitzungsplan alsPlan() {
         return new Sitzungsplan(aufgaben, Duration.ofMinutes(arbeitszeitMinuten), versuche);
     }
@@ -78,5 +98,29 @@ public class Sitzungseinstellungen {
 
     public void setProtokollOrdner(String protokollOrdner) {
         this.protokollOrdner = protokollOrdner;
+    }
+
+    public boolean isCsvSchreiben() {
+        return csvSchreiben;
+    }
+
+    public void setCsvSchreiben(boolean csvSchreiben) {
+        this.csvSchreiben = csvSchreiben;
+    }
+
+    public String getExportSchluessel() {
+        return exportSchluessel;
+    }
+
+    public void setExportSchluessel(String exportSchluessel) {
+        this.exportSchluessel = exportSchluessel;
+    }
+
+    /** Prueft den mitgeschickten Schluessel. Ein leerer eingestellter Wert gibt frei. */
+    public boolean schluesselStimmt(String angeboten) {
+        if (exportSchluessel.isBlank()) {
+            return true;
+        }
+        return exportSchluessel.equals(angeboten);
     }
 }
