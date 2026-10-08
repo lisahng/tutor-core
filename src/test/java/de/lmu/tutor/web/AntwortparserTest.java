@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
 import java.util.Optional;
 
 import de.lmu.tutor.ast.JType;
@@ -12,103 +13,111 @@ import de.lmu.tutor.diagnose.NutzerAntwort;
 import de.lmu.tutor.eval.Value;
 
 /**
- * Tests fuer die Uebersetzung der Browsereingabe in einen typisierten Wert.
+ * Tests fuer die Uebersetzung der beiden Eingabefelder in einen typisierten Wert.
  *
  * <p>Diese Klasse ist wichtiger, als ihre Groesse vermuten laesst. Die gesamte Diagnose
- * haengt daran, dass {@code 4} und {@code 4.0} unterschiedlich ankommen, denn genau dieser
- * Unterschied macht die Fehlvorstellung zur Integer-Division sichtbar. Ein Parser, der hier
+ * haengt daran, dass Typ und Wert getrennt ankommen. Bei {@code 25 / 6} unterscheidet sich
+ * die richtige Antwort von der haeufigsten falschen nur im Typ, und ein Parser, der hier
  * grosszuegig waere, wuerde die Fehlerklassifikation unbrauchbar machen.</p>
  */
 class AntwortparserTest {
 
-    private Value lies(String eingabe) {
-        return Antwortparser.lies(eingabe, Optional.empty()).orElseThrow().wert();
+    private Value wert(String typ, String wert) {
+        return Antwortparser.lies(typ, wert).orElseThrow().wert();
     }
 
-    private Optional<NutzerAntwort> liesRoh(String eingabe) {
-        return Antwortparser.lies(eingabe, Optional.empty());
-    }
-
-    private Optional<NutzerAntwort> liesMitTyp(String eingabe, JType erwartet) {
-        return Antwortparser.lies(eingabe, Optional.of(erwartet));
+    private Optional<NutzerAntwort> lies(String typ, String wert) {
+        return Antwortparser.lies(typ, wert);
     }
 
     // ================================================================
-    // Zahlen
+    // Die Typliste
     // ================================================================
 
     @Test
-    void ganzeZahlenWerdenInt() {
-        assertEquals(Value.ofInt(7), lies("7"));
-        assertEquals(Value.ofInt(-3), lies("-3"));
-        assertEquals(Value.ofInt(0), lies("0"));
+    void dieListeEnthaeltDieTypenInJavaSchreibweise() {
+        // So stehen sie auch in den Klausuraufgaben, also int und nicht Ganzzahl.
+        assertEquals(List.of("int", "double", "char", "boolean", "String"),
+                Antwortparser.typen());
+    }
+
+    // ================================================================
+    // Die einzelnen Typen
+    // ================================================================
+
+    @Test
+    void intNimmtGanzeZahlen() {
+        assertEquals(Value.ofInt(7), wert("int", "7"));
+        assertEquals(Value.ofInt(-3), wert("int", "-3"));
+        assertEquals(Value.ofInt(0), wert("int", "0"));
     }
 
     @Test
-    void zahlenMitPunktWerdenDouble() {
-        assertEquals(Value.ofDouble(2.5), lies("2.5"));
-        assertEquals(JType.DOUBLE, lies("4.0").typ());
+    void intNimmtKeineKommazahl() {
+        // Ein solches Paar gibt es in Java nicht, es laesst sich also auch nicht mit der
+        // Musterloesung vergleichen.
+        assertTrue(lies("int", "4.0").isEmpty());
     }
 
     @Test
-    void derTypHaengtAmPunktUndNichtAmWert() {
-        // Der Kern der Sache: 4 und 4.0 sind derselbe Zahlenwert, aber verschiedene Typen.
-        // Wer bei 25 / 6 "4" eingibt, hat richtig gerechnet, wer "4.0" eingibt, nicht.
-        assertEquals(JType.INT, lies("4").typ());
-        assertEquals(JType.DOUBLE, lies("4.0").typ());
+    void doubleNimmtAuchGanzeZahlen() {
+        // Wer double waehlt und 4 tippt, meint 4.0. Daran soll niemand scheitern.
+        assertEquals(Value.ofDouble(4.0), wert("double", "4"));
+        assertEquals(JType.DOUBLE, wert("double", "4").typ());
+    }
+
+    @Test
+    void derTypKommtAusDemFeldUndNichtAusDerSchreibweise() {
+        // Der Kern der Sache: 4 ist derselbe Zahlenwert, aber die Angabe des Typs
+        // entscheidet. Wer bei 25 / 6 int und 4 waehlt, hat richtig gerechnet, wer
+        // double und 4 waehlt, nicht.
+        assertEquals(JType.INT, wert("int", "4").typ());
+        assertEquals(JType.DOUBLE, wert("double", "4").typ());
     }
 
     @Test
     void einDezimalkommaWirdWieEinPunktGelesen() {
-        // Zugestaendnis an die deutsche Tastaturgewohnheit. Der Typ bleibt double, es wird
-        // also nichts verraten, sondern nur eine unnoetige Huerde abgebaut.
-        assertEquals(Value.ofDouble(2.5), lies("2,5"));
+        // Zugestaendnis an die deutsche Tastaturgewohnheit, ohne Einfluss auf den Typ.
+        assertEquals(Value.ofDouble(2.5), wert("double", "2,5"));
     }
 
     @Test
-    void zuGrosseGanzeZahlenWerdenDouble() {
-        // "12345678901" ist eine Zahl, nur eben kein int. Das als Tippfehler abzuweisen
-        // waere falsch, denn die Person hat sehr wohl einen Wert gemeint.
-        assertEquals(JType.DOUBLE, lies("12345678901").typ());
-    }
-
-    // ================================================================
-    // Uebrige Typen
-    // ================================================================
-
-    @Test
-    void wahrheitswerteWerdenBool() {
-        assertTrue(lies("true").asBool());
-        assertFalse(lies("false").asBool());
+    void charNimmtEinZeichenMitUndOhneHochkomma() {
+        assertEquals(Value.ofChar('a'), wert("char", "'a'"));
+        assertEquals(Value.ofChar('a'), wert("char", "a"));
     }
 
     @Test
-    void grossUndKleinschreibungSpieltBeiWahrheitswertenKeineRolle() {
-        assertTrue(lies("TRUE").asBool());
-        assertFalse(lies("False").asBool());
+    void charNimmtKeineZweiZeichen() {
+        assertTrue(lies("char", "ab").isEmpty());
     }
 
     @Test
-    void einfacheAnfuehrungszeichenErgebenChar() {
-        assertEquals(Value.ofChar('a'), lies("'a'"));
+    void booleanNimmtTrueUndFalse() {
+        assertTrue(wert("boolean", "true").asBool());
+        assertFalse(wert("boolean", "FALSE").asBool());
+        assertTrue(lies("boolean", "ja").isEmpty());
     }
 
     @Test
-    void doppelteAnfuehrungszeichenErgebenString() {
-        assertEquals(Value.ofString("abc"), lies("\"abc\""));
-        assertEquals(Value.ofString(""), lies("\"\""));
+    void stringNimmtDenTextMitUndOhneAnfuehrungszeichen() {
+        assertEquals(Value.ofString("abc"), wert("String", "\"abc\""));
+        assertEquals(Value.ofString("abc"), wert("String", "abc"));
+        assertEquals(Value.ofString(""), wert("String", "\"\""));
     }
 
     @Test
-    void mehrereZeichenInEinfachenAnfuehrungszeichenSindKeinChar() {
-        assertTrue(liesRoh("'ab'").isEmpty());
+    void beiStringBleibtEineZiffernfolgeText() {
+        // Wichtig fuer die Stringkonkatenation: "33" + 2 ergibt "332" als String und
+        // nicht die Zahl 332.
+        assertEquals(Value.ofString("332"), wert("String", "332"));
+        assertEquals(JType.STRING, wert("String", "332").typ());
     }
 
     @Test
-    void nichtAuswertbarWirdErkannt() {
-        assertFalse(liesRoh("nicht auswertbar").orElseThrow().auswertbar());
-        assertFalse(liesRoh("Nicht Auswertbar").orElseThrow().auswertbar());
-        assertFalse(liesRoh("fehler").orElseThrow().auswertbar());
+    void nichtAuswertbarBrauchtKeinenWert() {
+        assertFalse(lies(Antwortparser.NICHT_AUSWERTBAR, "").orElseThrow().auswertbar());
+        assertFalse(lies("Nicht Auswertbar", null).orElseThrow().auswertbar());
     }
 
     // ================================================================
@@ -116,46 +125,56 @@ class AntwortparserTest {
     // ================================================================
 
     @Test
-    void leereEingabenWerdenZurueckgewiesen() {
-        assertTrue(liesRoh(null).isEmpty());
-        assertTrue(liesRoh("").isEmpty());
-        assertTrue(liesRoh("   ").isEmpty());
+    void ohneTypGibtEsKeineAntwort() {
+        assertTrue(lies(null, "7").isEmpty());
+        assertTrue(lies("", "7").isEmpty());
+        assertTrue(lies("   ", "7").isEmpty());
     }
 
     @Test
-    void unlesbareEingabenWerdenZurueckgewiesen() {
-        // Wichtig fuer die Fairness: Wer sich vertippt, hat keine Fehlvorstellung gezeigt.
-        // Der Ablauf wertet eine solche Eingabe deshalb gar nicht erst.
-        assertTrue(liesRoh("haehae").isEmpty());
-        assertTrue(liesRoh("??").isEmpty());
+    void ohneWertGibtEsKeineAntwort() {
+        assertTrue(lies("int", null).isEmpty());
+        assertTrue(lies("int", "").isEmpty());
+    }
+
+    @Test
+    void einUnbekannterTypWirdZurueckgewiesen() {
+        // Kann ueber die Oberflaeche nicht passieren, wohl aber ueber eine von Hand
+        // zusammengebaute Anfrage. Dann soll nichts Unsinniges im Protokoll landen.
+        assertTrue(lies("long", "7").isEmpty());
+    }
+
+    @Test
+    void grossUndKleinschreibungDesTypsSpieltKeineRolle() {
+        assertEquals(Value.ofInt(7), wert("INT", "7"));
+        assertEquals(Value.ofString("a"), wert("string", "a"));
     }
 
     @Test
     void umgebendeLeerzeichenStoerenNicht() {
-        assertEquals(Value.ofInt(7), lies("  7  "));
+        assertEquals(Value.ofInt(7), wert("  int  ", "  7  "));
     }
 
     // ================================================================
-    // Der Rueckfall auf Zeichenketten
+    // Die Hinweise
     // ================================================================
 
     @Test
-    void ohneAnfuehrungszeichenGiltStringNurWennDieLoesungEinStringIst() {
-        assertEquals(Value.ofString("haehae"),
-                liesMitTyp("haehae", JType.STRING).orElseThrow().wert());
-        assertTrue(liesMitTyp("haehae", JType.INT).isEmpty());
+    void derHinweisNenntWasFehlt() {
+        assertTrue(Antwortparser.hinweisZu("", "7").contains("Typ"));
+        assertTrue(Antwortparser.hinweisZu("int", "").contains("Wert"));
     }
 
     @Test
-    void derRueckfallVerraetNichts() {
-        // Auch bei einer String-Loesung bleibt "7" ein int. Sonst bekaeme die Person die
-        // Rueckmeldung zum Typfehler nicht, obwohl sie genau den gemacht hat.
-        assertEquals(JType.INT, liesMitTyp("7", JType.STRING).orElseThrow().wert().typ());
+    void derHinweisNenntDieRegelUndNichtDieAufgabe() {
+        // Er darf nichts ueber den gestellten Ausdruck verraten, sonst waere er ein
+        // verstecktes Feedback und die Kontrollgruppe bekaeme es ebenfalls.
+        assertTrue(Antwortparser.hinweisZu("int", "4.0").contains("ganze Zahl"));
+        assertTrue(Antwortparser.hinweisZu("boolean", "ja").contains("true"));
     }
 
     @Test
-    void anfuehrungszeichenHabenVorrang() {
-        assertEquals(Value.ofString("true"),
-                liesMitTyp("\"true\"", JType.STRING).orElseThrow().wert());
+    void eineLesbareEingabeBrauchtKeinenHinweis() {
+        assertTrue(Antwortparser.hinweisZu(Antwortparser.NICHT_AUSWERTBAR, "").isEmpty());
     }
 }

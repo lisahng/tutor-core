@@ -44,6 +44,10 @@
                 <th>Protokollzeilen</th>
                 <td th:text="${zeilen}">47</td>
             </tr>
+            <tr>
+                <th>Bewertungen der Rückmeldung</th>
+                <td th:text="${bewertungen}">18</td>
+            </tr>
         </table>
 
         <p class="konvention">
@@ -51,10 +55,11 @@
         </p>
 
         <p>
-            <a href="/protokoll.csv">Protokoll als CSV herunterladen</a>
+            <a href="/protokoll.csv">Protokoll als CSV herunterladen</a><br>
+            <a href="/bewertungen.csv">Bewertungen als CSV herunterladen</a>
         </p>
 
-        <form method="post" action="/neu" class="antwort">
+        <form method="post" action="/neu">
             <button type="submit" class="leise">Nächste Person vorbereiten</button>
         </form>
     </div>

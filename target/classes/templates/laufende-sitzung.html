@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="de" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Es läuft noch eine Sitzung</title>
+    <link rel="stylesheet" href="/stil.css">
+</head>
+<body>
+<div class="seite">
+
+    <div class="karte">
+        <h1>Es läuft noch eine Sitzung</h1>
+        <p>
+            In diesem Browser ist noch eine Sitzung offen. Soll sie weitergehen, oder fängt
+            jetzt eine neue Person an?
+        </p>
+
+        <table class="zahlen">
+            <tr>
+                <th>Pseudonym</th>
+                <td th:text="${laufend.id()}">P07</td>
+            </tr>
+            <tr>
+                <th>Gruppe</th>
+                <td th:text="${laufend.gruppe()}">TUTOR</td>
+            </tr>
+        </table>
+
+        <div class="eingabe">
+            <form method="get" th:action="@{/uebung}" th:unless="${beendet}">
+                <button type="submit">Sitzung fortsetzen</button>
+            </form>
+            <form method="get" th:action="@{/ende}" th:if="${beendet}">
+                <button type="submit">Zur Abschlussseite</button>
+            </form>
+            <form method="post" action="/neu">
+                <button type="submit" class="leise">Neue Person, diese Sitzung schließen</button>
+            </form>
+        </div>
+
+        <p class="konvention">
+            Diese Seite erscheint, damit eine neue Sitzung nicht versehentlich unter dem
+            Pseudonym und der Gruppe der vorigen Person läuft. Vergewissere dich vor dem
+            Schließen, dass das Protokoll gesichert ist. Es liegt im Ordner
+            <code>protokolle</code> und steht auf der Abschlussseite zum Herunterladen.
+        </p>
+    </div>
+
+</div>
+</body>
+</html>

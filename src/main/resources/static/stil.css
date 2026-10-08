@@ -122,16 +122,45 @@ h2 {
 
 /* ---- Eingabe ---- */
 
-form.antwort {
-    display: flex;
-    gap: 10px;
+.karte form {
     margin-top: 20px;
+}
+
+/*
+ * Typ und Wert stehen nebeneinander, so wie in der Klausur Typ und Wert
+ * nebeneinander in die Tabelle geschrieben werden. Der Knopf schliesst die Zeile ab
+ * und sitzt auf derselben Grundlinie wie die beiden Felder.
+ */
+.eingabe {
+    display: flex;
+    gap: 12px;
+    align-items: flex-end;
     flex-wrap: wrap;
+}
+
+.feldblock {
+    flex: 1 1 220px;
+}
+
+.feldblock.schmal {
+    flex: 0 0 190px;
+}
+
+.feldblock label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-leise);
+    margin-bottom: 6px;
+}
+
+.feldblock input[type="text"],
+.feldblock select {
+    width: 100%;
 }
 
 input[type="text"],
 select {
-    flex: 1 1 220px;
     padding: 12px 14px;
     font-size: 18px;
     border: 1px solid var(--rahmen);
@@ -153,6 +182,11 @@ input[type="text"]:focus,
 select:focus {
     outline: 2px solid var(--akzent);
     outline-offset: 1px;
+}
+
+input[type="text"]:disabled {
+    background: var(--hintergrund);
+    color: var(--text-leise);
 }
 
 button {
@@ -208,6 +242,57 @@ button.leise {
 .loesung {
     margin-top: 16px;
     font-size: 19px;
+}
+
+/*
+ * Die Bewertung der Rueckmeldung. Die fuenf Stufen sind zugleich der Weiter-Knopf, ein
+ * Klick statt zweier. Sie sehen deshalb wie Knoepfe aus und nicht wie Radiofelder, und sie
+ * sind in beiden Gruppen gleich, denn verschieden ist allein der Text darueber.
+ */
+.bewertung {
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid var(--rahmen);
+}
+
+.bewertung .frage {
+    margin: 0 0 12px;
+    font-weight: 600;
+}
+
+.skala {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 0;
+}
+
+.skala .stufe {
+    flex: 1 1 110px;
+    background: var(--flaeche);
+    color: var(--text);
+    border: 1px solid var(--rahmen);
+    font-size: 15px;
+    padding: 12px 10px;
+}
+
+.skala .stufe:hover {
+    border-color: var(--akzent);
+    background: var(--hintergrund);
+    filter: none;
+}
+
+.ueberspringen {
+    background: transparent;
+    color: var(--text-leise);
+    padding: 8px 0;
+    font-size: 14px;
+    text-decoration: underline;
+}
+
+.ueberspringen:hover {
+    color: var(--text);
+    filter: none;
 }
 
 /* ---- Fusszeile ---- */

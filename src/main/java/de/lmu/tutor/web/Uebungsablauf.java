@@ -3,10 +3,10 @@ package de.lmu.tutor.web;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import de.lmu.tutor.ast.JType;
 import de.lmu.tutor.buglib.BugLibrary;
 import de.lmu.tutor.diagnose.NutzerAntwort;
 import de.lmu.tutor.eval.EvaluationResult;
@@ -61,7 +61,9 @@ public final class Uebungsablauf {
     private int aufgabenNummer;
     private Antwortergebnis letztesErgebnis;
     private String eingabehinweis = "";
-    private String letzteEingabe = "";
+    private String letzterTyp = "";
+    private String letzterWert = "";
+    private final List<Feedbackbewertung> bewertungen = new ArrayList<>();
 
     /**
      * @param bibliothek die Bug Library
@@ -99,22 +101,25 @@ public final class Uebungsablauf {
     /**
      * Wertet eine Eingabe aus.
      *
-     * <p>Eine nicht lesbare Eingabe wird nicht gewertet, sondern mit einem Hinweis
-     * zurueckgewiesen. Der Versuchszaehler und die Fehlerhistorie bleiben unberuehrt, denn
-     * ein Tippfehler ist keine Fehlvorstellung.</p>
+     * <p>Gefragt wird nach Typ und Wert, getrennt, wie in den Klausuraufgaben. Eine nicht
+     * lesbare Eingabe wird nicht gewertet, sondern mit einem Hinweis zurueckgewiesen. Der
+     * Versuchszaehler und die Fehlerhistorie bleiben unberuehrt, denn ein Tippfehler ist
+     * keine Fehlvorstellung.</p>
      *
+     * @param typ  der gewaehlte Typ, etwa {@code "int"}, oder "nicht auswertbar"
+     * @param wert der getippte Wert
      * @return {@code true}, wenn die Eingabe gewertet wurde
      */
-    public boolean antworte(String eingabe) {
+    public boolean antworte(String typ, String wert) {
         if (zustand != Zustand.AUFGABE_OFFEN) {
             return false;
         }
-        letzteEingabe = eingabe == null ? "" : eingabe;
+        letzterTyp = typ == null ? "" : typ;
+        letzterWert = wert == null ? "" : wert;
 
-        Optional<NutzerAntwort> gelesen = Antwortparser.lies(eingabe, erwarteterTyp());
+        Optional<NutzerAntwort> gelesen = Antwortparser.lies(typ, wert);
         if (gelesen.isEmpty()) {
-            eingabehinweis = "Diese Eingabe konnte ich nicht lesen. Bitte gib einen Java-Wert ein, "
-                    + "etwa 7, 2.5, true, 'a', \"abc\" oder \"nicht auswertbar\".";
+            eingabehinweis = Antwortparser.hinweisZu(typ, wert);
             return false;
         }
 
@@ -136,9 +141,24 @@ public final class Uebungsablauf {
      * damit niemand beim Tippen unterbrochen wird.</p>
      */
     public void weiter() {
+        weiter(Feedbackbewertung.UEBERSPRUNGEN);
+    }
+
+    /**
+     * Geht zur naechsten Aufgabe und haelt dabei fest, wie hilfreich die Rueckmeldung war.
+     *
+     * <p>Die Bewertung haengt an der Aufgabe und nicht am einzelnen Versuch. Sie wird nur
+     * dann aufgenommen, wenn es ueberhaupt eine Rueckmeldung auf einen Fehler gab, denn
+     * ein Lob fuer eine auf Anhieb richtige Antwort ist keine Hilfestellung, die sich
+     * bewerten liesse.</p>
+     *
+     * @param bewertung 1 bis 5, oder {@link Feedbackbewertung#UEBERSPRUNGEN}
+     */
+    public void weiter(int bewertung) {
         if (zustand != Zustand.AUFGABE_ERLEDIGT) {
             return;
         }
+        erfasseBewertung(bewertung);
         if (aufgabenNummer >= plan.maximaleAufgaben() || zeitAbgelaufen()) {
             zustand = Zustand.BEENDET;
             return;
@@ -146,9 +166,71 @@ public final class Uebungsablauf {
         sitzung.naechsteAufgabe();
         aufgabenNummer++;
         letztesErgebnis = null;
-        letzteEingabe = "";
+        letzterTyp = "";
+        letzterWert = "";
         eingabehinweis = "";
         zustand = Zustand.AUFGABE_OFFEN;
+    }
+
+    /**
+     * Schreibt eine Bewertung der Rueckmeldung zur gerade erledigten Aufgabe mit.
+     *
+     * <p>Wer auf Anhieb richtig liegt, bekommt keine Frage gestellt und erzeugt auch keine
+     * Zeile. Sonst waere die Haelfte der Daten eine Bewertung von Lob.</p>
+     */
+    private void erfasseBewertung(int bewertung) {
+        if (letztesErgebnis == null || bewertungGefragtEntfaellt()) {
+            return;
+        }
+        Antwortergebnis e = letztesErgebnis;
+        bewertungen.add(new Feedbackbewertung(
+                uhr.instant(),
+                teilnehmer().id(),
+                teilnehmer().gruppe(),
+                aufgabenNummer,
+                sitzung.aktuelleAufgabe().map(Aufgabe::kategorieId).orElse(""),
+                ausdruck(),
+                e.versuch(),
+                e.korrekt(),
+                e.rueckmeldung().stufe(),
+                // Nur eine begruendete Diagnose wird genannt. Eine blosse Vermutung aus
+                // der Herkunft der Aufgabe gehoert nicht in dieselbe Spalte, sonst waere
+                // die Trefferquote geschoent. Dieselbe Trennung wie im Systemprotokoll.
+                e.diagnose().erklaert() ? e.diagnose().kategorieIds() : "",
+                e.diagnose().erklaert(),
+                begrenzeBewertung(bewertung)));
+    }
+
+    /** Nach einer auf Anhieb richtigen Antwort gab es keine Rueckmeldung zu bewerten. */
+    public boolean bewertungGefragtEntfaellt() {
+        return letztesErgebnis != null && letztesErgebnis.korrekt()
+                && letztesErgebnis.versuch() == 1;
+    }
+
+    /** Ob nach dieser Aufgabe nach der Nuetzlichkeit der Rueckmeldung gefragt wird. */
+    public boolean fragtNachBewertung() {
+        return zustand == Zustand.AUFGABE_ERLEDIGT && !bewertungGefragtEntfaellt();
+    }
+
+    private static int begrenzeBewertung(int bewertung) {
+        if (bewertung < Feedbackbewertung.KLEINSTE || bewertung > Feedbackbewertung.GROESSTE) {
+            return Feedbackbewertung.UEBERSPRUNGEN;
+        }
+        return bewertung;
+    }
+
+    /** Die bisher abgegebenen Bewertungen, aelteste zuerst. */
+    public List<Feedbackbewertung> bewertungen() {
+        return List.copyOf(bewertungen);
+    }
+
+    /** Die Bewertungen als CSV, passend zum Systemprotokoll. */
+    public String bewertungenAlsCsv() {
+        StringBuilder sb = new StringBuilder(Feedbackbewertung.csvKopfzeile());
+        for (Feedbackbewertung b : bewertungen) {
+            sb.append(System.lineSeparator()).append(b.alsCsvZeile());
+        }
+        return sb.toString();
     }
 
     /** Beendet die Arbeitsphase vorzeitig, etwa wenn die Versuchsleitung abbricht. */
@@ -202,8 +284,19 @@ public final class Uebungsablauf {
         return eingabehinweis;
     }
 
-    public String letzteEingabe() {
-        return letzteEingabe;
+    /** Der zuletzt gewaehlte Typ, damit die Auswahl nach einem Fehlversuch stehen bleibt. */
+    public String letzterTyp() {
+        return letzterTyp;
+    }
+
+    /** Der zuletzt getippte Wert, damit das Feld nach einem Fehlversuch gefuellt bleibt. */
+    public String letzterWert() {
+        return letzterWert;
+    }
+
+    /** Die Typen, die zur Auswahl stehen. */
+    public List<String> typen() {
+        return Antwortparser.typen();
     }
 
     /** Der wievielte Versuch an der laufenden Aufgabe als naechstes faellig waere. */
@@ -246,9 +339,4 @@ public final class Uebungsablauf {
         return sitzung;
     }
 
-    private Optional<JType> erwarteterTyp() {
-        return sitzung.musterloesung()
-                .filter(EvaluationResult::auswertbar)
-                .map(r -> r.wert().typ());
-    }
 }

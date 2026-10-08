@@ -14,6 +14,7 @@ de\lmu\tutor\ast\Expr$Call.class
 de\lmu\tutor\buglib\Subtype.class
 de\lmu\tutor\buglib\json\MiniJson.class
 de\lmu\tutor\ast\JType.class
+de\lmu\tutor\web\Skala$Stufe.class
 de\lmu\tutor\buglib\json\MiniJson$JsonException.class
 de\lmu\tutor\session\Teilnehmer$Gruppe.class
 de\lmu\tutor\buglib\Misconception.class
@@ -23,6 +24,7 @@ de\lmu\tutor\buglib\Difficulty.class
 de\lmu\tutor\diagnose\Fehlersimulator.class
 de\lmu\tutor\student\PfaParameter.class
 de\lmu\tutor\ast\Expr.class
+de\lmu\tutor\web\Antwortparser$1.class
 de\lmu\tutor\demo\FeedbackDemo.class
 de\lmu\tutor\diagnose\Diagnose$Konfidenz.class
 de\lmu\tutor\ast\AST.class
@@ -53,8 +55,10 @@ de\lmu\tutor\student\Studentenmodell.class
 de\lmu\tutor\ast\Expr$IncDec.class
 de\lmu\tutor\session\Uebungssitzung.class
 de\lmu\tutor\diagnose\Fehlerklassifikator.class
+de\lmu\tutor\web\Skala.class
 de\lmu\tutor\eval\EvaluationResult.class
 de\lmu\tutor\diagnose\Fehlersimulator$Treffer.class
+de\lmu\tutor\web\Feedbackbewertung.class
 de\lmu\tutor\web\UebungsController.class
 de\lmu\tutor\eval\EvaluationContext.class
 de\lmu\tutor\eval\Value$1.class

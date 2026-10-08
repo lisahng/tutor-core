@@ -18,7 +18,7 @@
     </div>
 
     <div class="karte">
-        <h2>Welchen Wert hat dieser Ausdruck?</h2>
+        <h2>Gib Typ und Wert des Ausdrucks an</h2>
 
         <p class="belegung" th:if="${!#strings.isEmpty(belegung)}" th:text="${belegung}">
             x = 3, y = 4
@@ -27,10 +27,29 @@
         <div class="ausdruck" th:text="${ausdruck}">8 + 23 % 3</div>
 
         <!-- Eingabe, solange noch ein Versuch offen ist -->
-        <form class="antwort" method="post" action="/antwort" th:unless="${erledigt}">
-            <input type="text" name="eingabe" id="eingabe" autocomplete="off" autofocus
-                   th:value="${letzteEingabe}" placeholder="Ergebnis eingeben">
-            <button type="submit">Antwort prüfen</button>
+        <form method="post" action="/antwort" th:unless="${erledigt}">
+            <div class="eingabe">
+                <div class="feldblock schmal">
+                    <label for="typ">Typ</label>
+                    <select name="typ" id="typ" autofocus>
+                        <option value=""
+                                th:selected="${#strings.isEmpty(letzterTyp)}">bitte wählen</option>
+                        <option th:each="t : ${typen}"
+                                th:value="${t}" th:text="${t}"
+                                th:selected="${t == letzterTyp}">int</option>
+                        <option th:value="${nichtAuswertbar}" th:text="${nichtAuswertbar}"
+                                th:selected="${nichtAuswertbar == letzterTyp}">nicht auswertbar</option>
+                    </select>
+                </div>
+
+                <div class="feldblock">
+                    <label for="wert">Wert</label>
+                    <input type="text" name="wert" id="wert" autocomplete="off"
+                           th:value="${letzterWert}" placeholder="Ergebnis">
+                </div>
+
+                <button type="submit">Antwort prüfen</button>
+            </div>
         </form>
 
         <p class="eingabehinweis" th:if="${!#strings.isEmpty(hinweis)}" th:text="${hinweis}">
@@ -49,17 +68,35 @@
             <p class="loesung" th:if="${!korrekt}">
                 Richtig wäre: <strong th:text="${loesung}">10 : int</strong>
             </p>
-            <form method="post" action="/weiter" class="antwort">
+
+            <!--
+                Die Bewertung ist zugleich der Weiter-Knopf. Ein Klick statt zweier, und
+                niemand kann weitergehen, ohne gefragt worden zu sein. Nach einer auf
+                Anhieb richtigen Antwort entfällt die Frage, denn ein Lob ist keine
+                Hilfestellung, die sich bewerten ließe.
+            -->
+            <div class="bewertung" th:if="${frageNachBewertung}">
+                <p class="frage" th:text="${frage}">Wie hilfreich war diese Rückmeldung?</p>
+                <form method="post" action="/weiter" class="skala">
+                    <button th:each="s : ${skala}" type="submit" class="stufe"
+                            name="bewertung" th:value="${s.wert()}"
+                            th:text="${s.text()}">hilfreich</button>
+                </form>
+                <form method="post" action="/weiter">
+                    <button type="submit" class="ueberspringen">ohne Bewertung weiter</button>
+                </form>
+            </div>
+
+            <form method="post" action="/weiter" th:unless="${frageNachBewertung}">
                 <button type="submit" autofocus>Nächste Aufgabe</button>
             </form>
         </div>
 
         <p class="konvention" th:unless="${erledigt}">
             Ganze Zahlen ohne Punkt (<code>7</code>), Kommazahlen mit Punkt (<code>2.5</code>),
-            Zeichen in einfachen (<code>'a'</code>), Zeichenketten in doppelten
-            Anführungszeichen (<code>"abc"</code>), Wahrheitswerte als <code>true</code> oder
-            <code>false</code>. Wenn der Ausdruck zu einem Fehler führt:
-            <code>nicht auswertbar</code>.
+            char als <code>'a'</code> oder <code>a</code>, String als <code>"abc"</code> oder
+            <code>abc</code>, boolean als <code>true</code> oder <code>false</code>. Führt der
+            Ausdruck zu einem Laufzeitfehler, wähle als Typ <code>nicht auswertbar</code>.
         </p>
     </div>
 
@@ -90,6 +127,22 @@
             setTimeout(zeichne, 1000);
         }
         zeichne();
+    })();
+
+    // Bei "nicht auswertbar" gibt es keinen Wert. Das Feld wird deshalb stillgelegt,
+    // damit niemand dort etwas einträgt und sich wundert, dass es ignoriert wird.
+    (function () {
+        var typ = document.getElementById('typ');
+        var wert = document.getElementById('wert');
+        if (!typ || !wert) return;
+        function pruefe() {
+            var aus = typ.value === 'nicht auswertbar';
+            wert.disabled = aus;
+            wert.placeholder = aus ? 'entfällt' : 'Ergebnis';
+            if (aus) wert.value = '';
+        }
+        typ.addEventListener('change', pruefe);
+        pruefe();
     })();
 </script>
 </body>

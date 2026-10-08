@@ -57,8 +57,14 @@ class UebungsablaufTest {
 
     private final Pruefuhr uhr = new Pruefuhr();
 
-    /** Eine garantiert falsche Antwort. */
-    private static final String FALSCH = "-987654";
+    /** Eine garantiert falsche Antwort, als Typ und Wert. */
+    private static final String FALSCH_TYP = "int";
+    private static final String FALSCH_WERT = "-987654";
+
+    /** Kuerzel fuer "antworte mit einer garantiert falschen Eingabe". */
+    private static boolean falsch(Uebungsablauf a) {
+        return a.antworte(FALSCH_TYP, FALSCH_WERT);
+    }
 
     private Uebungsablauf ablauf(Sitzungsplan plan, Teilnehmer.Gruppe gruppe) {
         return new Uebungsablauf(lib, new Teilnehmer("P01", gruppe), plan, 2026L, uhr);
@@ -116,7 +122,7 @@ class UebungsablaufTest {
     void einZweiterStartBleibtWirkungslos() {
         // Sonst wuerde ein Neuladen der Startseite mitten in der Sitzung von vorn beginnen.
         Uebungsablauf a = gestartet();
-        a.antworte(FALSCH);
+        falsch(a);
         a.starte();
         assertEquals(1, a.aufgabenNummer());
         assertEquals(1, a.protokoll().size());
@@ -131,7 +137,7 @@ class UebungsablaufTest {
         // Das Scaffolding wuerde sonst eine Stufe weiterruecken und die Fehlerhistorie des
         // Studentenmodells bekaeme einen Eintrag, der nichts ueber den Kenntnisstand sagt.
         Uebungsablauf a = gestartet();
-        assertFalse(a.antworte("qqq"));
+        assertFalse(a.antworte("int", "qqq"));
         assertEquals(0, a.versuche());
         assertTrue(a.protokoll().isEmpty());
         assertEquals(Uebungsablauf.Zustand.AUFGABE_OFFEN, a.zustand());
@@ -140,16 +146,17 @@ class UebungsablaufTest {
     @Test
     void einTippfehlerErzeugtEinenHinweis() {
         Uebungsablauf a = gestartet();
-        a.antworte("qqq");
+        a.antworte("int", "qqq");
         assertFalse(a.eingabehinweis().isBlank());
-        assertEquals("qqq", a.letzteEingabe());
+        assertEquals("int", a.letzterTyp());
+        assertEquals("qqq", a.letzterWert());
     }
 
     @Test
     void derHinweisVerschwindetNachEinerLesbarenEingabe() {
         Uebungsablauf a = gestartet();
-        a.antworte("qqq");
-        a.antworte(FALSCH);
+        a.antworte("int", "qqq");
+        falsch(a);
         assertTrue(a.eingabehinweis().isBlank());
     }
 
@@ -160,21 +167,21 @@ class UebungsablaufTest {
     @Test
     void dieStufenSteigenInnerhalbEinerAufgabe() {
         Uebungsablauf a = gestartet();
-        a.antworte(FALSCH);
+        falsch(a);
         assertEquals(0, a.letztesErgebnis().orElseThrow().rueckmeldung().stufe());
-        a.antworte(FALSCH);
+        falsch(a);
         assertEquals(1, a.letztesErgebnis().orElseThrow().rueckmeldung().stufe());
-        a.antworte(FALSCH);
+        falsch(a);
         assertEquals(2, a.letztesErgebnis().orElseThrow().rueckmeldung().stufe());
     }
 
     @Test
     void nachDemLetztenVersuchIstDieAufgabeErledigt() {
         Uebungsablauf a = gestartet();
-        a.antworte(FALSCH);
-        a.antworte(FALSCH);
+        falsch(a);
+        falsch(a);
         assertEquals(Uebungsablauf.Zustand.AUFGABE_OFFEN, a.zustand());
-        a.antworte(FALSCH);
+        falsch(a);
         assertEquals(Uebungsablauf.Zustand.AUFGABE_ERLEDIGT, a.zustand());
         assertFalse(a.musterloesung().isBlank());
     }
@@ -183,17 +190,18 @@ class UebungsablaufTest {
     void eineErledigteAufgabeNimmtKeineAntwortMehrAn() {
         // Schutz gegen ein doppelt abgeschicktes Formular.
         Uebungsablauf a = gestartet();
-        a.antworte(FALSCH);
-        a.antworte(FALSCH);
-        a.antworte(FALSCH);
-        assertFalse(a.antworte("1"));
+        falsch(a);
+        falsch(a);
+        falsch(a);
+        assertFalse(a.antworte("int", "1"));
         assertEquals(3, a.protokoll().size());
     }
 
     @Test
     void eineRichtigeAntwortBeendetDieAufgabeSofort() {
         Uebungsablauf a = gestartet();
-        a.antworte(a.musterloesung().split(" : ")[0]);
+        String[] teile = a.musterloesung().split(" : ");
+        a.antworte(teile[1], teile[0]);
         assertEquals(Uebungsablauf.Zustand.AUFGABE_ERLEDIGT, a.zustand());
         assertTrue(a.letztesErgebnis().orElseThrow().korrekt());
         assertEquals(1, a.richtigeAntworten());
@@ -208,27 +216,28 @@ class UebungsablaufTest {
         // Die Vorgabe aus der vierten Besprechung: Stufe 0 fuer jede neue Aufgabe, das
         // Scaffolding gilt nur innerhalb derselben Aufgabe.
         Uebungsablauf a = gestartet();
-        a.antworte(FALSCH);
-        a.antworte(FALSCH);
-        a.antworte(FALSCH);
+        falsch(a);
+        falsch(a);
+        falsch(a);
         a.weiter();
 
         assertEquals(2, a.aufgabenNummer());
         assertEquals(0, a.versuche());
-        a.antworte(FALSCH);
+        falsch(a);
         assertEquals(0, a.letztesErgebnis().orElseThrow().rueckmeldung().stufe());
     }
 
     @Test
     void dieAnzeigeWirdBeimWeitergehenGeleert() {
         Uebungsablauf a = gestartet();
-        a.antworte("qqq");
-        a.antworte(FALSCH);
-        a.antworte(FALSCH);
-        a.antworte(FALSCH);
+        a.antworte("int", "qqq");
+        falsch(a);
+        falsch(a);
+        falsch(a);
         a.weiter();
         assertTrue(a.letztesErgebnis().isEmpty());
-        assertTrue(a.letzteEingabe().isEmpty());
+        assertTrue(a.letzterTyp().isEmpty());
+        assertTrue(a.letzterWert().isEmpty());
         assertTrue(a.eingabehinweis().isBlank());
     }
 
@@ -249,12 +258,12 @@ class UebungsablaufTest {
         Uebungsablauf a = ablauf(new Sitzungsplan(2, Duration.ofMinutes(25), 1),
                 Teilnehmer.Gruppe.TUTOR);
         a.starte();
-        a.antworte(FALSCH);
+        falsch(a);
         a.weiter();
         assertEquals(2, a.aufgabenNummer());
         assertFalse(a.beendet());
 
-        a.antworte(FALSCH);
+        falsch(a);
         a.weiter();
         assertTrue(a.beendet());
     }
@@ -268,7 +277,7 @@ class UebungsablaufTest {
         assertEquals(0, a.restsekunden());
         assertTrue(a.zeitAbgelaufen());
 
-        a.antworte(FALSCH);
+        falsch(a);
         a.weiter();
         assertTrue(a.beendet());
     }
@@ -281,7 +290,7 @@ class UebungsablaufTest {
                 Teilnehmer.Gruppe.TUTOR);
         a.starte();
         uhr.weiter(Duration.ofMinutes(26));
-        assertTrue(a.antworte(FALSCH));
+        assertTrue(falsch(a));
         assertFalse(a.beendet());
     }
 
@@ -308,7 +317,7 @@ class UebungsablaufTest {
         Uebungsablauf a = ablauf(new Sitzungsplan(20, Duration.ofMinutes(25), 3),
                 Teilnehmer.Gruppe.KONTROLLE);
         a.starte();
-        a.antworte(FALSCH);
+        falsch(a);
         assertTrue(a.letztesErgebnis().orElseThrow().rueckmeldung().kategorieId().isEmpty());
     }
 
@@ -324,8 +333,8 @@ class UebungsablaufTest {
 
         for (int i = 0; i < 5; i++) {
             assertEquals(tutor.ausdruck(), kontrolle.ausdruck());
-            tutor.antworte(FALSCH);
-            kontrolle.antworte(FALSCH);
+            falsch(tutor);
+            falsch(kontrolle);
             tutor.weiter();
             kontrolle.weiter();
         }
@@ -338,16 +347,16 @@ class UebungsablaufTest {
     @Test
     void jedeGewerteteAntwortErzeugtGenauEineProtokollzeile() {
         Uebungsablauf a = gestartet();
-        a.antworte("qqq");
-        a.antworte(FALSCH);
-        a.antworte(FALSCH);
+        a.antworte("int", "qqq");
+        falsch(a);
+        falsch(a);
         assertEquals(2, a.protokoll().size());
     }
 
     @Test
     void dasCsvHatEineKopfzeile() {
         Uebungsablauf a = gestartet();
-        a.antworte(FALSCH);
+        falsch(a);
         String csv = a.protokollAlsCsv();
         assertTrue(csv.startsWith("zeitpunkt;teilnehmer;gruppe;"), "war: " + csv.lines().findFirst());
         assertEquals(2, csv.lines().count());

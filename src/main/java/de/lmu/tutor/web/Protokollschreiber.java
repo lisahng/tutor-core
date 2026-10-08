@@ -40,10 +40,24 @@ public class Protokollschreiber {
      * @return der Pfad der geschriebenen Datei, oder {@code null} bei einem Fehler
      */
     public Path schreibe(Path ordner, String teilnehmerId, String csv) {
+        return schreibe(ordner, teilnehmerId, "", csv);
+    }
+
+    /**
+     * Schreibt eine Datei mit Namenszusatz, etwa {@code P07-bewertungen.csv}.
+     *
+     * <p>Protokoll und Bewertungen liegen getrennt, weil sie verschiedene Einheiten haben.
+     * Das Protokoll hat eine Zeile je Versuch, die Bewertungen eine Zeile je Aufgabe. In
+     * einer Datei vermischt waere beides nur mit Mehrarbeit auszuwerten.</p>
+     *
+     * @param zusatz Namenszusatz ohne Bindestrich, leer fuer das Systemprotokoll
+     */
+    public Path schreibe(Path ordner, String teilnehmerId, String zusatz, String csv) {
         try {
             Files.createDirectories(ordner);
-            Path ziel = ordner.resolve(dateiname(teilnehmerId));
-            Path zwischenstand = ordner.resolve(dateiname(teilnehmerId) + ".teil");
+            String name = dateiname(teilnehmerId, zusatz);
+            Path ziel = ordner.resolve(name);
+            Path zwischenstand = ordner.resolve(name + ".teil");
             Files.writeString(zwischenstand, csv, StandardCharsets.UTF_8);
             Files.move(zwischenstand, ziel,
                     java.nio.file.StandardCopyOption.REPLACE_EXISTING);
@@ -61,6 +75,10 @@ public class Protokollschreiber {
      * herausfuehrt.</p>
      */
     static String dateiname(String teilnehmerId) {
+        return dateiname(teilnehmerId, "");
+    }
+
+    static String dateiname(String teilnehmerId, String zusatz) {
         String sauber = teilnehmerId == null ? "" : teilnehmerId.replaceAll("[^A-Za-z0-9_-]", "_");
         if (sauber.isBlank()) {
             sauber = "unbenannt";
@@ -68,6 +86,9 @@ public class Protokollschreiber {
         if (sauber.length() > 40) {
             sauber = sauber.substring(0, 40);
         }
-        return sauber + ".csv";
+        String anhang = zusatz == null || zusatz.isBlank()
+                ? ""
+                : "-" + zusatz.replaceAll("[^A-Za-z0-9_-]", "_");
+        return sauber + anhang + ".csv";
     }
 }

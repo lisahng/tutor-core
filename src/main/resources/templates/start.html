@@ -31,14 +31,14 @@
                 </select>
             </div>
 
-            <div class="feld">
-                <label for="seed">Startwert des Aufgabengenerators</label>
-                <input type="text" id="seed" name="seed" th:value="${seed}" autocomplete="off">
-                <p class="konvention">
-                    Für alle Teilnehmenden derselbe Wert, damit auch dieselben Aufgaben
-                    entstehen. Nur zum Ausprobieren ändern.
-                </p>
-            </div>
+            <!--
+                Der Startwert wird mitgeschickt, aber nicht zum Ausfuellen angeboten. Jeder
+                andere Wert als der eingestellte waere ein Fehler, denn dann bekaeme diese
+                eine Person andere Aufgaben als alle uebrigen. Ein Feld, das man nur falsch
+                ausfuellen kann, gehoert nicht ins Formular. Zum Ausprobieren laesst er
+                sich ueber die Adresse setzen, etwa /?seed=99.
+            -->
+            <input type="hidden" name="seed" th:value="${seed}">
 
             <button type="submit">Sitzung starten</button>
         </form>
@@ -59,10 +59,15 @@
                 <th>Versuche je Aufgabe</th>
                 <td th:text="${plan.maximaleVersuche()}">3</td>
             </tr>
+            <tr>
+                <th>Startwert des Generators</th>
+                <td th:text="${seed}">2026</td>
+            </tr>
         </table>
         <p class="konvention">
-            Was zuerst erreicht ist, beendet die Arbeitsphase. Die Werte stehen in
-            <code>application.properties</code>.
+            Was zuerst erreicht ist, beendet die Arbeitsphase. Alle Werte stehen in
+            <code>application.properties</code>. Der Startwert ist für alle Teilnehmenden
+            derselbe, damit auch dieselben Aufgaben entstehen.
         </p>
     </div>
 

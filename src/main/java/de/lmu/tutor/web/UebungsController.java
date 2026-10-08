@@ -64,14 +64,32 @@ public class UebungsController {
     // Start
     // ================================================================
 
-    /** Das Startformular, das die Versuchsleitung vor der Sitzung ausfuellt. */
+    /**
+     * Das Startformular, das die Versuchsleitung vor der Sitzung ausfuellt.
+     *
+     * <p>Auszufuellen sind nur Pseudonym und Gruppe, also genau die beiden Dinge, die sich
+     * von Person zu Person unterscheiden. Der Startwert des Generators wird angezeigt, aber
+     * nicht zum Aendern angeboten, und als verstecktes Feld mitgeschickt.</p>
+     *
+     * <p><b>Die Hintertuer.</b> Fuer eigene Probelaeufe laesst sich der Startwert ueber die
+     * Adresse setzen, etwa {@code /?seed=99}. Im normalen Ablauf tippt das niemand, und ein
+     * versehentlich geaenderter Startwert mitten im Termin ist damit ausgeschlossen.</p>
+     */
     @GetMapping("/")
-    public String start(HttpSession sitzung, Model model) {
-        if (ablauf(sitzung) != null) {
-            return "redirect:/uebung";
+    public String start(@RequestParam(name = "seed", required = false) String seed,
+                        HttpSession sitzung, Model model) {
+        Uebungsablauf laufend = ablauf(sitzung);
+        if (laufend != null) {
+            // Nicht still umleiten. Wer die Startseite aufruft, will meist die naechste
+            // Person anlegen, und eine stille Umleitung wuerde die neue Sitzung unter
+            // Pseudonym und Gruppe der vorigen laufen lassen. Das faellt erst bei der
+            // Auswertung auf, und dann ist der Termin verloren.
+            model.addAttribute("laufend", laufend.teilnehmer());
+            model.addAttribute("beendet", laufend.beendet());
+            return "laufende-sitzung";
         }
         model.addAttribute("plan", einstellungen.alsPlan());
-        model.addAttribute("seed", einstellungen.getSeed());
+        model.addAttribute("seed", startwert(seed));
         return "start";
     }
 
@@ -118,26 +136,35 @@ public class UebungsController {
 
     /** Nimmt eine Antwort entgegen. */
     @PostMapping("/antwort")
-    public String antworte(@RequestParam(name = "eingabe", required = false) String eingabe,
+    public String antworte(@RequestParam(name = "typ", required = false) String typ,
+                           @RequestParam(name = "wert", required = false) String wert,
                            HttpSession sitzung) {
         Uebungsablauf ablauf = ablauf(sitzung);
         if (ablauf == null) {
             return "redirect:/";
         }
-        if (ablauf.antworte(eingabe)) {
+        if (ablauf.antworte(typ, wert)) {
             sichere(ablauf);
         }
         return "redirect:/uebung";
     }
 
-    /** Geht zur naechsten Aufgabe. */
+    /**
+     * Geht zur naechsten Aufgabe und nimmt dabei die Bewertung der Rueckmeldung entgegen.
+     *
+     * <p>Die Bewertung ist zugleich der Weiter-Knopf. Ein Klick statt zweier, und es gibt
+     * keine Reihenfolge, in der jemand weitergeht und das Bewerten vergisst. Wer nicht
+     * bewerten moechte, nimmt den Link daneben, dann wird {@code 0} aufgezeichnet.</p>
+     */
     @PostMapping("/weiter")
-    public String weiter(HttpSession sitzung) {
+    public String weiter(@RequestParam(name = "bewertung", required = false) Integer bewertung,
+                         HttpSession sitzung) {
         Uebungsablauf ablauf = ablauf(sitzung);
         if (ablauf == null) {
             return "redirect:/";
         }
-        ablauf.weiter();
+        ablauf.weiter(bewertung == null ? Feedbackbewertung.UEBERSPRUNGEN : bewertung);
+        sichere(ablauf);
         return ablauf.beendet() ? "redirect:/ende" : "redirect:/uebung";
     }
 
@@ -169,6 +196,7 @@ public class UebungsController {
         model.addAttribute("bearbeitet", ablauf.aufgabenNummer());
         model.addAttribute("richtig", ablauf.richtigeAntworten());
         model.addAttribute("zeilen", ablauf.protokoll().size());
+        model.addAttribute("bewertungen", ablauf.bewertungen().size());
         model.addAttribute("datei", Path.of(einstellungen.getProtokollOrdner())
                 .resolve(Protokollschreiber.dateiname(ablauf.teilnehmer().id())).toAbsolutePath());
         return "ende";
@@ -185,6 +213,21 @@ public class UebungsController {
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\""
                         + Protokollschreiber.dateiname(ablauf.teilnehmer().id()) + "\"")
+                .contentType(MediaType.parseMediaType("text/csv; charset=UTF-8"))
+                .body(inhalt);
+    }
+
+    /** Die Bewertungen als CSV-Datei zum Herunterladen. */
+    @GetMapping("/bewertungen.csv")
+    public ResponseEntity<byte[]> bewertungen(HttpSession sitzung) {
+        Uebungsablauf ablauf = ablauf(sitzung);
+        if (ablauf == null) {
+            return ResponseEntity.notFound().build();
+        }
+        byte[] inhalt = ablauf.bewertungenAlsCsv().getBytes(StandardCharsets.UTF_8);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\""
+                        + Protokollschreiber.dateiname(ablauf.teilnehmer().id(), "bewertungen") + "\"")
                 .contentType(MediaType.parseMediaType("text/csv; charset=UTF-8"))
                 .body(inhalt);
     }
@@ -222,9 +265,19 @@ public class UebungsController {
         return (Uebungsablauf) sitzung.getAttribute(SCHLUESSEL);
     }
 
+    /**
+     * Sichert Systemprotokoll und Bewertungen nach jeder Antwort.
+     *
+     * <p>Zwei Dateien, weil die Einheiten verschieden sind: eine Zeile je Versuch im
+     * Protokoll, eine Zeile je Aufgabe bei den Bewertungen.</p>
+     */
     private void sichere(Uebungsablauf ablauf) {
-        schreiber.schreibe(Path.of(einstellungen.getProtokollOrdner()),
-                ablauf.teilnehmer().id(), ablauf.protokollAlsCsv());
+        Path ordner = Path.of(einstellungen.getProtokollOrdner());
+        String id = ablauf.teilnehmer().id();
+        schreiber.schreibe(ordner, id, ablauf.protokollAlsCsv());
+        if (!ablauf.bewertungen().isEmpty()) {
+            schreiber.schreibe(ordner, id, "bewertungen", ablauf.bewertungenAlsCsv());
+        }
     }
 
     /**
@@ -240,7 +293,10 @@ public class UebungsController {
         model.addAttribute("ausdruck", ablauf.ausdruck());
         model.addAttribute("belegung", ablauf.belegung());
         model.addAttribute("hinweis", ablauf.eingabehinweis());
-        model.addAttribute("letzteEingabe", ablauf.letzteEingabe());
+        model.addAttribute("typen", ablauf.typen());
+        model.addAttribute("nichtAuswertbar", Antwortparser.NICHT_AUSWERTBAR);
+        model.addAttribute("letzterTyp", ablauf.letzterTyp());
+        model.addAttribute("letzterWert", ablauf.letzterWert());
         model.addAttribute("erledigt", ablauf.zustand() == Uebungsablauf.Zustand.AUFGABE_ERLEDIGT);
         model.addAttribute("versuche", ablauf.versuche());
         model.addAttribute("maxVersuche", ablauf.plan().maximaleVersuche());
@@ -255,5 +311,8 @@ public class UebungsController {
         if (ablauf.zustand() == Uebungsablauf.Zustand.AUFGABE_ERLEDIGT) {
             model.addAttribute("loesung", ablauf.musterloesung());
         }
+        model.addAttribute("frageNachBewertung", ablauf.fragtNachBewertung());
+        model.addAttribute("skala", Skala.STUFEN);
+        model.addAttribute("frage", Skala.FRAGE);
     }
 }
