@@ -16,15 +16,54 @@
         <maven.compiler.release>21</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <junit.version>5.10.2</junit.version>
+        <spring.boot.version>3.3.5</spring.boot.version>
     </properties>
 
+    <!--
+        Spring Boot wird ueber die Stueckliste eingebunden statt ueber das Eltern-POM.
+        Das Eltern-POM wuerde eigene Werte fuer Compiler, Surefire und Kodierung
+        mitbringen und die oben bewusst gesetzten ueberschreiben. Die Stueckliste legt
+        dagegen nur die Versionen der Abhaengigkeiten fest, auch die von JUnit. Deshalb
+        steht bei den Abhaengigkeiten unten keine Versionsnummer mehr.
+    -->
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${spring.boot.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
     <dependencies>
-        <!-- Nur fuer die Tests. Die Kernlogik ist bewusst abhaengigkeitsfrei. -->
+        <!--
+            Die Kernlogik in ast, eval, buglib, gen, diagnose, feedback, student und
+            session bleibt abhaengigkeitsfrei. Spring kommt ausschliesslich im Paket web
+            vor, das nichts weiter tut, als Eingaben hereinzureichen und Ergebnisse
+            anzuzeigen. Damit laesst sich alles Inhaltliche weiterhin ohne Webserver
+            testen.
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-thymeleaf</artifactId>
+        </dependency>
+
+        <!-- Nur fuer die Tests. -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
-            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -32,14 +71,34 @@
     <build>
         <plugins>
             <!--
-                Version bewusst festgelegt: Ohne Angabe waehlt Maven je nach eigener
-                Version ein anderes Compiler-Plugin, und derselbe Quelltext koennte auf
-                einem anderen Rechner anders uebersetzt werden.
+                Alle Plugin-Versionen sind ausdruecklich festgelegt. Ohne Angabe waehlt
+                jede Maven-Version ihre eigene, und derselbe Quelltext wuerde auf einem
+                anderen Rechner anders gebaut. Die Java-Erweiterung in VS Code bringt
+                zudem ein eigenes Maven mit und meldet sonst Fehler zu Versionen, die
+                auf der Kommandozeile gar nicht verwendet werden.
             -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.3.1</version>
+            </plugin>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.13.0</version>
+                <configuration>
+                    <!--
+                        Haelt die Parameternamen im uebersetzten Code fest. Ohne diese
+                        Option heisst ein Methodenparameter zur Laufzeit nur noch arg0,
+                        und Spring kann das Formularfeld teilnehmerId keinem Parameter
+                        mehr zuordnen. Die Oberflaeche antwortet dann mit "Name for
+                        argument of type [java.lang.String] not specified". Das
+                        Spring-Eltern-POM setzt das sonst, wir binden aber bewusst nur
+                        die Stueckliste ein.
+                    -->
+                    <parameters>true</parameters>
+                </configuration>
             </plugin>
 
             <plugin>
@@ -49,10 +108,11 @@
                 <configuration>
                     <!--
                         Surefire startet die Tests in einer eigenen JVM, die sich
-                        standardmaessig ein Viertel des Arbeitsspeichers reserviert. Laeuft
-                        daneben eine Entwicklungsumgebung, schlaegt das fehl ("insufficient
-                        memory ... to map ... bytes for G1 virtual space"). Die Tests dieses
-                        Projekts brauchen sehr wenig Speicher, deshalb die feste Obergrenze.
+                        standardmaessig ein Viertel des Arbeitsspeichers reserviert.
+                        Laeuft daneben eine Entwicklungsumgebung, schlaegt das fehl
+                        ("insufficient memory ... to map ... bytes for G1 virtual
+                        space"). Die Tests dieses Projekts brauchen sehr wenig
+                        Speicher, deshalb die feste Obergrenze.
                     -->
                     <argLine>-Xmx256m</argLine>
                 </configuration>
@@ -61,13 +121,30 @@
             <!--
                 Version 3.2.0 baut einen eigenen Classloader, der Ressourcen aus
                 target/classes nicht zuverlaessig findet. Die Bug Library wird als
-                Ressource geladen, weshalb die Demos dort mit "Ressource nicht gefunden"
-                abbrechen. 3.1.1 verhaelt sich korrekt.
+                Ressource geladen, weshalb die Demos dort mit "Ressource nicht
+                gefunden" abbrechen. 3.1.1 verhaelt sich korrekt.
             -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.1.1</version>
+            </plugin>
+
+            <!--
+                Startet die Weboberflaeche mit "mvn spring-boot:run".
+
+                Das Ziel repackage ist bewusst nicht eingebunden. Es wuerde beim
+                Paketieren eine startfaehige JAR-Datei bauen, die hier niemand braucht,
+                und es ist der haeufigste Ausloeser fuer die Meldung "Plugin execution
+                not covered by lifecycle configuration" in VS Code.
+            -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>${spring.boot.version}</version>
+                <configuration>
+                    <mainClass>de.lmu.tutor.web.TutorWebApplication</mainClass>
+                </configuration>
             </plugin>
         </plugins>
     </build>

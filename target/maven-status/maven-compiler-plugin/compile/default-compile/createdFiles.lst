@@ -1,5 +1,6 @@
 de\lmu\tutor\eval\NotEvaluableException.class
 de\lmu\tutor\ast\Expr$Index.class
+de\lmu\tutor\web\Antwortparser.class
 de\lmu\tutor\feedback\Rueckmeldung.class
 de\lmu\tutor\demo\StudentenmodellDemo.class
 de\lmu\tutor\session\Teilnehmer.class
@@ -8,6 +9,7 @@ de\lmu\tutor\diagnose\Diagnose.class
 de\lmu\tutor\ast\Expr$Var.class
 de\lmu\tutor\buglib\BugLibrary.class
 de\lmu\tutor\diagnose\Vergleichsergebnis.class
+de\lmu\tutor\web\Sitzungseinstellungen.class
 de\lmu\tutor\ast\Expr$Call.class
 de\lmu\tutor\buglib\Subtype.class
 de\lmu\tutor\buglib\json\MiniJson.class
@@ -26,11 +28,15 @@ de\lmu\tutor\diagnose\Diagnose$Konfidenz.class
 de\lmu\tutor\ast\AST.class
 de\lmu\tutor\ast\Expr$Unary.class
 de\lmu\tutor\demo\SitzungsDemo.class
+de\lmu\tutor\web\Protokollschreiber.class
 de\lmu\tutor\eval\EvaluationStep.class
+de\lmu\tutor\web\Uebungsablauf.class
 de\lmu\tutor\student\Kategoriestatistik.class
+de\lmu\tutor\web\Sitzungsplan.class
 de\lmu\tutor\demo\EvaluatorDemo.class
 de\lmu\tutor\ast\Expr$Ternary.class
 de\lmu\tutor\demo\DiagnoseDemo.class
+de\lmu\tutor\web\Uebungsablauf$Zustand.class
 de\lmu\tutor\ast\Expr$StaticCall.class
 de\lmu\tutor\ast\Expr$Bin.class
 de\lmu\tutor\diagnose\NutzerAntwort.class
@@ -49,6 +55,7 @@ de\lmu\tutor\session\Uebungssitzung.class
 de\lmu\tutor\diagnose\Fehlerklassifikator.class
 de\lmu\tutor\eval\EvaluationResult.class
 de\lmu\tutor\diagnose\Fehlersimulator$Treffer.class
+de\lmu\tutor\web\UebungsController.class
 de\lmu\tutor\eval\EvaluationContext.class
 de\lmu\tutor\eval\Value$1.class
 de\lmu\tutor\diagnose\Fehlersimulator$Annahmen.class
@@ -57,3 +64,4 @@ de\lmu\tutor\session\Protokolleintrag.class
 de\lmu\tutor\feedback\Feedbackgenerator.class
 de\lmu\tutor\demo\BugLibraryDemo.class
 de\lmu\tutor\gen\AufgabenGenerator.class
+de\lmu\tutor\web\TutorWebApplication.class

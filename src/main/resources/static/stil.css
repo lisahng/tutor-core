@@ -1,0 +1,264 @@
+/*
+ * Gestaltung der Uebungsoberflaeche.
+ *
+ * Zurueckhaltend und in beiden Gruppen identisch. Alles, was die Aufmerksamkeit vom
+ * Ausdruck wegzieht, waere hier eine Stoerquelle: Die Sitzungen werden aufgezeichnet und
+ * im Interview besprochen, und was auf dem Bildschirm passiert, soll auf die Aufgabe und
+ * die Rueckmeldung zurueckgehen und nicht auf das Layout.
+ */
+
+:root {
+    --text: #1a1f26;
+    --text-leise: #5b6572;
+    --rahmen: #d7dde5;
+    --flaeche: #ffffff;
+    --hintergrund: #f4f6f9;
+    --akzent: #1f4e79;
+    --richtig-rahmen: #2f7d4f;
+    --richtig-flaeche: #eef7f1;
+    --falsch-rahmen: #b4532a;
+    --falsch-flaeche: #fdf3ed;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    background: var(--hintergrund);
+    color: var(--text);
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    font-size: 17px;
+    line-height: 1.55;
+}
+
+.seite {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 24px 16px 64px;
+}
+
+/* ---- Kopfzeile ---- */
+
+.kopf {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: 12px 0 16px;
+    border-bottom: 1px solid var(--rahmen);
+    margin-bottom: 24px;
+}
+
+.fortschritt {
+    font-weight: 600;
+}
+
+.restzeit {
+    font-variant-numeric: tabular-nums;
+    color: var(--text-leise);
+}
+
+.restzeit.knapp {
+    color: var(--falsch-rahmen);
+    font-weight: 600;
+}
+
+.kennung {
+    color: var(--text-leise);
+    font-size: 14px;
+}
+
+/* ---- Karten ---- */
+
+.karte {
+    background: var(--flaeche);
+    border: 1px solid var(--rahmen);
+    border-radius: 10px;
+    padding: 24px;
+    margin-bottom: 20px;
+}
+
+h1 {
+    font-size: 26px;
+    margin: 0 0 8px;
+    color: var(--akzent);
+}
+
+h2 {
+    font-size: 15px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-leise);
+    margin: 0 0 10px;
+    font-weight: 600;
+}
+
+/* ---- Aufgabe ---- */
+
+.belegung,
+.ausdruck,
+.loesung {
+    font-family: "Cascadia Mono", "Consolas", "SF Mono", monospace;
+}
+
+.belegung {
+    font-size: 16px;
+    color: var(--text-leise);
+    margin-bottom: 14px;
+}
+
+.ausdruck {
+    font-size: 30px;
+    padding: 18px 20px;
+    background: var(--hintergrund);
+    border-radius: 8px;
+    border: 1px solid var(--rahmen);
+    word-break: break-word;
+}
+
+/* ---- Eingabe ---- */
+
+form.antwort {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+}
+
+input[type="text"],
+select {
+    flex: 1 1 220px;
+    padding: 12px 14px;
+    font-size: 18px;
+    border: 1px solid var(--rahmen);
+    border-radius: 8px;
+    background: var(--flaeche);
+    color: var(--text);
+}
+
+/* Eingetippte Werte stehen im selben Schriftbild wie der Ausdruck darueber. */
+input[type="text"] {
+    font-family: "Cascadia Mono", "Consolas", monospace;
+}
+
+select {
+    font-family: inherit;
+}
+
+input[type="text"]:focus,
+select:focus {
+    outline: 2px solid var(--akzent);
+    outline-offset: 1px;
+}
+
+button {
+    padding: 12px 22px;
+    font-size: 17px;
+    font-family: inherit;
+    border: none;
+    border-radius: 8px;
+    background: var(--akzent);
+    color: #fff;
+    cursor: pointer;
+}
+
+button:hover {
+    filter: brightness(1.12);
+}
+
+button.leise {
+    background: transparent;
+    color: var(--text-leise);
+    border: 1px solid var(--rahmen);
+}
+
+/* ---- Rueckmeldung ---- */
+
+.rueckmeldung {
+    border: 1px solid var(--falsch-rahmen);
+    background: var(--falsch-flaeche);
+    border-radius: 8px;
+    padding: 16px 18px;
+    margin-top: 20px;
+}
+
+.rueckmeldung.richtig {
+    border-color: var(--richtig-rahmen);
+    background: var(--richtig-flaeche);
+}
+
+.rueckmeldung .marke {
+    display: block;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-leise);
+    margin-bottom: 6px;
+}
+
+.eingabehinweis {
+    margin-top: 14px;
+    color: var(--falsch-rahmen);
+}
+
+.loesung {
+    margin-top: 16px;
+    font-size: 19px;
+}
+
+/* ---- Fusszeile ---- */
+
+.konvention {
+    color: var(--text-leise);
+    font-size: 14px;
+    margin-top: 20px;
+}
+
+.konvention code {
+    font-family: "Cascadia Mono", "Consolas", monospace;
+    background: var(--flaeche);
+    border: 1px solid var(--rahmen);
+    border-radius: 4px;
+    padding: 1px 5px;
+}
+
+.abbruch {
+    margin-top: 32px;
+    text-align: center;
+}
+
+table.zahlen {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 8px;
+}
+
+table.zahlen th,
+table.zahlen td {
+    text-align: left;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--rahmen);
+}
+
+table.zahlen td:last-child {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.feld {
+    margin-bottom: 18px;
+}
+
+.feld label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+a {
+    color: var(--akzent);
+}

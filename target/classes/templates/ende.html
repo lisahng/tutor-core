@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="de" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Arbeitsphase beendet</title>
+    <link rel="stylesheet" href="/stil.css">
+</head>
+<body>
+<div class="seite">
+
+    <div class="karte">
+        <h1>Geschafft</h1>
+        <p>
+            Die Arbeitsphase ist beendet. Vielen Dank fürs Mitmachen. Es geht gleich mit ein
+            paar Fragen weiter.
+        </p>
+
+        <table class="zahlen">
+            <tr>
+                <th>Bearbeitete Aufgaben</th>
+                <td th:text="${bearbeitet}">20</td>
+            </tr>
+            <tr>
+                <th>Davon auf Anhieb oder später richtig</th>
+                <td th:text="${richtig}">13</td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- Ab hier nur noch für die Versuchsleitung -->
+    <div class="karte">
+        <h2>Für die Versuchsleitung</h2>
+        <table class="zahlen">
+            <tr>
+                <th>Pseudonym</th>
+                <td th:text="${teilnehmer.id()}">P01</td>
+            </tr>
+            <tr>
+                <th>Gruppe</th>
+                <td th:text="${teilnehmer.gruppe()}">TUTOR</td>
+            </tr>
+            <tr>
+                <th>Protokollzeilen</th>
+                <td th:text="${zeilen}">47</td>
+            </tr>
+        </table>
+
+        <p class="konvention">
+            Automatisch gesichert unter <code th:text="${datei}">…/protokolle/P01.csv</code>
+        </p>
+
+        <p>
+            <a href="/protokoll.csv">Protokoll als CSV herunterladen</a>
+        </p>
+
+        <form method="post" action="/neu" class="antwort">
+            <button type="submit" class="leise">Nächste Person vorbereiten</button>
+        </form>
+    </div>
+
+</div>
+</body>
+</html>

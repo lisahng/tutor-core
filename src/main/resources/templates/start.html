@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="de" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Java-Ausdrücke üben</title>
+    <link rel="stylesheet" href="/stil.css">
+</head>
+<body>
+<div class="seite">
+
+    <div class="karte">
+        <h1>Java-Ausdrücke üben</h1>
+        <p>
+            Diese Seite richtet die Versuchsleitung vor der Sitzung ein. Pseudonym und Gruppe
+            stehen danach in jeder Zeile des Protokolls.
+        </p>
+
+        <form method="post" action="/start">
+            <div class="feld">
+                <label for="teilnehmerId">Pseudonym</label>
+                <input type="text" id="teilnehmerId" name="teilnehmerId" value="P01" required
+                       autocomplete="off">
+            </div>
+
+            <div class="feld">
+                <label for="gruppe">Gruppe</label>
+                <select id="gruppe" name="gruppe">
+                    <option value="TUTOR">Tutorgruppe (Diagnose und gestuftes Feedback)</option>
+                    <option value="KONTROLLE">Kontrollgruppe (nur richtig oder falsch)</option>
+                </select>
+            </div>
+
+            <div class="feld">
+                <label for="seed">Startwert des Aufgabengenerators</label>
+                <input type="text" id="seed" name="seed" th:value="${seed}" autocomplete="off">
+                <p class="konvention">
+                    Für alle Teilnehmenden derselbe Wert, damit auch dieselben Aufgaben
+                    entstehen. Nur zum Ausprobieren ändern.
+                </p>
+            </div>
+
+            <button type="submit">Sitzung starten</button>
+        </form>
+    </div>
+
+    <div class="karte">
+        <h2>Rahmen der Arbeitsphase</h2>
+        <table class="zahlen">
+            <tr>
+                <th>Aufgaben höchstens</th>
+                <td th:text="${plan.maximaleAufgaben()}">20</td>
+            </tr>
+            <tr>
+                <th>Zeit</th>
+                <td th:text="|${plan.arbeitszeit().toMinutes()} Minuten|">25 Minuten</td>
+            </tr>
+            <tr>
+                <th>Versuche je Aufgabe</th>
+                <td th:text="${plan.maximaleVersuche()}">3</td>
+            </tr>
+        </table>
+        <p class="konvention">
+            Was zuerst erreicht ist, beendet die Arbeitsphase. Die Werte stehen in
+            <code>application.properties</code>.
+        </p>
+    </div>
+
+</div>
+</body>
+</html>

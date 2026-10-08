@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="de" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="|Aufgabe ${nummer}|">Aufgabe 1</title>
+    <link rel="stylesheet" href="/stil.css">
+</head>
+<body>
+<div class="seite">
+
+    <div class="kopf">
+        <span class="fortschritt">
+            Aufgabe <span th:text="${nummer}">1</span> von <span th:text="${gesamt}">20</span>
+        </span>
+        <span class="restzeit" id="restzeit" th:attr="data-sekunden=${restsekunden}">--:--</span>
+        <span class="kennung" th:text="${teilnehmer.id()}">P01</span>
+    </div>
+
+    <div class="karte">
+        <h2>Welchen Wert hat dieser Ausdruck?</h2>
+
+        <p class="belegung" th:if="${!#strings.isEmpty(belegung)}" th:text="${belegung}">
+            x = 3, y = 4
+        </p>
+
+        <div class="ausdruck" th:text="${ausdruck}">8 + 23 % 3</div>
+
+        <!-- Eingabe, solange noch ein Versuch offen ist -->
+        <form class="antwort" method="post" action="/antwort" th:unless="${erledigt}">
+            <input type="text" name="eingabe" id="eingabe" autocomplete="off" autofocus
+                   th:value="${letzteEingabe}" placeholder="Ergebnis eingeben">
+            <button type="submit">Antwort prüfen</button>
+        </form>
+
+        <p class="eingabehinweis" th:if="${!#strings.isEmpty(hinweis)}" th:text="${hinweis}">
+            Diese Eingabe konnte ich nicht lesen.
+        </p>
+
+        <!-- Rückmeldung auf die letzte gewertete Antwort -->
+        <div class="rueckmeldung" th:if="${rueckmeldung != null}"
+             th:classappend="${korrekt} ? 'richtig' : ''">
+            <span class="marke" th:text="${korrekt} ? 'Richtig' : 'Rückmeldung'">Rückmeldung</span>
+            <span th:text="${rueckmeldung}">Das Ergebnis stimmt noch nicht.</span>
+        </div>
+
+        <!-- Lösung und Weiter, sobald die Aufgabe erledigt ist -->
+        <div th:if="${erledigt}">
+            <p class="loesung" th:if="${!korrekt}">
+                Richtig wäre: <strong th:text="${loesung}">10 : int</strong>
+            </p>
+            <form method="post" action="/weiter" class="antwort">
+                <button type="submit" autofocus>Nächste Aufgabe</button>
+            </form>
+        </div>
+
+        <p class="konvention" th:unless="${erledigt}">
+            Ganze Zahlen ohne Punkt (<code>7</code>), Kommazahlen mit Punkt (<code>2.5</code>),
+            Zeichen in einfachen (<code>'a'</code>), Zeichenketten in doppelten
+            Anführungszeichen (<code>"abc"</code>), Wahrheitswerte als <code>true</code> oder
+            <code>false</code>. Wenn der Ausdruck zu einem Fehler führt:
+            <code>nicht auswertbar</code>.
+        </p>
+    </div>
+
+    <div class="abbruch">
+        <form method="post" action="/beenden">
+            <button type="submit" class="leise">Arbeitsphase beenden</button>
+        </form>
+    </div>
+
+</div>
+
+<script>
+    // Zeigt die Restzeit an. Die Grenze gilt serverseitig; diese Anzeige dient nur der
+    // Orientierung und bricht niemanden mitten in einer Aufgabe ab.
+    (function () {
+        var anzeige = document.getElementById('restzeit');
+        if (!anzeige) return;
+        var rest = parseInt(anzeige.dataset.sekunden, 10);
+        function zeichne() {
+            var m = Math.floor(rest / 60), s = rest % 60;
+            anzeige.textContent = m + ':' + (s < 10 ? '0' : '') + s + ' verbleibend';
+            anzeige.classList.toggle('knapp', rest <= 120);
+            if (rest <= 0) {
+                anzeige.textContent = 'Zeit abgelaufen – bitte die Aufgabe noch abschließen';
+                return;
+            }
+            rest--;
+            setTimeout(zeichne, 1000);
+        }
+        zeichne();
+    })();
+</script>
+</body>
+</html>
