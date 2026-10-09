@@ -11,6 +11,7 @@ import static de.lmu.tutor.ast.AST.staticCall;
 import static de.lmu.tutor.ast.AST.stringLit;
 import static de.lmu.tutor.ast.AST.ternary;
 import static de.lmu.tutor.ast.AST.var;
+
 import de.lmu.tutor.ast.Expr;
 import de.lmu.tutor.ast.JType;
 import de.lmu.tutor.buglib.BugLibrary;

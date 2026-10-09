@@ -58,6 +58,7 @@ de\lmu\tutor\session\Uebungssitzung.class
 de\lmu\tutor\diagnose\Fehlerklassifikator.class
 de\lmu\tutor\web\Protokollspeicher.class
 de\lmu\tutor\web\Skala.class
+de\lmu\tutor\demo\GruppenvergleichDemo.class
 de\lmu\tutor\eval\EvaluationResult.class
 de\lmu\tutor\diagnose\Fehlersimulator$Treffer.class
 de\lmu\tutor\web\Feedbackbewertung.class
