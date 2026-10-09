@@ -87,6 +87,16 @@ public final class Feedbackgenerator {
             "Das Ergebnis stimmt noch nicht. Geh den Ausdruck Schritt fuer Schritt von innen "
                     + "nach aussen durch und vergleiche deinen Weg mit dem erwarteten.";
 
+    // ---- Kontrollbedingung: nur richtig oder falsch ----
+
+    private static final String KONTROLLE_FALSCH = "Das stimmt noch nicht.";
+
+    private static final String KONTROLLE_MIT_LOESUNG =
+            "Das stimmt noch nicht. Richtig waere {ergebnis}.";
+
+    private static final String KONTROLLE_MIT_LOESUNG_OHNE_AUFGABE =
+            "Das stimmt noch nicht.";
+
     private final Random random;
 
     public Feedbackgenerator() {
@@ -120,6 +130,52 @@ public final class Feedbackgenerator {
     /** Erstellt die Rueckmeldung ohne Bezug auf eine Aufgabe. */
     public Rueckmeldung erstelle(Diagnose diagnose, int fehlversucheAnAufgabe) {
         return erstelle(diagnose, fehlversucheAnAufgabe, null, true);
+    }
+
+    /**
+     * Rueckmeldung fuer die Kontrollbedingung der Evaluationsstudie: nur richtig oder
+     * falsch, ohne Diagnose und ohne gestufte Hinweise.
+     *
+     * <p>Das entspricht der gewohnten Situation, denn genau diese Auskunft gibt auch ein
+     * Compiler. Die Gruppe arbeitet also nicht mit einem kuenstlich verschlechterten
+     * Werkzeug, sondern mit dem ueblichen.</p>
+     *
+     * <p><b>Was absichtlich gleich bleibt.</b> Eine richtige Antwort erhaelt dieselbe
+     * Bestaetigung wie in der Tutorgruppe. Verglichen wird das Feedback auf <em>Fehler</em>,
+     * also darf sich das Lob nicht unterscheiden, sonst gaebe es mehr als einen
+     * Unterschied zwischen den Gruppen.</p>
+     *
+     * <p><b>Die Loesung nach dem dritten Versuch.</b> Beim letzten Versuch nennt auch
+     * diese Fassung das richtige Ergebnis, also Wert und Datentyp. Das entspricht einem
+     * Loesungsblatt und haelt den Zeitpunkt gleich, zu dem beide Gruppen die Antwort
+     * kennen koennen: Die Tutorgruppe erreicht zu diesem Versuch die letzte
+     * Scaffolding-Stufe. Ohne diese Angabe waere der Unterschied nicht mehr die
+     * <em>Art</em> der Rueckmeldung, sondern ihr blosses Vorhandensein, und die
+     * Kontrollgruppe koennte aus ihren Fehlern gar nichts lernen.</p>
+     *
+     * <p>Die Diagnose laeuft im Hintergrund trotzdem und wird protokolliert. Nur
+     * angezeigt wird sie nicht. So bleiben die Logdaten beider Gruppen vergleichbar, und
+     * die Kontrollgruppe liefert ebenfalls Beobachtungen fuer die Schaetzung von beta.</p>
+     *
+     * @param diagnose              die im Hintergrund ermittelte Diagnose, fuer den Text
+     *                              wird nur {@code korrekt} daraus verwendet
+     * @param fehlversucheAnAufgabe wie oft an dieser Aufgabe schon falsch geantwortet wurde
+     * @param aufgabe               die gestellte Aufgabe
+     * @param referenz              deren vorab berechnete Loesung
+     */
+    public Rueckmeldung erstelleOhneDiagnose(Diagnose diagnose, int fehlversucheAnAufgabe,
+                                             Aufgabe aufgabe, EvaluationResult referenz) {
+        if (diagnose.korrekt()) {
+            return Rueckmeldung.korrekt(LOB[random.nextInt(LOB.length)]);
+        }
+        int stufe = begrenze(fehlversucheAnAufgabe, 3);
+        if (stufe < 2) {
+            return Rueckmeldung.ohneDiagnose(KONTROLLE_FALSCH, stufe);
+        }
+        Platzhalter platzhalter = new Platzhalter(aufgabe, referenz);
+        String text = platzhalter.fuelle(KONTROLLE_MIT_LOESUNG)
+                .orElse(KONTROLLE_MIT_LOESUNG_OHNE_AUFGABE);
+        return Rueckmeldung.ohneDiagnose(text, stufe);
     }
 
     /** Letzte Scaffolding-Stufe unabhaengig von der Zahl der Fehlversuche. */

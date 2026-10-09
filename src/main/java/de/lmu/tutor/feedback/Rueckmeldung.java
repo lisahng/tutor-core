@@ -35,6 +35,17 @@ public record Rueckmeldung(boolean korrekt, String text, Optional<String> katego
         return new Rueckmeldung(false, text, Optional.empty(), stufe);
     }
 
+    /**
+     * Rueckmeldung der Kontrollbedingung: nur richtig oder falsch, ohne Diagnose.
+     *
+     * <p>Traegt keine Kategorie, weil keine genannt wird. Die Stufe wird trotzdem
+     * gefuehrt, damit sich die abgerufenen Feedback-Stufen zwischen den Gruppen
+     * vergleichen lassen.</p>
+     */
+    public static Rueckmeldung ohneDiagnose(String text, int stufe) {
+        return new Rueckmeldung(false, text, Optional.empty(), stufe);
+    }
+
     /** Wie {@link #modellabgleich(String, int)}, ohne Stufung. */
     public static Rueckmeldung unbekannterFehler(String text) {
         return new Rueckmeldung(false, text, Optional.empty(), -1);

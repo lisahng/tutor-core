@@ -25,7 +25,14 @@
 
             <div class="feld">
                 <label for="gruppe">Gruppe</label>
-                <select id="gruppe" name="gruppe">
+                <select id="gruppe" name="gruppe" required>
+                    <!--
+                        Keine Vorauswahl. Stuende hier eine Gruppe schon im Feld, liefe eine
+                        Sitzung in der falschen Bedingung, sobald die Versuchsleitung das Feld
+                        einmal uebersieht. Der Fehler faellt dann erst bei der Auswertung auf,
+                        wo er nicht mehr zu beheben ist.
+                    -->
+                    <option value="" disabled selected>bitte wählen</option>
                     <option value="TUTOR">Tutorgruppe (Diagnose und gestuftes Feedback)</option>
                     <option value="KONTROLLE">Kontrollgruppe (nur richtig oder falsch)</option>
                 </select>

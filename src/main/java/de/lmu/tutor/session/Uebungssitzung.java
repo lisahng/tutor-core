@@ -51,6 +51,12 @@ import de.lmu.tutor.student.Studentenmodell;
  * zu derselben Aufgabe und erhaelt beim zweiten Mal die naechste Scaffolding-Stufe. Das ist
  * beabsichtigt, denn die Anzahl der Versuche gehoert zu den erhobenen Daten.</p>
  *
+ * <p><b>Die beiden Bedingungen.</b> Gehoert die Person zur Kontrollgruppe, bekommt sie
+ * nur richtig oder falsch zu sehen. Alles andere laeuft identisch: dieselbe
+ * Aufgabenauswahl, dieselben Aufgaben, dieselbe Zahl moeglicher Versuche, dieselbe
+ * Diagnose im Hintergrund und dieselbe Protokollierung. Damit unterscheiden sich die
+ * Gruppen in genau einer Sache, naemlich der Art der Rueckmeldung auf einen Fehler.</p>
+ *
  * <p><b>Nicht nebenlaeufig.</b> Eine Sitzung gehoert zu genau einer Person und haelt
  * veraenderlichen Zustand. In einer Webanwendung gehoert sie in die Session, nicht in eine
  * von allen geteilte Bean.</p>
@@ -231,8 +237,15 @@ public final class Uebungssitzung {
             fehlversucheAnAufgabe.put(schluessel, fehlversuche + 1);
         }
 
-        Rueckmeldung rueckmeldung = feedbackgenerator.erstelle(
-                diagnose, fehlversuche, aktuelleAufgabe, aktuelleReferenz);
+        // Die Diagnose laeuft in beiden Bedingungen und wird in beiden protokolliert.
+        // Nur die Kontrollgruppe bekommt sie nicht zu sehen. So bleiben die Logdaten
+        // vergleichbar, und beide Gruppen liefern Beobachtungen fuer die Schaetzung
+        // von beta.
+        Rueckmeldung rueckmeldung = teilnehmer.istKontrollgruppe()
+                ? feedbackgenerator.erstelleOhneDiagnose(
+                        diagnose, fehlversuche, aktuelleAufgabe, aktuelleReferenz)
+                : feedbackgenerator.erstelle(
+                        diagnose, fehlversuche, aktuelleAufgabe, aktuelleReferenz);
         protokolliere(antwort, diagnose, rueckmeldung,
                 kategorieFuerHistorie, erfolgeVorher, fehlerVorher);
 

@@ -14,7 +14,13 @@
             Aufgabe <span th:text="${nummer}">1</span> von <span th:text="${gesamt}">20</span>
         </span>
         <span class="restzeit" id="restzeit" th:attr="data-sekunden=${restsekunden}">--:--</span>
-        <span class="kennung" th:text="${teilnehmer.id()}">P01</span>
+        <!--
+            Die Bedingung steht als neutraler Buchstabe da, nicht als "Kontrollgruppe".
+            Die Versuchsleitung kann damit jederzeit pruefen, in welcher Bedingung die
+            Sitzung laeuft. Wer teilnimmt, erfaehrt daraus nichts ueber die eigene Rolle
+            und kann sich deshalb auch nicht benachteiligt fuehlen.
+        -->
+        <span class="kennung" th:text="|${teilnehmer.id()} · ${bedingung}|">P01 · A</span>
     </div>
 
     <div class="karte">
