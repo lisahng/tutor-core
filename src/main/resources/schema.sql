@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS protokoll (
     historie_kategorie  VARCHAR(16),
     erfolge_vorher      INT          NOT NULL,
     fehler_vorher       INT          NOT NULL,
-    dauer_millis        BIGINT       NOT NULL,
+    dauer_sekunden      INT          NOT NULL,
     INDEX idx_protokoll_sitzung (sitzung_id),
     INDEX idx_protokoll_teilnehmer (teilnehmer)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

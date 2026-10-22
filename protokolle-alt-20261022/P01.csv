@@ -1,0 +1,4 @@
+zeitpunkt;teilnehmer;gruppe;kategorie;ausdruck;belegung;referenz;antwort;versuch;korrekt;diagnose;vermutung;erklaert;konfidenz;feedbackStufe;historieKategorie;erfolgeVorher;fehlerVorher;dauerMillis
+"2026-10-09T11:14:44.398113300Z";"P01";"KONTROLLE";"B01";"8 + 23 % 3";"";"10 : int";"3.0 : double";1;false;"";"B01";false;"ZIELKATEGORIE";0;"B01";0;0;4753
+"2026-10-09T11:14:48.837237900Z";"P01";"KONTROLLE";"B01";"8 + 23 % 3";"";"10 : int";"3.0 : double";2;false;"";"B01";false;"ZIELKATEGORIE";1;"B01";0;1;9192
+"2026-10-09T11:14:50.555855800Z";"P01";"KONTROLLE";"B01";"8 + 23 % 3";"";"10 : int";"3.0 : double";3;false;"";"B01";false;"ZIELKATEGORIE";2;"B01";0;2;10910

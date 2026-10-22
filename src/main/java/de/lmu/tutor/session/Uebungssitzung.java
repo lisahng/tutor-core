@@ -51,11 +51,14 @@ import de.lmu.tutor.student.Studentenmodell;
  * zu derselben Aufgabe und erhaelt beim zweiten Mal die naechste Scaffolding-Stufe. Das ist
  * beabsichtigt, denn die Anzahl der Versuche gehoert zu den erhobenen Daten.</p>
  *
- * <p><b>Die beiden Bedingungen.</b> Gehoert die Person zur Kontrollgruppe, bekommt sie
- * nur richtig oder falsch zu sehen. Alles andere laeuft identisch: dieselbe
- * Aufgabenauswahl, dieselben Aufgaben, dieselbe Zahl moeglicher Versuche, dieselbe
- * Diagnose im Hintergrund und dieselbe Protokollierung. Damit unterscheiden sich die
- * Gruppen in genau einer Sache, naemlich der Art der Rueckmeldung auf einen Fehler.</p>
+ * <p><b>Die beiden Bedingungen.</b> Der Unterschied liegt allein in der Aufgabenauswahl.
+ * In der Tutorgruppe waehlt das Studentenmodell die naechste Kategorie nach PFA, also die
+ * mit der niedrigsten geschaetzten Erfolgswahrscheinlichkeit, und stellt zu einer
+ * erkannten Fehlvorstellung weitere Aufgaben. In der Kontrollgruppe laeuft eine feste
+ * Reihenfolge reihum durch alle Kategorien, unabhaengig davon, was die Person richtig oder
+ * falsch beantwortet hat. Alles andere ist identisch: dieselbe Rueckmeldung mit denselben
+ * Scaffolding-Stufen, dieselbe Zahl moeglicher Versuche, dieselbe Diagnose und dieselbe
+ * Protokollierung. Damit unterscheiden sich die Gruppen in genau einer Sache.</p>
  *
  * <p><b>Nicht nebenlaeufig.</b> Eine Sitzung gehoert zu genau einer Person und haelt
  * veraenderlichen Zustand. In einer Webanwendung gehoert sie in die Session, nicht in eine
@@ -78,6 +81,13 @@ public final class Uebungssitzung {
 
     /** Kategorien, fuer die der Generator keine Vorlage hat. Wird zur Laufzeit gelernt. */
     private final Set<String> ohneVorlage = new HashSet<>();
+
+    /**
+     * Position in der festen Reihenfolge der Kontrollgruppe. Zaehlt ueber die ganze
+     * Sitzung weiter und laeuft am Ende der Liste wieder von vorn los, so dass jede
+     * Kategorie gleich oft drankommt.
+     */
+    private int festePosition;
 
     private Aufgabe aktuelleAufgabe;
     private EvaluationResult aktuelleReferenz;
@@ -162,7 +172,9 @@ public final class Uebungssitzung {
         // Hoechstens so viele Anlaeufe wie es Kategorien gibt: danach ist jede einmal
         // geprueft und ein weiterer Versuch koennte nur endlos kreisen.
         for (int versuch = 0; versuch < bibliothek.size(); versuch++) {
-            Optional<Misconception> kategorie = studentenmodell.naechsteKategorie();
+            Optional<Misconception> kategorie = teilnehmer.istKontrollgruppe()
+                    ? naechsteFesteKategorie()
+                    : studentenmodell.naechsteKategorie();
             if (kategorie.isEmpty()) {
                 break;
             }
@@ -185,6 +197,37 @@ public final class Uebungssitzung {
     public Aufgabe aufgabeZu(String kategorieId) {
         stelle(generator.generiere(kategorieId));
         return aktuelleAufgabe;
+    }
+
+    /**
+     * Die naechste Kategorie der Kontrollbedingung, ohne jede Anpassung an die Leistung.
+     *
+     * <p>Grundlage ist dieselbe Startreihenfolge, mit der auch die Tutorgruppe beginnt,
+     * also die Kategorien in der Reihenfolge der Bug Library. Nach der letzten geht es
+     * wieder bei der ersten los. Dadurch bekommt jede Kategorie gleich viele Aufgaben,
+     * waehrend die Tutorgruppe ihre Zeit auf die schwachen Kategorien verlagert. Genau
+     * dieser Unterschied ist der untersuchte Faktor.</p>
+     *
+     * <p>Die Aufgaben selbst sind trotzdem jedes Mal neu, denn der Generator erzeugt zu
+     * einer Kategorie bei jedem Aufruf einen anderen Ausdruck. Wiederholt wird also die
+     * Kategorie, nicht die Aufgabe.</p>
+     */
+    private Optional<Misconception> naechsteFesteKategorie() {
+        List<String> reihenfolge = studentenmodell.startreihenfolge();
+        if (reihenfolge.isEmpty()) {
+            return Optional.empty();
+        }
+        // Hoechstens eine volle Runde: Sind alle IDs der Reihenfolge unbekannt, bricht die
+        // Schleife ab, statt endlos zu kreisen.
+        for (int i = 0; i < reihenfolge.size(); i++) {
+            String id = reihenfolge.get(Math.floorMod(festePosition, reihenfolge.size()));
+            festePosition++;
+            Optional<Misconception> m = bibliothek.byId(id);
+            if (m.isPresent()) {
+                return m;
+            }
+        }
+        return Optional.empty();
     }
 
     private void stelle(Aufgabe aufgabe) {
@@ -237,15 +280,10 @@ public final class Uebungssitzung {
             fehlversucheAnAufgabe.put(schluessel, fehlversuche + 1);
         }
 
-        // Die Diagnose laeuft in beiden Bedingungen und wird in beiden protokolliert.
-        // Nur die Kontrollgruppe bekommt sie nicht zu sehen. So bleiben die Logdaten
-        // vergleichbar, und beide Gruppen liefern Beobachtungen fuer die Schaetzung
-        // von beta.
-        Rueckmeldung rueckmeldung = teilnehmer.istKontrollgruppe()
-                ? feedbackgenerator.erstelleOhneDiagnose(
-                        diagnose, fehlversuche, aktuelleAufgabe, aktuelleReferenz)
-                : feedbackgenerator.erstelle(
-                        diagnose, fehlversuche, aktuelleAufgabe, aktuelleReferenz);
+        // Die Rueckmeldung ist in beiden Bedingungen dieselbe. Unterschieden wird allein
+        // bei der Auswahl der naechsten Aufgabe, siehe naechsteFesteKategorie().
+        Rueckmeldung rueckmeldung = feedbackgenerator.erstelle(
+                diagnose, fehlversuche, aktuelleAufgabe, aktuelleReferenz);
         protokolliere(antwort, diagnose, rueckmeldung,
                 kategorieFuerHistorie, erfolgeVorher, fehlerVorher);
 
@@ -285,7 +323,18 @@ public final class Uebungssitzung {
                 historieKategorie,
                 erfolgeVorher,
                 fehlerVorher,
-                jetzt.toEpochMilli() - aufgabeGestelltUm.toEpochMilli()));
+                sekundenSeit(aufgabeGestelltUm, jetzt)));
+    }
+
+    /**
+     * Die vergangene Zeit in vollen Sekunden, kaufmaennisch gerundet.
+     *
+     * <p>Millisekunden waeren Scheingenauigkeit. Gemessen wird, wie lange jemand ueber
+     * einer Aufgabe sitzt, und das haengt am Nachdenken und am Tippen, nicht am
+     * Netzwerk. Sekunden sind ausserdem die Einheit, in der die Auswertung rechnet.</p>
+     */
+    private static long sekundenSeit(Instant anfang, Instant ende) {
+        return Math.round((ende.toEpochMilli() - anfang.toEpochMilli()) / 1000.0);
     }
 
     private static String antwortAlsText(NutzerAntwort antwort) {

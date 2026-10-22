@@ -1,0 +1,3 @@
+zeitpunkt;teilnehmer;gruppe;aufgabenNummer;kategorie;ausdruck;versuche;korrekt;feedbackStufe;diagnose;erklaert;bewertung
+"2026-10-09T11:07:59.100121Z";"P01";"TUTOR";1;"B01";"8 + 23 % 3";3;true;-1;"";false;4
+"2026-10-09T11:08:37.352427100Z";"P01";"TUTOR";2;"B02";"34 / 8";3;false;0;"B07";true;2

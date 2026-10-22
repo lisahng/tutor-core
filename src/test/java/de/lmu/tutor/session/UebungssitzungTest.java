@@ -1,16 +1,16 @@
 package de.lmu.tutor.session;
 
-import java.time.Clock;
-import java.util.HashSet;
-import java.util.Random;
-import java.util.Set;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
+
+import java.time.Clock;
+import java.util.HashSet;
+import java.util.Random;
+import java.util.Set;
 
 import de.lmu.tutor.buglib.BugLibrary;
 import de.lmu.tutor.diagnose.NutzerAntwort;
@@ -299,7 +299,7 @@ class UebungssitzungTest {
         assertEquals(1, eintrag.versuch());
         assertFalse(eintrag.korrekt());
         assertFalse(eintrag.referenz().isBlank());
-        assertTrue(eintrag.dauerMillis() >= 0);
+        assertTrue(eintrag.dauerSekunden() >= 0);
     }
 
     @Test

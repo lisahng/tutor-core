@@ -37,7 +37,7 @@ public class Protokollspeicher {
                 sitzung_id, zeitpunkt, teilnehmer, gruppe, kategorie, ausdruck, belegung,
                 referenz, antwort, versuch, korrekt, diagnose, vermutung, erklaert,
                 konfidenz, feedback_stufe, historie_kategorie, erfolge_vorher,
-                fehler_vorher, dauer_millis
+                fehler_vorher, dauer_sekunden
             ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
             """;
 
@@ -95,7 +95,7 @@ public class Protokollspeicher {
                             z.historieKategorie(),
                             z.erfolgeVorher(),
                             z.fehlerVorher(),
-                            z.dauerMillis()
+                            z.dauerSekunden()
                     })
                     .toList());
             letzterFehler = "";

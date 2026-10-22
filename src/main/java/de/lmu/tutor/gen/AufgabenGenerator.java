@@ -1,22 +1,12 @@
 package de.lmu.tutor.gen;
 
-import java.util.Random;
-
-import static de.lmu.tutor.ast.AST.bin;
-import static de.lmu.tutor.ast.AST.boolLit;
-import static de.lmu.tutor.ast.AST.call;
-import static de.lmu.tutor.ast.AST.cast;
-import static de.lmu.tutor.ast.AST.doubleLit;
-import static de.lmu.tutor.ast.AST.index;
-import static de.lmu.tutor.ast.AST.intLit;
-import static de.lmu.tutor.ast.AST.postInc;
-import static de.lmu.tutor.ast.AST.preInc;
-import static de.lmu.tutor.ast.AST.stringLit;
-import static de.lmu.tutor.ast.AST.ternary;
-import static de.lmu.tutor.ast.AST.var;
 import de.lmu.tutor.ast.Expr;
 import de.lmu.tutor.ast.JType;
 import de.lmu.tutor.eval.EvaluationContext;
+
+import java.util.Random;
+
+import static de.lmu.tutor.ast.AST.*;
 
 /**
  * Erzeugt zu einer Bug-Kategorie (B01-B14) einen zufaelligen, typkonformen
@@ -144,9 +134,35 @@ public final class AufgabenGenerator {
         return new Aufgabe("B05", index(var("a"), bin("+", var("k"), intLit(1))), ctx, belegungArray(arr, "k", k));
     }
 
-    private Aufgabe b06() { // Method-Chaining: "WORT".substring(1).toLowerCase()
-        String w = wortMitLaenge(3);
-        return ohneVars("B06", call(call(stringLit(w), "substring", intLit(1)), "toLowerCase"));
+    /**
+     * Method-Chaining: eine Kette aus genau zwei Aufrufen.
+     *
+     * <p>Fuenf Bauformen, damit nicht immer dasselbe dasteht und das Ergebnis nicht immer
+     * denselben Datentyp hat. Herauskommen String, char und int.</p>
+     *
+     * <p><b>Warum die Gross- und Kleinschreibung des Wortes zur Bauform passen muss.</b>
+     * Eine Kette taugt nur dann als Aufgabe, wenn sich <em>beide</em> Glieder auf das
+     * Ergebnis auswirken. Bei {@code "gelb".substring(1).toLowerCase()} aendert
+     * {@code toLowerCase} nichts mehr, das Auslassen dieses Glieds waere also nicht zu
+     * beobachten und die Fehlvorstellung nicht diagnostizierbar. Deshalb bekommen die
+     * Bauformen mit {@code toLowerCase} ein durchgehend grosses Wort und die mit
+     * {@code toUpperCase} ein kleines.</p>
+     */
+    private Aufgabe b06() {
+        Expr e = switch (random.nextInt(5)) {
+            // "JAVA".substring(1).toLowerCase()  ->  "ava" : String
+            case 0 -> call(call(stringLit(grossWort(3)), "substring", intLit(1)), "toLowerCase");
+            // "java".toUpperCase().substring(2)  ->  "VA" : String
+            case 1 -> call(call(stringLit(kleinWort(3)), "toUpperCase"), "substring", intLit(2));
+            // "java".substring(1, 3).toUpperCase()  ->  "AV" : String
+            case 2 -> call(call(stringLit(kleinWort(3)), "substring", intLit(1), intLit(3)),
+                    "toUpperCase");
+            // "JAVA".toLowerCase().charAt(1)  ->  'a' : char
+            case 3 -> call(call(stringLit(grossWort(3)), "toLowerCase"), "charAt", intLit(1));
+            // "JAVA".substring(1).length()  ->  3 : int
+            default -> call(call(stringLit(grossWort(3)), "substring", intLit(1)), "length");
+        };
+        return ohneVars("B06", e);
     }
 
     private Aufgabe b07() { // Datentyp: x / y (int-Division)
@@ -162,9 +178,51 @@ public final class AufgabenGenerator {
         return ohneVars("B08", e);
     }
 
-    private Aufgabe b09() { // Kurzschluss: false && (x / 0 == 0) -> false, kein Fehler
-        return ohneVars("B09", bin("&&", boolLit(false),
-                bin("==", bin("/", intLit(rnd(1, 9)), intLit(0)), intLit(0))));
+    /**
+     * Kurzschlussauswertung: Der linke Operand entscheidet, der rechte wuerde abstuerzen.
+     *
+     * <p><b>Warum der linke Operand nicht immer eine Konstante ist.</b> Bei
+     * {@code false && ...} steht die Antwort nach dem ersten Blick fest, und wer die
+     * Aufgabe einmal gesehen hat, traegt beim naechsten Mal ohne Nachdenken wieder
+     * {@code false} ein. Dann misst die Aufgabe nicht mehr das Verstaendnis der
+     * Kurzschlussauswertung, sondern nur noch die Erinnerung. Deshalb steht links in der
+     * Haelfte der Faelle ein Vergleich, der erst ausgerechnet werden muss.</p>
+     *
+     * <p>Mit {@code ||} ist das Ergebnis {@code true}, mit {@code &&} ist es
+     * {@code false}. Auch das wechselt also, waehrend vorher jede Aufgabe dieser Kategorie
+     * auf {@code false} hinauslief.</p>
+     *
+     * <p>Der rechte Operand ist immer ein Ausdruck, der fuer sich genommen nicht
+     * auswertbar waere, also eine Division durch null, ein Modulo mit null oder ein
+     * Zugriff hinter das Ende einer Zeichenkette. Genau daran zeigt sich die
+     * Fehlvorstellung: Wer glaubt, Java werte beide Seiten aus, traegt "nicht auswertbar"
+     * ein.</p>
+     */
+    private Aufgabe b09() {
+        boolean oder = random.nextBoolean();
+        Expr links = random.nextBoolean()
+                ? boolLit(oder)
+                : vergleichMitWert(oder);
+        return ohneVars("B09", bin(oder ? "||" : "&&", links, riskanterAusdruck()));
+    }
+
+    /** Ein Vergleich zweier Zahlen, dessen Ergebnis feststeht. */
+    private Expr vergleichMitWert(boolean sollWahrSein) {
+        int a = rnd(2, 9);
+        int b = rnd(10, 30);
+        return sollWahrSein
+                ? bin("<", intLit(a), intLit(b))
+                : bin(">", intLit(a), intLit(b));
+    }
+
+    /** Ein Ausdruck, der fuer sich genommen einen Laufzeitfehler ausloesen wuerde. */
+    private Expr riskanterAusdruck() {
+        return switch (random.nextInt(3)) {
+            case 0 -> bin("==", bin("/", intLit(rnd(1, 9)), intLit(0)), intLit(0));
+            case 1 -> bin("==", bin("%", intLit(rnd(10, 40)), intLit(0)), intLit(0));
+            default -> bin("==", call(stringLit(wort()), "charAt", intLit(rnd(12, 20))),
+                    charLit('a'));
+        };
     }
 
     private Aufgabe b10() { // Modulo: x % y (mit echtem Rest)
@@ -207,6 +265,16 @@ public final class AufgabenGenerator {
 
     private String wort() {
         return WOERTER[random.nextInt(WOERTER.length)];
+    }
+
+    /** Ein durchgehend grosses Wort, damit {@code toLowerCase} sichtbar wirkt. */
+    private String grossWort(int minLaenge) {
+        return wortMitLaenge(minLaenge).toUpperCase();
+    }
+
+    /** Ein durchgehend kleines Wort, damit {@code toUpperCase} sichtbar wirkt. */
+    private String kleinWort(int minLaenge) {
+        return wortMitLaenge(minLaenge).toLowerCase();
     }
 
     private String wortMitLaenge(int minLaenge) {

@@ -161,7 +161,7 @@
       "basisgewicht": 2,
       "konzept": "SHORT_CIRCUIT",
       "feedback": [
-        "Wird der rechte Operand von && in jedem Fall ausgewertet?",
+        "Wird der rechte Operand hier in jedem Fall ausgewertet?",
         "&& wertet den linken Operanden zuerst aus. Steht das Ergebnis dadurch schon fest, wird der rechte Operand gar nicht mehr ausgewertet. Bei || gilt das entsprechend.",
         "Der linke Operand {links} ergibt {linksWert}. Damit steht das Ergebnis bereits fest, {rechts} wird nicht mehr ausgewertet. {ausdruck} ergibt {ergebnis}."
       ],

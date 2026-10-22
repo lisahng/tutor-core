@@ -3,6 +3,9 @@ package de.lmu.tutor.gen;
 import de.lmu.tutor.eval.EvaluationResult;
 import de.lmu.tutor.eval.StepEvaluator;
 import org.junit.jupiter.api.Test;
+import de.lmu.tutor.ast.JType;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -45,12 +48,22 @@ class AufgabenGeneratorTest {
     }
 
     @Test
-    void b09KurzschlussVermeidetDivisionDurchNull() {
-        // false && (x / 0 == 0) muss false ergeben, nicht abstuerzen
-        Aufgabe auf = new AufgabenGenerator(7).generiere("B09");
-        EvaluationResult r = ev.evaluate(auf.ausdruck(), auf.kontext());
-        assertTrue(r.auswertbar());
-        assertEquals("false", r.wert().render());
+    void b09KurzschlussVermeidetDenLaufzeitfehler() {
+        AufgabenGenerator generator = new AufgabenGenerator(2026L);
+        StepEvaluator evaluator = new StepEvaluator();
+
+        for (int i = 0; i < 200; i++) {
+            Aufgabe aufgabe = generator.generiere("B09");
+            EvaluationResult ergebnis = evaluator.evaluate(aufgabe.ausdruck(), aufgabe.kontext());
+
+            assertTrue(ergebnis.auswertbar(),
+                    "Dank Kurzschluss muss der Ausdruck auswertbar sein: " + aufgabe.render());
+            assertEquals(JType.BOOL, ergebnis.wert().typ());
+
+            boolean oder = aufgabe.render().contains("||");
+            assertEquals(oder, ergebnis.wert().asBool(),
+                    "Mit || ergibt sich true, mit && false: " + aufgabe.render());
+        }
     }
 
     @Test

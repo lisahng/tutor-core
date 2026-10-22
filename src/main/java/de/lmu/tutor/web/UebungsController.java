@@ -99,18 +99,22 @@ public class UebungsController {
     /**
      * Legt die Sitzung an und stellt die erste Aufgabe.
      *
-     * <p>Die Gruppe wird hier von der Versuchsleitung gesetzt, nicht vom System ausgelost.
-     * Bei zwanzig Teilnehmenden ist eine vorab festgelegte Zuteilung der Zufallszuweisung
-     * vorzuziehen, weil sie garantiert gleich grosse Gruppen ergibt.</p>
+     * <p>Die Gruppe wird nicht mehr eingegeben, sondern aus der Nummer des Pseudonyms
+     * abgeleitet: ungerade Tutorgruppe, gerade Kontrollgruppe. Damit faellt das Feld weg,
+     * das man im Termin uebersehen oder falsch setzen konnte, und die Gruppen bleiben
+     * gleich gross. Siehe {@link Teilnehmer#ausKennung(String)}.</p>
+     *
+     * <p>Enthaelt die Kennung keine Ziffer, wirft {@code ausKennung} eine Ausnahme. Das
+     * Formular laesst eine solche Eingabe gar nicht erst zu, der Riegel bleibt trotzdem,
+     * denn die Adresse laesst sich auch von Hand aufrufen.</p>
      */
     @PostMapping("/start")
     public String starte(@RequestParam("teilnehmerId") String teilnehmerId,
-                         @RequestParam("gruppe") Teilnehmer.Gruppe gruppe,
                          @RequestParam(name = "seed", required = false) String seed,
                          HttpSession sitzung) {
         Uebungsablauf ablauf = new Uebungsablauf(
                 bibliothek,
-                new Teilnehmer(teilnehmerId.trim(), gruppe),
+                Teilnehmer.ausKennung(teilnehmerId),
                 einstellungen.alsPlan(),
                 startwert(seed),
                 uhr);

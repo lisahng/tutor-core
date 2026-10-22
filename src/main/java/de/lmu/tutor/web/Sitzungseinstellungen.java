@@ -12,17 +12,23 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * ChomskyTrainer-Studie (Schmutz, Blanchette und Strickroth 2026) wurde niemand in der
  * vorgesehenen Zeit fertig, und das sollte sich hier nicht wiederholen.</p>
  *
- * <p><b>Zum Startwert.</b> Alle Teilnehmenden bekommen denselben Startwert, damit auch
- * dieselben Aufgaben erzeugt werden. Unterschiedliche Aufgaben waeren ein zweiter
- * Unterschied zwischen den Gruppen und wuerden den Vergleich tragen lassen, obwohl er es
- * nicht tut. Ab der zweiten Runde waehlt das Studentenmodell adaptiv weiter, in beiden
- * Gruppen nach derselben Regel.</p>
+ * <p><b>Zum Startwert.</b> Alle Teilnehmenden bekommen denselben Startwert, damit der
+ * Generator dieselbe Folge von Ausdruecken erzeugt. Verschiedene Gruppen sehen trotzdem
+ * verschiedene Aufgaben, und genau das ist gewollt, denn die Auswahl ist der untersuchte
+ * Faktor. Gleich bleibt, dass niemand leichtere oder schwerere Ausdruecke bekommt, weil
+ * die Ausdruecke einer Kategorie nach demselben Bauplan entstehen.</p>
+ *
+ * <p><b>Zur Aufgabenzahl.</b> Sie ist eine Obergrenze, nicht ein Ziel. In der Regel
+ * beendet die Zeit die Arbeitsphase, nicht der Zaehler. Die Grenze liegt bewusst hoch,
+ * damit niemand vorzeitig an ihr haengen bleibt, denn in der Kontrollbedingung laeuft eine
+ * feste Runde durch alle vierzehn Kategorien, und wer zuegig arbeitet, schafft mehr als
+ * eine davon.</p>
  */
 @ConfigurationProperties(prefix = "tutor")
 public class Sitzungseinstellungen {
 
-    /** Hoechstzahl der Aufgaben in der Arbeitsphase. */
-    private int aufgaben = 20;
+    /** Hoechstzahl der Aufgaben in der Arbeitsphase. Begrenzend ist normalerweise die Zeit. */
+    private int aufgaben = 45;
 
     /** Zeitbudget der Arbeitsphase in Minuten. */
     private int arbeitszeitMinuten = 25;

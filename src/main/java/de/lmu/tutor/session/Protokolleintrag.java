@@ -46,7 +46,7 @@ import de.lmu.tutor.diagnose.Diagnose;
  * @param historieKategorie unter welcher Kategorie dieser Versuch verbucht wurde
  * @param erfolgeVorher     Erfolge in dieser Kategorie vor diesem Versuch
  * @param fehlerVorher      Fehler in dieser Kategorie vor diesem Versuch
- * @param dauerMillis       Zeit zwischen Aufgabenstellung und dieser Antwort
+ * @param dauerSekunden     Zeit zwischen Aufgabenstellung und dieser Antwort, in vollen Sekunden
  */
 public record Protokolleintrag(
         Instant zeitpunkt,
@@ -67,7 +67,7 @@ public record Protokolleintrag(
         String historieKategorie,
         int erfolgeVorher,
         int fehlerVorher,
-        long dauerMillis
+        long dauerSekunden
 ) {
 
     /** Ein Fehler, den keine Fehlregel erklaeren konnte. Kandidat fuer die Bug Library. */
@@ -84,7 +84,7 @@ public record Protokolleintrag(
     public static String csvKopfzeile() {
         return "zeitpunkt;teilnehmer;gruppe;kategorie;ausdruck;belegung;referenz;antwort;"
                 + "versuch;korrekt;diagnose;vermutung;erklaert;konfidenz;feedbackStufe;"
-                + "historieKategorie;erfolgeVorher;fehlerVorher;dauerMillis";
+                + "historieKategorie;erfolgeVorher;fehlerVorher;dauerSekunden";
     }
 
     /**
@@ -115,7 +115,7 @@ public record Protokolleintrag(
                 zitiere(historieKategorie),
                 String.valueOf(erfolgeVorher),
                 String.valueOf(fehlerVorher),
-                String.valueOf(dauerMillis));
+                String.valueOf(dauerSekunden));
     }
 
     /** Setzt ein Feld in Anfuehrungszeichen und verdoppelt darin enthaltene Anfuehrungszeichen. */
