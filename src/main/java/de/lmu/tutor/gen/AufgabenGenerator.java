@@ -4,6 +4,9 @@ import de.lmu.tutor.ast.Expr;
 import de.lmu.tutor.ast.JType;
 import de.lmu.tutor.eval.EvaluationContext;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Random;
 
 import static de.lmu.tutor.ast.AST.*;
@@ -122,12 +125,29 @@ public final class AufgabenGenerator {
         return ohneVars("B03", bin("+", stringLit(String.valueOf(rnd(10, 99))), intLit(rnd(1, 9))));
     }
 
-    private Aufgabe b04() { // Cast: (int) d  mit Nachkommastellen
-        double d = rnd(1, 9) + rnd(1, 9) / 10.0;
+    /**
+     * Cast: {@code (int) d} mit Nachkommastellen.
+     *
+     * <p>Die Nachkommastelle liegt bewusst bei mindestens fuenf. Die Fehlvorstellung
+     * lautet, der Cast runde, statt abzuschneiden. Bei {@code (int) 2.1} ergeben Runden
+     * und Abschneiden beide 2, die Fehlvorstellung waere also nicht zu beobachten und die
+     * Aufgabe damit fuer diese Kategorie wertlos. Bei {@code (int) 2.7} unterscheiden sich
+     * die beiden Wege.</p>
+     */
+    private Aufgabe b04() {
+        double d = rnd(1, 9) + rnd(5, 9) / 10.0;
         return ohneVars("B04", cast(JType.INT, doubleLit(d)));
     }
 
-    private Aufgabe b05() { // Array-Index: a[k + 1]  (k+1 gueltig)
+    /**
+     * Array-Index: {@code a[k + 1]}, wobei {@code k + 1} immer gueltig ist.
+     *
+     * <p>Die Eintraege sind verschieden, siehe {@link #zufallsArray(int)}. Stuenden an
+     * {@code a[k]} und {@code a[k + 1]} dieselben Woerter, lieferte der ignorierte Versatz
+     * dasselbe Ergebnis wie der richtige Weg, und die Fehlvorstellung waere nicht zu
+     * beobachten.</p>
+     */
+    private Aufgabe b05() {
         String[] arr = zufallsArray(rnd(4, 5));
         int k = rnd(0, arr.length - 2);
         EvaluationContext ctx = new EvaluationContext().setzeStringArray("a", arr).setzeInt("k", k);
@@ -225,16 +245,32 @@ public final class AufgabenGenerator {
         };
     }
 
-    private Aufgabe b10() { // Modulo: x % y (mit echtem Rest)
+    /**
+     * Modulo: {@code x % y} mit echtem Rest.
+     *
+     * <p>Zusaetzlich muss sich der Rest vom Quotienten unterscheiden. Die Fehlvorstellung
+     * lautet, {@code %} liefere den Quotienten. Bei {@code 36 % 8} sind Rest und Quotient
+     * beide 4, die Fehlvorstellung waere also nicht zu beobachten.</p>
+     */
+    private Aufgabe b10() {
         int y = rnd(2, 9), x;
-        do { x = rnd(10, 40); } while (x % y == 0);
+        do { x = rnd(10, 40); } while (x % y == 0 || x % y == x / y);
         return ohneVars("B10", bin("%", intLit(x), intLit(y)));
     }
 
-    private Aufgabe b11() { // Ternaer: (x > 0) ? a : b
+    /**
+     * Ternaerer Operator: {@code (x > 0) ? a : b}.
+     *
+     * <p>Die beiden Zweige tragen verschiedene Werte. Waeren sie gleich, lieferte der
+     * falsche Zweig dasselbe Ergebnis wie der richtige, und die Fehlvorstellung waere
+     * nicht zu beobachten.</p>
+     */
+    private Aufgabe b11() {
         int x = rnd(-5, 5);
+        int dann = rnd(1, 9), sonst;
+        do { sonst = rnd(1, 9); } while (sonst == dann);
         EvaluationContext ctx = new EvaluationContext().setzeInt("x", x);
-        Expr e = ternary(bin(">", var("x"), intLit(0)), intLit(rnd(1, 9)), intLit(rnd(1, 9)));
+        Expr e = ternary(bin(">", var("x"), intLit(0)), intLit(dann), intLit(sonst));
         return new Aufgabe("B11", e, ctx, "x = " + x);
     }
 
@@ -250,9 +286,23 @@ public final class AufgabenGenerator {
         return ohneVars("B13", call(stringLit(w), "charAt", intLit(rnd(0, w.length() - 1))));
     }
 
-    private Aufgabe b14() { // String-Vergleich: s.equals("wort")
+    /**
+     * String-Vergleich: {@code s.equals("wort")}.
+     *
+     * <p><b>Nur der Gleichheitsfall ist diagnostisch.</b> Die Fehlvorstellung lautet,
+     * {@code equals} vergleiche Referenzen und liefere deshalb {@code false}. Ist die
+     * richtige Antwort ohnehin {@code false}, fuehrt die Fehlvorstellung zum selben Wert
+     * und bleibt unsichtbar. Das liegt an der Fehlvorstellung selbst und nicht am
+     * Generator.</p>
+     *
+     * <p>Trotzdem kommt der ungleiche Fall vor, sonst waere die Antwort hier immer
+     * {@code true} und nach der zweiten Aufgabe zu erraten. Im ungleichen Fall
+     * unterscheiden sich die Woerter nur in der Gross- und Kleinschreibung, denn dann
+     * muss man wenigstens genau hinsehen.</p>
+     */
+    private Aufgabe b14() {
         String w = wort();
-        String vergleich = random.nextBoolean() ? w : wort();
+        String vergleich = random.nextBoolean() ? w : andereSchreibweise(w);
         EvaluationContext ctx = new EvaluationContext().setzeString("s", w);
         return new Aufgabe("B14", call(var("s"), "equals", stringLit(vergleich)), ctx, "s = \"" + w + "\"");
     }
@@ -261,6 +311,18 @@ public final class AufgabenGenerator {
 
     private int rnd(int min, int max) {
         return min + random.nextInt(max - min + 1);
+    }
+
+    /** Dasselbe Wort in anderer Gross- und Kleinschreibung, also ungleich fuer equals. */
+    private String andereSchreibweise(String w) {
+        String anders = w.equals(w.toLowerCase()) ? w.toUpperCase() : w.toLowerCase();
+        // Sollte ein Wort beides zugleich sein, bleibt ein anderes Wort als Ausweg.
+        if (anders.equals(w)) {
+            String ersatz;
+            do { ersatz = WOERTER[random.nextInt(WOERTER.length)]; } while (ersatz.equals(w));
+            return ersatz;
+        }
+        return anders;
     }
 
     private String wort() {
@@ -283,10 +345,17 @@ public final class AufgabenGenerator {
         return w;
     }
 
+    /**
+     * Ein Feld mit lauter verschiedenen Woertern.
+     *
+     * <p>Doppelte Eintraege waeren fuer eine Index-Aufgabe schaedlich: Stehen an zwei
+     * benachbarten Stellen dieselben Woerter, liefert ein falsch berechneter Index
+     * dasselbe Ergebnis wie der richtige, und der Fehler bleibt unsichtbar.</p>
+     */
     private String[] zufallsArray(int n) {
-        String[] a = new String[n];
-        for (int i = 0; i < n; i++) a[i] = wort();
-        return a;
+        List<String> vorrat = new ArrayList<>(List.of(WOERTER));
+        Collections.shuffle(vorrat, random);
+        return vorrat.subList(0, Math.min(n, vorrat.size())).toArray(new String[0]);
     }
 
     private Aufgabe ohneVars(String id, Expr e) {

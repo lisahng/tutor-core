@@ -61,6 +61,17 @@ public final class Uebungsablauf {
     private Instant beginn;
     private int aufgabenNummer;
     private Antwortergebnis letztesErgebnis;
+
+    /**
+     * Die letzte Rueckmeldung auf einen <em>Fehler</em> an der aktuellen Aufgabe.
+     *
+     * <p>Bewertet wird genau diese Rueckmeldung, denn ein Lob fuer die schliesslich
+     * richtige Antwort ist keine Hilfestellung. Ohne dieses Feld stuenden in der Bewertung
+     * die Werte der letzten Antwort, und die war in den meisten Faellen die richtige. Dann
+     * stuende dort Stufe -1 und keine Diagnose, und die Bewertung liesse sich der Stufe,
+     * auf die sie sich bezieht, nicht mehr zuordnen.</p>
+     */
+    private Antwortergebnis letzteFehlerrueckmeldung;
     private String eingabehinweis = "";
     private String letzterTyp = "";
     private String letzterWert = "";
@@ -142,6 +153,9 @@ public final class Uebungsablauf {
 
         eingabehinweis = "";
         letztesErgebnis = sitzung.antworte(gelesen.get());
+        if (!letztesErgebnis.korrekt()) {
+            letzteFehlerrueckmeldung = letztesErgebnis;
+        }
 
         boolean versucheAufgebraucht = letztesErgebnis.versuch() >= plan.maximaleVersuche();
         if (letztesErgebnis.korrekt() || versucheAufgebraucht) {
@@ -183,6 +197,7 @@ public final class Uebungsablauf {
         sitzung.naechsteAufgabe();
         aufgabenNummer++;
         letztesErgebnis = null;
+        letzteFehlerrueckmeldung = null;
         letzterTyp = "";
         letzterWert = "";
         eingabehinweis = "";
@@ -199,7 +214,12 @@ public final class Uebungsablauf {
         if (letztesErgebnis == null || bewertungGefragtEntfaellt()) {
             return;
         }
-        Antwortergebnis e = letztesErgebnis;
+        Antwortergebnis letzte = letztesErgebnis;
+        // Die bewertete Rueckmeldung ist die auf den letzten Fehler, nicht die auf die
+        // schliesslich richtige Antwort. Gab es an dieser Aufgabe keinen Fehler, wird
+        // ohnehin nicht gefragt, dann faellt der Zweig nicht an.
+        Antwortergebnis bewertet =
+                letzteFehlerrueckmeldung != null ? letzteFehlerrueckmeldung : letzte;
         bewertungen.add(new Feedbackbewertung(
                 uhr.instant(),
                 teilnehmer().id(),
@@ -207,14 +227,16 @@ public final class Uebungsablauf {
                 aufgabenNummer,
                 sitzung.aktuelleAufgabe().map(Aufgabe::kategorieId).orElse(""),
                 ausdruck(),
-                e.versuch(),
-                e.korrekt(),
-                e.rueckmeldung().stufe(),
+                // Zahl der Versuche und Ausgang der Aufgabe stammen aus der letzten
+                // Antwort, die Angaben zur Rueckmeldung dagegen aus der bewerteten.
+                letzte.versuch(),
+                letzte.korrekt(),
+                bewertet.rueckmeldung().stufe(),
                 // Nur eine begruendete Diagnose wird genannt. Eine blosse Vermutung aus
                 // der Herkunft der Aufgabe gehoert nicht in dieselbe Spalte, sonst waere
                 // die Trefferquote geschoent. Dieselbe Trennung wie im Systemprotokoll.
-                e.diagnose().erklaert() ? e.diagnose().kategorieIds() : "",
-                e.diagnose().erklaert(),
+                bewertet.diagnose().erklaert() ? bewertet.diagnose().kategorieIds() : "",
+                bewertet.diagnose().erklaert(),
                 begrenzeBewertung(bewertung)));
     }
 

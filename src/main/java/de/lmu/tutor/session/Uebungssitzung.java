@@ -82,6 +82,9 @@ public final class Uebungssitzung {
     /** Kategorien, fuer die der Generator keine Vorlage hat. Wird zur Laufzeit gelernt. */
     private final Set<String> ohneVorlage = new HashSet<>();
 
+    /** So oft wird hoechstens neu gezogen, um einen unverbrauchten Ausdruck zu finden. */
+    private static final int ANLAEUFE = 25;
+
     /**
      * Position in der festen Reihenfolge der Kontrollgruppe. Zaehlt ueber die ganze
      * Sitzung weiter und laeuft am Ende der Liste wieder von vorn los, so dass jede
@@ -95,16 +98,14 @@ public final class Uebungssitzung {
     private int versucheAnAktuellerAufgabe;
 
     /**
-     * Fehlversuche je Kategorie <em>an der aktuellen Aufgabe</em>. Steuert die
-     * Scaffolding-Stufe und wird mit jeder neuen Aufgabe geleert.
+     * Die bereits gestellten Ausdruecke dieser Sitzung, als Text samt Belegung.
      *
-     * <p>Bewusst getrennt von der Fehlerhistorie im Studentenmodell: Jede neue Aufgabe ist
-     * eine neue Gelegenheit, den Fehler selbst zu bemerken, und beginnt deshalb wieder beim
-     * allgemeinen Hinweis. Nur wer an derselben Aufgabe mehrfach danebenliegt, bekommt
-     * zunehmend konkretere Hilfe. Das Studentenmodell zaehlt weiterhin ueber die ganze
-     * Sitzung, denn fuer die Aufgabenauswahl ist genau das die richtige Grundlage.</p>
+     * <p>Verhindert, dass derselbe Ausdruck zweimal erscheint. Eine Kategorie darf und
+     * soll wiederkommen, ein wortgleicher Ausdruck nicht: Beim zweiten Mal wird er
+     * erinnert statt ausgewertet, und die Aufgabe misst dann etwas anderes als beim ersten
+     * Mal.</p>
      */
-    private final Map<String, Integer> fehlversucheAnAufgabe = new HashMap<>();
+    private final Set<String> gestellteAusdruecke = new HashSet<>();
 
     /**
      * Sitzung mit Standardeinstellungen und zufaelligen Aufgaben, ohne Teilnehmerbezug.
@@ -183,7 +184,7 @@ public final class Uebungssitzung {
                 continue;
             }
             try {
-                stelle(generator.generiere(id));
+                stelle(frischeAufgabe(id));
                 return aktuelleAufgabe;
             } catch (IllegalArgumentException keineVorlage) {
                 ohneVorlage.add(id);
@@ -195,8 +196,36 @@ public final class Uebungssitzung {
 
     /** Stellt gezielt eine Aufgabe zu einer Kategorie, etwa fuer einen festen Prae-Test. */
     public Aufgabe aufgabeZu(String kategorieId) {
-        stelle(generator.generiere(kategorieId));
+        stelle(frischeAufgabe(kategorieId));
         return aktuelleAufgabe;
+    }
+
+    /**
+     * Erzeugt zu einer Kategorie einen Ausdruck, der in dieser Sitzung noch nicht vorkam.
+     *
+     * <p>Der Generator zieht zufaellig, und bei kleinen Zahlenraeumen wiederholt sich ein
+     * Ausdruck irgendwann. In einer Sitzung mit vierzig Aufgaben passiert das haeufig
+     * genug, um aufzufallen: In einer Stichprobe von vierzig simulierten Sitzungen war
+     * mehr als die Haelfte betroffen. Ein zweites Mal derselbe Ausdruck misst aber nicht
+     * mehr dasselbe, denn beim zweiten Mal kann man sich an die Loesung erinnern.</p>
+     *
+     * <p>Nach {@value #ANLAEUFE} vergeblichen Anlaeufen wird der zuletzt erzeugte Ausdruck
+     * genommen. Das kommt vor, wenn eine Kategorie nur wenige moegliche Ausdruecke hat und
+     * sie alle schon dran waren. Eine Wiederholung ist dann besser als eine Sitzung, die
+     * stehen bleibt.</p>
+     */
+    private Aufgabe frischeAufgabe(String kategorieId) {
+        Aufgabe aufgabe = generator.generiere(kategorieId);
+        for (int anlauf = 1; anlauf < ANLAEUFE && gestellteAusdruecke.contains(kennung(aufgabe));
+                anlauf++) {
+            aufgabe = generator.generiere(kategorieId);
+        }
+        return aufgabe;
+    }
+
+    /** Ausdruck samt Belegung, denn bei {@code a[k + 1]} entscheidet erst die Belegung. */
+    private static String kennung(Aufgabe aufgabe) {
+        return aufgabe.render() + " | " + aufgabe.belegung();
     }
 
     /**
@@ -235,7 +264,7 @@ public final class Uebungssitzung {
         this.aktuelleReferenz = evaluator.evaluate(aufgabe.ausdruck(), aufgabe.kontext());
         this.aufgabeGestelltUm = uhr.instant();
         this.versucheAnAktuellerAufgabe = 0;
-        this.fehlversucheAnAufgabe.clear();
+        this.gestellteAusdruecke.add(kennung(aufgabe));
     }
 
     /**
@@ -272,13 +301,17 @@ public final class Uebungssitzung {
         studentenmodell.erfasseErgebnis(kategorieFuerHistorie, diagnose.korrekt());
 
         // Die Scaffolding-Stufe richtet sich nach den Fehlversuchen an DIESER Aufgabe,
-        // nicht nach der Fehlerhistorie der ganzen Sitzung.
-        int fehlversuche = 0;
-        if (!diagnose.korrekt()) {
-            String schluessel = diagnose.erklaert() ? kategorieFuerHistorie : "";
-            fehlversuche = fehlversucheAnAufgabe.getOrDefault(schluessel, 0);
-            fehlversucheAnAufgabe.put(schluessel, fehlversuche + 1);
-        }
+        // nicht nach der Fehlerhistorie der ganzen Sitzung und auch nicht nach der
+        // diagnostizierten Kategorie. Weil eine richtige Antwort die Aufgabe beendet,
+        // waren alle vorherigen Versuche Fehlversuche.
+        //
+        // Frueher wurde je diagnostizierter Kategorie gezaehlt. Das hatte eine unschoene
+        // Folge: Wechselte die Diagnose zwischen zwei Versuchen, begann die Stufung wieder
+        // bei 0, und die Person bekam zweimal hintereinander denselben allgemeinen
+        // Hinweis. Bei drei erlaubten Versuchen konnte sie die ausgerechnete Loesung dann
+        // gar nicht mehr erreichen. Ausserdem war die protokollierte Stufe nicht mehr
+        // monoton und damit schwer auszuwerten.
+        int fehlversuche = versucheAnAktuellerAufgabe - 1;
 
         // Die Rueckmeldung ist in beiden Bedingungen dieselbe. Unterschieden wird allein
         // bei der Auswahl der naechsten Aufgabe, siehe naechsteFesteKategorie().
