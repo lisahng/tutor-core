@@ -63,8 +63,10 @@
         <p class="rueckmeldung"
            th:if="${datenbank and (inDatenbank != zeilen or !#strings.isEmpty(datenbankFehler))}">
             <span class="marke">Achtung</span>
-            Die Datenbank hat nicht alles aufgenommen. Lade das Protokoll jetzt von Hand
-            herunter und sichere es, bevor du diese Sitzung schließt.
+            Die Datenbank hat nicht alles aufgenommen. Sichere das Protokoll jetzt aus dem
+            Container, bevor du diese Sitzung schließt. Die Dateien liegen im eingehängten
+            Verzeichnis, und über die Export-Adresse mit Schlüssel kommst du ebenfalls
+            heran.
             <br><span th:text="${datenbankFehler}"></span>
         </p>
 
@@ -78,11 +80,6 @@
 
         <p class="konvention">
             Sitzungskennung <code th:text="${sitzungId}">…</code>
-        </p>
-
-        <p>
-            <a href="/protokoll.csv">Protokoll als CSV herunterladen</a><br>
-            <a href="/bewertungen.csv">Bewertungen als CSV herunterladen</a>
         </p>
 
         <form method="post" action="/neu">

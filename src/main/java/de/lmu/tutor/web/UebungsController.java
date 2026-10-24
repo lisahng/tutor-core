@@ -215,10 +215,23 @@ public class UebungsController {
     }
 
     /** Das Protokoll als CSV-Datei zum Herunterladen. */
+    /**
+     * Das Protokoll der laufenden Sitzung als Datei.
+     *
+     * <p>Nur mit Schluessel erreichbar, genau wie die Export-Adressen. Auf der
+     * Abschlussseite steht kein Verweis mehr darauf. Wer teilnimmt, sitzt am Ende der
+     * Arbeitsphase noch vor dem Bildschirm und soll die eigenen Rohdaten weder sehen noch
+     * versehentlich herunterladen koennen. Im Betrieb kommen die Daten ohnehin aus dem
+     * Container, naemlich aus dem eingehaengten Verzeichnis oder ueber
+     * {@code /export/protokoll.csv}. Dieser Weg hier bleibt fuer den Fall, dass die
+     * Datenbank eine Sitzung nicht aufgenommen hat.</p>
+     */
     @GetMapping("/protokoll.csv")
-    public ResponseEntity<byte[]> protokoll(HttpSession sitzung) {
+    public ResponseEntity<byte[]> protokoll(HttpSession sitzung,
+                                            @RequestParam(name = "schluessel",
+                                                          required = false) String schluessel) {
         Uebungsablauf ablauf = ablauf(sitzung);
-        if (ablauf == null) {
+        if (ablauf == null || !einstellungen.schluesselStimmt(schluessel)) {
             return ResponseEntity.notFound().build();
         }
         byte[] inhalt = ablauf.protokollAlsCsv().getBytes(StandardCharsets.UTF_8);
@@ -230,10 +243,13 @@ public class UebungsController {
     }
 
     /** Die Bewertungen als CSV-Datei zum Herunterladen. */
+    /** Die Bewertungen der laufenden Sitzung, ebenfalls nur mit Schluessel. */
     @GetMapping("/bewertungen.csv")
-    public ResponseEntity<byte[]> bewertungen(HttpSession sitzung) {
+    public ResponseEntity<byte[]> bewertungen(HttpSession sitzung,
+                                              @RequestParam(name = "schluessel",
+                                                            required = false) String schluessel) {
         Uebungsablauf ablauf = ablauf(sitzung);
-        if (ablauf == null) {
+        if (ablauf == null || !einstellungen.schluesselStimmt(schluessel)) {
             return ResponseEntity.notFound().build();
         }
         byte[] inhalt = ablauf.bewertungenAlsCsv().getBytes(StandardCharsets.UTF_8);
@@ -309,7 +325,6 @@ public class UebungsController {
     private void fuelleModell(Model model, Uebungsablauf ablauf) {
         model.addAttribute("nummer", ablauf.aufgabenNummer());
         model.addAttribute("gesamt", ablauf.plan().maximaleAufgaben());
-        model.addAttribute("restsekunden", ablauf.restsekunden());
         model.addAttribute("ausdruck", ablauf.ausdruck());
         model.addAttribute("belegung", ablauf.belegung());
         model.addAttribute("hinweis", ablauf.eingabehinweis());

@@ -13,7 +13,6 @@
         <span class="fortschritt">
             Aufgabe <span th:text="${nummer}">1</span> von <span th:text="${gesamt}">20</span>
         </span>
-        <span class="restzeit" id="restzeit" th:attr="data-sekunden=${restsekunden}">--:--</span>
         <span class="kennung" th:text="${teilnehmer.id()}">P01</span>
     </div>
 
@@ -107,43 +106,5 @@
     </div>
 
 </div>
-
-<script>
-    // Zeigt die Restzeit an. Die Grenze gilt serverseitig; diese Anzeige dient nur der
-    // Orientierung und bricht niemanden mitten in einer Aufgabe ab.
-    (function () {
-        var anzeige = document.getElementById('restzeit');
-        if (!anzeige) return;
-        var rest = parseInt(anzeige.dataset.sekunden, 10);
-        function zeichne() {
-            var m = Math.floor(rest / 60), s = rest % 60;
-            anzeige.textContent = m + ':' + (s < 10 ? '0' : '') + s + ' verbleibend';
-            anzeige.classList.toggle('knapp', rest <= 120);
-            if (rest <= 0) {
-                anzeige.textContent = 'Zeit abgelaufen – bitte die Aufgabe noch abschließen';
-                return;
-            }
-            rest--;
-            setTimeout(zeichne, 1000);
-        }
-        zeichne();
-    })();
-
-    // Bei "nicht auswertbar" gibt es keinen Wert. Das Feld wird deshalb stillgelegt,
-    // damit niemand dort etwas einträgt und sich wundert, dass es ignoriert wird.
-    (function () {
-        var typ = document.getElementById('typ');
-        var wert = document.getElementById('wert');
-        if (!typ || !wert) return;
-        function pruefe() {
-            var aus = typ.value === 'nicht auswertbar';
-            wert.disabled = aus;
-            wert.placeholder = aus ? 'entfällt' : 'Ergebnis';
-            if (aus) wert.value = '';
-        }
-        typ.addEventListener('change', pruefe);
-        pruefe();
-    })();
-</script>
 </body>
 </html>
