@@ -57,12 +57,18 @@ body {
     font-weight: 600;
 }
 
-.restzeit {
-    font-variant-numeric: tabular-nums;
+/*
+ * Der Versuchszaehler. Die Restzeit wird bewusst nicht angezeigt, eine sichtbare Uhr
+ * veraendert das Arbeitstempo und damit ausgerechnet die Zeiten, die protokolliert
+ * werden. Die Zahl der Versuche dagegen ist fuer die Aufgabe selbst wichtig und in
+ * beiden Gruppen gleich.
+ */
+.versuche {
     color: var(--text-leise);
+    font-variant-numeric: tabular-nums;
 }
 
-.restzeit.knapp {
+.versuche.letzter {
     color: var(--falsch-rahmen);
     font-weight: 600;
 }
@@ -97,6 +103,13 @@ h2 {
     font-weight: 600;
 }
 
+/* Die Arbeitsanweisung ist ein Satz und keine Rubrik, deshalb nicht in Versalien. */
+.anweisung {
+    font-size: 19px;
+    font-weight: 600;
+    margin: 0 0 18px;
+}
+
 /* ---- Aufgabe ---- */
 
 .belegung,
@@ -105,19 +118,63 @@ h2 {
     font-family: "Cascadia Mono", "Consolas", "SF Mono", monospace;
 }
 
+/*
+ * Belegung und Ausdruck bilden einen Block. Vorher stand die Belegung als graue Zeile
+ * darueber und wurde leicht ueberlesen, obwohl ohne sie keine Loesung moeglich ist.
+ */
+.aufgabenblock {
+    border: 1px solid var(--rahmen);
+    border-radius: 8px;
+    background: var(--hintergrund);
+    overflow: hidden;
+}
+
 .belegung {
     font-size: 16px;
+    margin: 0;
+    padding: 10px 20px;
+    background: var(--flaeche);
+    border-bottom: 1px solid var(--rahmen);
+    display: flex;
+    gap: 10px;
+    align-items: baseline;
+    flex-wrap: wrap;
+}
+
+.belegung .marke {
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
     color: var(--text-leise);
-    margin-bottom: 14px;
 }
 
 .ausdruck {
     font-size: 30px;
-    padding: 18px 20px;
-    background: var(--hintergrund);
-    border-radius: 8px;
-    border: 1px solid var(--rahmen);
+    letter-spacing: -0.01em;
+    padding: 20px;
     word-break: break-word;
+}
+
+/* Die eigenen bisherigen Eingaben, unter dem Ausdruck und leise gesetzt. */
+.versuchsliste {
+    font-family: "Cascadia Mono", "Consolas", "SF Mono", monospace;
+    font-size: 15px;
+    color: var(--text-leise);
+    margin: 0;
+    padding: 10px 20px;
+    border-top: 1px solid var(--rahmen);
+    display: flex;
+    gap: 10px;
+    align-items: baseline;
+    flex-wrap: wrap;
+}
+
+.versuchsliste .marke {
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
 }
 
 /* ---- Eingabe ---- */

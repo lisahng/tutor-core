@@ -334,6 +334,7 @@ public class UebungsController {
         model.addAttribute("letzterWert", ablauf.letzterWert());
         model.addAttribute("erledigt", ablauf.zustand() == Uebungsablauf.Zustand.AUFGABE_ERLEDIGT);
         model.addAttribute("versuche", ablauf.versuche());
+        model.addAttribute("bisherigeVersuche", ablauf.bisherigeVersuche());
         model.addAttribute("maxVersuche", ablauf.plan().maximaleVersuche());
         model.addAttribute("teilnehmer", ablauf.teilnehmer());
 

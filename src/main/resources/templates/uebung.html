@@ -10,20 +10,40 @@
 <div class="seite">
 
     <div class="kopf">
-        <span class="fortschritt">
-            Aufgabe <span th:text="${nummer}">1</span> von <span th:text="${gesamt}">20</span>
-        </span>
+        <!--
+            Nur die laufende Nummer, nicht die Hoechstzahl. Die Hoechstzahl wird praktisch
+            nie erreicht, die Arbeitsphase endet an der Zeit. "Aufgabe 7 von 45" waere
+            also irrefuehrend und zugleich entmutigend.
+        -->
+        <span class="fortschritt">Aufgabe <span th:text="${nummer}">1</span></span>
+        <span class="versuche" th:unless="${erledigt}"
+              th:classappend="${versuche + 1 == maxVersuche} ? 'letzter' : ''"
+              th:text="|Versuch ${versuche + 1} von ${maxVersuche}|">Versuch 1 von 3</span>
         <span class="kennung" th:text="${teilnehmer.id()}">P01</span>
     </div>
 
     <div class="karte">
-        <h2>Gib Typ und Wert des Ausdrucks an</h2>
+        <p class="anweisung">Gib Typ und Wert des Ausdrucks an.</p>
 
-        <p class="belegung" th:if="${!#strings.isEmpty(belegung)}" th:text="${belegung}">
-            x = 3, y = 4
-        </p>
+        <div class="aufgabenblock">
+            <p class="belegung" th:if="${!#strings.isEmpty(belegung)}">
+                <span class="marke">gegeben</span>
+                <span th:text="${belegung}">x = 3, y = 4</span>
+            </p>
+            <div class="ausdruck" th:text="${ausdruck}">8 + 23 % 3</div>
 
-        <div class="ausdruck" th:text="${ausdruck}">8 + 23 % 3</div>
+            <!--
+                Die eigenen bisherigen Eingaben an dieser Aufgabe. Sie entlasten das
+                Gedaechtnis und enthalten nichts, was die Person nicht selbst eingegeben
+                haette. In beiden Gruppen gleich.
+            -->
+            <p class="versuchsliste" th:if="${!#lists.isEmpty(bisherigeVersuche)}">
+                <span class="marke">bisher probiert</span>
+                <span th:each="v,i : ${bisherigeVersuche}">
+                    <span th:text="${v}">9 : int</span><span th:unless="${i.last}">, </span>
+                </span>
+            </p>
+        </div>
 
         <!-- Eingabe, solange noch ein Versuch offen ist -->
         <form method="post" action="/antwort" th:unless="${erledigt}">

@@ -4,6 +4,7 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -72,6 +73,20 @@ public final class Uebungsablauf {
      * auf die sie sich bezieht, nicht mehr zuordnen.</p>
      */
     private Antwortergebnis letzteFehlerrueckmeldung;
+
+    /**
+     * Die bisherigen gewerteten Eingaben an der aktuellen Aufgabe, als Text.
+     *
+     * <p>Sie werden auf der Seite angezeigt, damit niemand sich merken muss, was schon
+     * probiert wurde. Das entlastet das Arbeitsgedaechtnis und kostet nichts, denn es
+     * sind die eigenen Eingaben und keine zusaetzliche Information. In beiden Gruppen
+     * gleich.</p>
+     *
+     * <p>Nicht lesbare Eingaben stehen nicht darin. Ein Vertipper zaehlt nicht als
+     * Versuch, und er gehoert auch nicht in die Liste, sonst waere die Zahl der
+     * angezeigten Eintraege eine andere als der Versuchszaehler oben.</p>
+     */
+    private final List<String> bisherigeVersuche = new ArrayList<>();
     private String eingabehinweis = "";
     private String letzterTyp = "";
     private String letzterWert = "";
@@ -152,6 +167,7 @@ public final class Uebungsablauf {
         }
 
         eingabehinweis = "";
+        bisherigeVersuche.add(alsText(gelesen.get()));
         letztesErgebnis = sitzung.antworte(gelesen.get());
         if (!letztesErgebnis.korrekt()) {
             letzteFehlerrueckmeldung = letztesErgebnis;
@@ -198,6 +214,7 @@ public final class Uebungsablauf {
         aufgabenNummer++;
         letztesErgebnis = null;
         letzteFehlerrueckmeldung = null;
+        bisherigeVersuche.clear();
         letzterTyp = "";
         letzterWert = "";
         eingabehinweis = "";
@@ -238,6 +255,15 @@ public final class Uebungsablauf {
                 bewertet.diagnose().erklaert() ? bewertet.diagnose().kategorieIds() : "",
                 bewertet.diagnose().erklaert(),
                 begrenzeBewertung(bewertung)));
+    }
+
+    /** Die bisherigen gewerteten Eingaben an der aktuellen Aufgabe, aelteste zuerst. */
+    public List<String> bisherigeVersuche() {
+        return Collections.unmodifiableList(bisherigeVersuche);
+    }
+
+    private static String alsText(NutzerAntwort antwort) {
+        return antwort.auswertbar() ? antwort.wert().mitTyp() : Antwortparser.NICHT_AUSWERTBAR;
     }
 
     /** Nach einer auf Anhieb richtigen Antwort gab es keine Rueckmeldung zu bewerten. */
