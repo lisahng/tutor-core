@@ -34,11 +34,11 @@ public class Protokollspeicher {
 
     private static final String PROTOKOLL_EINFUEGEN = """
             INSERT INTO protokoll (
-                sitzung_id, zeitpunkt, teilnehmer, gruppe, kategorie, ausdruck, belegung,
-                referenz, antwort, versuch, korrekt, diagnose, vermutung, erklaert,
-                konfidenz, feedback_stufe, historie_kategorie, erfolge_vorher,
-                fehler_vorher, dauer_sekunden
-            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                sitzung_id, zeitpunkt, teilnehmer, gruppe, aufgaben_nummer, kategorie,
+                ausdruck, belegung, referenz, antwort, versuch, korrekt, diagnose,
+                vermutung, erklaert, konfidenz, feedback_stufe, historie_kategorie,
+                erfolge_vorher, fehler_vorher, dauer_versuch_sekunden, dauer_sekunden
+            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
             """;
 
     private static final String BEWERTUNG_EINFUEGEN = """
@@ -80,6 +80,7 @@ public class Protokollspeicher {
                             Timestamp.from(z.zeitpunkt()),
                             z.teilnehmerId(),
                             z.gruppe().name(),
+                            z.aufgabenNummer(),
                             z.kategorieId(),
                             z.ausdruck(),
                             z.belegung(),
@@ -95,6 +96,7 @@ public class Protokollspeicher {
                             z.historieKategorie(),
                             z.erfolgeVorher(),
                             z.fehlerVorher(),
+                            z.dauerVersuchSekunden(),
                             z.dauerSekunden()
                     })
                     .toList());

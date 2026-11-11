@@ -79,7 +79,30 @@ mvn compile exec:java -Dexec.mainClass=de.lmu.tutor.demo.GruppenvergleichDemo
 ```
 
 `GruppenvergleichDemo` stellt die beiden Bedingungen der Evaluationsstudie nebeneinander
-und zeigt, dass sich die Gruppen in genau einer Sache unterscheiden.
+und zeigt, dass sie sich allein in der Auswahl der Aufgaben unterscheiden.
+
+## Die Evaluationsstudie
+
+**Der Faktor ist die Aufgabenauswahl, nicht das Feedback.** In der Tutorbedingung wählt das
+Studentenmodell die nächste Kategorie nach PFA aus der bisherigen Fehlerhistorie. In der
+Kontrollbedingung läuft eine feste Reihenfolge durch, die nicht auf die Antworten reagiert.
+Die Rückmeldung auf eine Eingabe ist in beiden Bedingungen wortgleich. Eine frühere Fassung
+der Arbeit hatte es umgekehrt, dort war das Feedback der Faktor.
+
+**Die Gruppe ergibt sich aus dem Pseudonym.** Ungerade Nummern bilden die Tutorgruppe,
+gerade die Kontrollgruppe. Die Zuteilung geschieht ohne Zutun der Versuchsleitung, und die
+Oberfläche zeigt die Bedingung nirgends an.
+
+**Die erste Runde ist pro Person gemischt.** Beide Bedingungen beginnen damit, alle vierzehn
+Kategorien einmal zu durchlaufen, denn vorher gibt es keine Historie, auf die PFA sich
+stützen könnte. Die Reihenfolge dieser Runde wird aus dem Pseudonym gewürfelt. Ohne das
+Mischen begegnete jeder Person zuerst die Operatorpräzedenz und zuletzt der char-Datentyp,
+die vorderen Kategorien träfen also immer auf die frischeste Aufmerksamkeit. Weil der
+Startwert am Pseudonym hängt, bekommt dieselbe Person nach einem Neustart dieselbe
+Reihenfolge, und der Durchlauf lässt sich bei der Auswertung nachbilden.
+
+Zu betonen ist, dass auch die Kontrollbedingung eine zufällige Reihenfolge bekommt. Der
+Unterschied zwischen den Gruppen ist die Anpassung an die Person, nicht die Zufälligkeit.
 
 ## Betrieb mit Docker und MariaDB
 
@@ -160,9 +183,15 @@ den Logdaten.
 
 ## Stand
 
-Die Implementierung für FQ2 ist abgeschlossen. Für die Evaluationsstudie fehlen noch Vor-
-und Nachtest sowie ein druckbares Gesprächsblatt für das Interview. Die Materialien,
-also Einwilligung, zwei Fragebögen und Interviewleitfaden, liegen als LaTeX vor.
+Die Implementierung für FQ2 ist abgeschlossen, die Weboberfläche ebenfalls. Die
+Studienmaterialien liegen als LaTeX vor: Einwilligung mit Teilnehmerinformation, je ein
+Bogen vor und nach der Übungsphase mit Aufgaben und Fragebogen in einem, sowie der
+Interviewleitfaden.
+
+Das Gespräch läuft am Laptop über die Protokolldatei und nicht über einen Ausdruck. Ein
+druckbares Gesprächsblatt wird deshalb nicht mehr gebraucht.
+
+Offen ist der Antrag an die Ethikkommission und danach die Pilotierung.
 
 ## Hinweis zu den Daten
 

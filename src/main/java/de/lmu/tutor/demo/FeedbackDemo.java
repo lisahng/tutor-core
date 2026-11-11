@@ -29,7 +29,7 @@ public final class FeedbackDemo {
     private static final BugLibrary LIB = BugLibrary.loadDefault();
 
     // Fester Seed, damit die Lobformulierungen bei jedem Lauf dieselben sind.
-    private static final Feedbackgenerator GENERATOR = new Feedbackgenerator(new Random(2026));
+    private static final Feedbackgenerator GENERATOR = new Feedbackgenerator();
 
     public static void main(String[] args) {
         System.out.println("Feedback-Generator - Demo (Schritt 6)");

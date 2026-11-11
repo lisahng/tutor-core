@@ -180,7 +180,7 @@ public final class GruppenvergleichDemo {
     private static Uebungssitzung sitzung(String id, Teilnehmer.Gruppe gruppe) {
         return new Uebungssitzung(LIB, new Teilnehmer(id, gruppe),
                 new AufgabenGenerator(SEED),
-                new Feedbackgenerator(new Random(SEED)),
+                new Feedbackgenerator(),
                 new Studentenmodell(LIB),
                 Clock.systemDefaultZone());
     }

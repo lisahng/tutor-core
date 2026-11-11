@@ -98,6 +98,27 @@ public final class Uebungssitzung {
     private int versucheAnAktuellerAufgabe;
 
     /**
+     * Die wievielte Aufgabe dieser Sitzung gerade laeuft, beginnend bei 1.
+     *
+     * <p>Steht in jeder Protokollzeile und verbindet das Protokoll mit der
+     * Bewertungstabelle. Ohne diese Spalte liessen sich die beiden Tabellen nur ueber
+     * Pseudonym und Ausdruck zusammenfuehren, und das geht schief, sobald derselbe
+     * Ausdruck doch einmal zweimal vorkommt.</p>
+     */
+    private int aufgabenNummer;
+
+    /**
+     * Wann an dieser Aufgabe zuletzt geantwortet wurde, anfangs der Zeitpunkt der
+     * Aufgabenstellung.
+     *
+     * <p>Daraus ergibt sich die Dauer des einzelnen Versuchs. Die kumulierte Dauer allein
+     * genuegt nicht: Aus ihr laesst sich zwar die Differenz bilden, aber nur solange die
+     * Zeilen vollstaendig und in der richtigen Reihenfolge vorliegen. Als eigene Spalte
+     * ist die Zahl auch dann noch lesbar, wenn beim Filtern Zeilen fehlen.</p>
+     */
+    private Instant letzteAntwortUm;
+
+    /**
      * Die bereits gestellten Ausdruecke dieser Sitzung, als Text samt Belegung.
      *
      * <p>Verhindert, dass derselbe Ausdruck zweimal erscheint. Eine Kategorie darf und
@@ -127,12 +148,11 @@ public final class Uebungssitzung {
     /**
      * Sitzung mit festem Zufall, damit Tests reproduzierbar sind.
      *
-     * @param seed steuert sowohl die erzeugten Ausdruecke als auch die Auswahl der
-     *             Lobformulierungen
+     * @param seed steuert die erzeugten Ausdruecke und die Mischung der ersten Runde
      */
     public Uebungssitzung(BugLibrary bibliothek, long seed) {
         this(bibliothek, Teilnehmer.anonym(), new AufgabenGenerator(seed),
-                new Feedbackgenerator(new Random(seed)),
+                new Feedbackgenerator(),
                 new Studentenmodell(bibliothek, PfaParameter.STANDARD, 1),
                 Clock.systemDefaultZone());
     }
@@ -263,7 +283,9 @@ public final class Uebungssitzung {
         this.aktuelleAufgabe = aufgabe;
         this.aktuelleReferenz = evaluator.evaluate(aufgabe.ausdruck(), aufgabe.kontext());
         this.aufgabeGestelltUm = uhr.instant();
+        this.letzteAntwortUm = this.aufgabeGestelltUm;
         this.versucheAnAktuellerAufgabe = 0;
+        this.aufgabenNummer++;
         this.gestellteAusdruecke.add(kennung(aufgabe));
     }
 
@@ -341,6 +363,7 @@ public final class Uebungssitzung {
                 jetzt,
                 teilnehmer.id(),
                 teilnehmer.gruppe(),
+                aufgabenNummer,
                 aktuelleAufgabe.kategorieId(),
                 aktuelleAufgabe.render(),
                 aktuelleAufgabe.belegung(),
@@ -356,7 +379,10 @@ public final class Uebungssitzung {
                 historieKategorie,
                 erfolgeVorher,
                 fehlerVorher,
+                sekundenSeit(letzteAntwortUm, jetzt),
                 sekundenSeit(aufgabeGestelltUm, jetzt)));
+
+        this.letzteAntwortUm = jetzt;
     }
 
     /**

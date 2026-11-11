@@ -1,14 +1,17 @@
 package de.lmu.tutor.feedback;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.Random;
 import java.util.stream.Collectors;
 
+import de.lmu.tutor.ast.Expr;
 import de.lmu.tutor.buglib.Misconception;
 import de.lmu.tutor.buglib.Subtype;
 import de.lmu.tutor.diagnose.Diagnose;
+import de.lmu.tutor.diagnose.Fehlersimulator;
 import de.lmu.tutor.eval.EvaluationResult;
+import de.lmu.tutor.eval.StepEvaluator;
 import de.lmu.tutor.gen.Aufgabe;
 
 /**
@@ -42,9 +45,17 @@ import de.lmu.tutor.gen.Aufgabe;
  */
 public final class Feedbackgenerator {
 
-    private static final String[] LOB = {
-            "Richtig!", "Genau so!", "Stimmt!", "Sehr gut, das passt!"
-    };
+    /**
+     * Die Rueckmeldung auf eine richtige Antwort, immer dieselbe.
+     *
+     * <p>Fruehere Fassungen waehlten zufaellig aus vier Formulierungen. Das war gut
+     * gemeint, aber fuer eine Studie unbrauchbar: Lob ist eine Rueckmeldung wie jede
+     * andere, und ob jemand "Richtig!" oder "Sehr gut, das passt!" liest, ist dann eine
+     * Groesse, die zwischen den Personen schwankt, ohne dass sie jemand kontrolliert.
+     * Eine Person koennte aus der waermeren Formulierung mehr Bestaetigung ziehen als die
+     * naechste aus der knappen, und dieser Unterschied landete unbemerkt in den Daten.</p>
+     */
+    private static final String LOB = "Richtig!";
 
     /** Ausweichtext, wenn sich die Platzhalter einer Stufe nicht aufloesen lassen. */
     private static final String AUSWEICHTEXT =
@@ -87,14 +98,12 @@ public final class Feedbackgenerator {
             "Das Ergebnis stimmt noch nicht. Geh den Ausdruck Schritt fuer Schritt von innen "
                     + "nach aussen durch und vergleiche deinen Weg mit dem erwarteten.";
 
-    private final Random random;
+    // Nur fuer Fehlerkombinationen: findet den Teilausdruck, auf den sich die zweite
+    // Fehlvorstellung bezieht. Siehe platzhalterFuer.
+    private final Fehlersimulator simulator = new Fehlersimulator();
+    private final StepEvaluator auswerter = new StepEvaluator();
 
     public Feedbackgenerator() {
-        this(new Random());
-    }
-
-    public Feedbackgenerator(Random random) {
-        this.random = random;
     }
 
     // ---------------------------------------------------------------
@@ -114,12 +123,12 @@ public final class Feedbackgenerator {
     public Rueckmeldung erstelle(Diagnose diagnose, int fehlversucheAnAufgabe,
                                  Aufgabe aufgabe, EvaluationResult referenz) {
         return erstelle(diagnose, fehlversucheAnAufgabe, new Platzhalter(aufgabe, referenz),
-                referenz.auswertbar());
+                referenz.auswertbar(), aufgabe);
     }
 
     /** Erstellt die Rueckmeldung ohne Bezug auf eine Aufgabe. */
     public Rueckmeldung erstelle(Diagnose diagnose, int fehlversucheAnAufgabe) {
-        return erstelle(diagnose, fehlversucheAnAufgabe, null, true);
+        return erstelle(diagnose, fehlversucheAnAufgabe, null, true, null);
     }
 
     /** Letzte Scaffolding-Stufe unabhaengig von der Zahl der Fehlversuche. */
@@ -140,15 +149,15 @@ public final class Feedbackgenerator {
     // ---------------------------------------------------------------
 
     private Rueckmeldung erstelle(Diagnose diagnose, int fehlversuche,
-                                  Platzhalter platzhalter, boolean auswertbar) {
+                                  Platzhalter platzhalter, boolean auswertbar, Aufgabe aufgabe) {
         if (diagnose.korrekt()) {
-            return Rueckmeldung.korrekt(LOB[random.nextInt(LOB.length)]);
+            return Rueckmeldung.korrekt(LOB);
         }
         if (!diagnose.erklaert()) {
             return modellabgleich(fehlversuche, platzhalter, auswertbar);
         }
         if (diagnose.istKombination()) {
-            return ausKombination(diagnose, fehlversuche, platzhalter);
+            return ausKombination(diagnose, fehlversuche, platzhalter, aufgabe);
         }
         return ausBugLibrary(diagnose, fehlversuche, platzhalter);
     }
@@ -174,7 +183,8 @@ public final class Feedbackgenerator {
      * als einer Stelle haengt. Das soll die Aufmerksamkeit lenken, ohne gleich zwei
      * Regeln auf einmal zu erklaeren.</p>
      */
-    private Rueckmeldung ausKombination(Diagnose diagnose, int fehlversuche, Platzhalter platzhalter) {
+    private Rueckmeldung ausKombination(Diagnose diagnose, int fehlversuche,
+                                        Platzhalter platzhalter, Aufgabe aufgabe) {
         List<Misconception> kategorien = diagnose.kategorien();
         int stufen = kategorien.stream().mapToInt(Misconception::anzahlFeedbackStufen).min().orElse(1);
         int stufe = begrenze(fehlversuche, stufen);
@@ -186,10 +196,69 @@ public final class Feedbackgenerator {
                     : platzhalter.fuelle(KOMBI_0).orElse(KOMBI_0_OHNE_AUSDRUCK);
         } else {
             text = kategorien.stream()
-                    .map(m -> aufloesen(m.feedbackStufe(stufe), platzhalter))
+                    .map(m -> aufloesen(m.feedbackStufe(stufe), platzhalterFuer(m, aufgabe, platzhalter)))
                     .collect(Collectors.joining(" "));
         }
         return Rueckmeldung.fehler(text, diagnose.kategorieIds(), stufe);
+    }
+
+    /**
+     * Waehlt die Platzhalter, mit denen der Text einer Kategorie gefuellt wird.
+     *
+     * <p>Bei einer einzelnen Diagnose betrifft die Fehlvorstellung den ganzen Ausdruck,
+     * und die Platzhalter der Aufgabe passen. Bei einer Kombination gilt das nur fuer eine
+     * der beiden. Die zweite betrifft fast immer einen Teilausdruck: Bei
+     * {@code 7 + 20 % 6} etwa ist die Wurzel ein Pluszeichen, der Modulo-Fehler steckt in
+     * {@code 20 % 6}. Werden die Platzhalter trotzdem aus der Wurzel gefuellt, entsteht
+     * daraus der Satz "Teilt man 7 durch 20 % 6, bleibt der Rest 9", der weder richtig
+     * noch verstaendlich ist.</p>
+     *
+     * <p>Gesucht wird deshalb der kleinste Teilausdruck, auf dem die Regel dieser
+     * Kategorie den Wert tatsaechlich veraendert. Genau dort hat die Lernende anders
+     * gerechnet, und genau darueber soll der Satz sprechen. Findet sich keiner, bleibt es
+     * bei den Platzhaltern der ganzen Aufgabe.</p>
+     *
+     * <p>Dass die Regel den Wert aendern muss, ist der entscheidende Teil der Bedingung.
+     * Der Simulator meldet eine Regel auch dort, wo sie wirkungslos bleibt: Von links nach
+     * rechts zu rechnen ergibt bei einem einzelnen Operator wie {@code 20 % 6} genau das
+     * richtige Ergebnis. Ohne diese Pruefung wuerde der Praezedenzfehler faelschlich dem
+     * Teilausdruck zugeordnet, obwohl er die Klammerung des ganzen Ausdrucks betrifft.</p>
+     *
+     * <p>Gezaehlt werden nur Treffer aus genau dieser einen Regel. Ein Treffer aus
+     * mehreren Regeln beweist nicht, dass die hier gesuchte an dieser Stelle wirkt.</p>
+     */
+    private Platzhalter platzhalterFuer(Misconception m, Aufgabe aufgabe, Platzhalter ersatz) {
+        if (aufgabe == null) {
+            return ersatz;
+        }
+        for (Expr knoten : vonInnenNachAussen(aufgabe.ausdruck())) {
+            EvaluationResult richtig = auswerter.evaluate(knoten, aufgabe.kontext());
+            if (!richtig.auswertbar()) {
+                continue;
+            }
+            boolean regelWirktHier = simulator.simuliereAlle(knoten, aufgabe.kontext()).stream()
+                    .filter(t -> t.bugIds().equals(List.of(m.id())))
+                    .anyMatch(t -> !t.wert().mitTyp().equals(richtig.wert().mitTyp()));
+            if (regelWirktHier) {
+                Aufgabe teil = new Aufgabe(m.id(), knoten, aufgabe.kontext(), aufgabe.belegung());
+                return new Platzhalter(teil, richtig);
+            }
+        }
+        return ersatz;
+    }
+
+    /** Alle Teilausdruecke, die kleinsten zuerst, der ganze Ausdruck zuletzt. */
+    private List<Expr> vonInnenNachAussen(Expr wurzel) {
+        List<Expr> gesammelt = new ArrayList<>();
+        sammle(wurzel, gesammelt);
+        return gesammelt;
+    }
+
+    private void sammle(Expr e, List<Expr> ziel) {
+        for (Expr kind : e.children()) {
+            sammle(kind, ziel);
+        }
+        ziel.add(e);
     }
 
     /**

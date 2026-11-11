@@ -18,6 +18,7 @@ import de.lmu.tutor.session.Antwortergebnis;
 import de.lmu.tutor.session.Protokolleintrag;
 import de.lmu.tutor.session.Teilnehmer;
 import de.lmu.tutor.session.Uebungssitzung;
+import de.lmu.tutor.student.PfaParameter;
 import de.lmu.tutor.student.Studentenmodell;
 
 /**
@@ -121,9 +122,23 @@ public final class Uebungsablauf {
         this.uhr = uhr;
         this.sitzung = new Uebungssitzung(bibliothek, teilnehmer,
                 new AufgabenGenerator(seed),
-                new de.lmu.tutor.feedback.Feedbackgenerator(new java.util.Random(seed)),
-                new Studentenmodell(bibliothek),
+                new de.lmu.tutor.feedback.Feedbackgenerator(),
+                new Studentenmodell(bibliothek, PfaParameter.STANDARD, 1,
+                        Studentenmodell.gemischteStartreihenfolge(
+                                bibliothek, mischSeed(teilnehmer, seed))),
                 uhr);
+    }
+
+    /**
+     * Der Startwert, mit dem die Reihenfolge der ersten Runde gemischt wird.
+     *
+     * <p>Er haengt am Pseudonym, damit jede Person eine eigene Reihenfolge bekommt und
+     * dieselbe Person nach einem Neustart wieder dieselbe. Der konfigurierte Startwert
+     * geht mit ein, damit sich ueber {@code tutor.seed} notfalls ein ganzer Durchlauf
+     * neu wuerfeln laesst, etwa zwischen Pilotierung und Hauptstudie.</p>
+     */
+    private static long mischSeed(Teilnehmer teilnehmer, long seed) {
+        return seed * 1_000_003L + teilnehmer.id().hashCode();
     }
 
     // ================================================================

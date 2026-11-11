@@ -50,7 +50,7 @@ class KontrollbedingungTest {
     private Uebungssitzung sitzung(Teilnehmer.Gruppe gruppe) {
         return new Uebungssitzung(lib, new Teilnehmer("P01", gruppe),
                 new AufgabenGenerator(SEED),
-                new Feedbackgenerator(new Random(SEED)),
+                new Feedbackgenerator(),
                 new Studentenmodell(lib),
                 Clock.systemDefaultZone());
     }

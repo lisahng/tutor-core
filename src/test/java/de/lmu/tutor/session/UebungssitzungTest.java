@@ -233,7 +233,7 @@ class UebungssitzungTest {
         Uebungssitzung s = new Uebungssitzung(lib,
                 Teilnehmer.anonym(),
                 new AufgabenGenerator(42L),
-                new Feedbackgenerator(new Random(42L)),
+                new Feedbackgenerator(),
                 new Studentenmodell(lib, PfaParameter.STANDARD, 3),
                 Clock.systemDefaultZone());
         Set<String> kategorien = new HashSet<>();
@@ -330,8 +330,13 @@ class UebungssitzungTest {
         s.antworte(falscheAntwort());
 
         String zeile = s.protokoll().get(0).alsCsvZeile();
-        assertEquals(19, zaehleSpalten(zeile),
-                "Die Zeile hat nicht 19 Spalten: " + zeile);
+        // Die erwartete Spaltenzahl kommt aus der Kopfzeile und nicht als feste Zahl.
+        // Sonst schlaegt dieser Test jedes Mal fehl, wenn eine Spalte dazukommt, obwohl
+        // er gar nicht die Zahl der Spalten pruefen soll, sondern dass Sonderzeichen in
+        // den Feldern sie nicht verschieben.
+        int erwartet = Protokolleintrag.csvKopfzeile().split(";", -1).length;
+        assertEquals(erwartet, zaehleSpalten(zeile),
+                "Die Zeile hat nicht " + erwartet + " Spalten: " + zeile);
     }
 
     // ================================================================

@@ -129,10 +129,15 @@ h2 {
     overflow: hidden;
 }
 
+/*
+ * Die Belegung wird gross gesetzt, nicht viel kleiner als der Ausdruck selbst. Wer
+ * x = 8 ueberliest, rechnet die Aufgabe zwangslaeufig falsch, und der Fehler haette
+ * dann nichts mit der gemessenen Fehlvorstellung zu tun.
+ */
 .belegung {
-    font-size: 16px;
+    font-size: 24px;
     margin: 0;
-    padding: 10px 20px;
+    padding: 14px 20px;
     background: var(--flaeche);
     border-bottom: 1px solid var(--rahmen);
     display: flex;
@@ -360,7 +365,8 @@ button.leise {
     margin-top: 20px;
 }
 
-.konvention code {
+.konvention code,
+.hinweisfenster code {
     font-family: "Cascadia Mono", "Consolas", monospace;
     background: var(--flaeche);
     border: 1px solid var(--rahmen);
@@ -368,9 +374,95 @@ button.leise {
     padding: 1px 5px;
 }
 
-.abbruch {
-    margin-top: 32px;
-    text-align: center;
+/*
+ * Der Link, der die Schreibweisen wieder oeffnet. Sieht aus wie Text und nicht wie ein
+ * Knopf, damit er nicht mit "Antwort pruefen" verwechselt wird.
+ */
+button.verweis {
+    padding: 0;
+    font-size: 14px;
+    font-family: inherit;
+    background: none;
+    border: none;
+    color: var(--text-leise);
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+button.verweis:hover {
+    filter: none;
+    color: var(--text);
+}
+
+/* ---- Fenster mit den Schreibweisen ---- */
+
+.hinweisfenster {
+    max-width: 560px;
+    padding: 28px 32px;
+    border: 1px solid var(--rahmen);
+    border-radius: 10px;
+    background: var(--flaeche);
+    color: var(--text);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+}
+
+.hinweisfenster::backdrop {
+    background: rgba(0, 0, 0, 0.45);
+}
+
+.hinweisfenster h2 {
+    margin: 0 0 14px;
+    font-size: 21px;
+}
+
+.hinweisfenster ul {
+    margin: 14px 0;
+    padding-left: 22px;
+}
+
+.hinweisfenster li {
+    margin-bottom: 8px;
+    line-height: 1.5;
+}
+
+.hinweisfenster .fussnote {
+    margin-top: 18px;
+    font-size: 14px;
+    color: var(--text-leise);
+}
+
+.hinweisfenster form {
+    margin-top: 20px;
+    text-align: right;
+}
+
+/*
+ * Abbruch oben rechts. Klein, grau und ohne Flaeche, damit er sich vom
+ * Antwort-Knopf deutlich unterscheidet und nicht im Arbeitstakt getroffen wird.
+ */
+.kopf-rechts {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 14px;
+}
+
+.kopf-rechts form {
+    display: inline;
+}
+
+button.beenden {
+    padding: 2px 0;
+    font-size: 13px;
+    background: none;
+    border: none;
+    border-bottom: 1px solid transparent;
+    color: var(--text-leise);
+}
+
+button.beenden:hover {
+    filter: none;
+    color: var(--text);
+    border-bottom-color: var(--rahmen);
 }
 
 table.zahlen {

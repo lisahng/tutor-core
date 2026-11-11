@@ -19,7 +19,18 @@
         <span class="versuche" th:unless="${erledigt}"
               th:classappend="${versuche + 1 == maxVersuche} ? 'letzter' : ''"
               th:text="|Versuch ${versuche + 1} von ${maxVersuche}|">Versuch 1 von 3</span>
-        <span class="kennung" th:text="${teilnehmer.id()}">P01</span>
+        <!--
+            Kennung und Abbruch stehen zusammen oben rechts, weit weg von den Knoepfen,
+            die im Takt der Aufgaben bedient werden. Der Abbruch fragt zusaetzlich nach,
+            denn ein versehentlicher Klick beendet die ganze Arbeitsphase.
+        -->
+        <span class="kopf-rechts">
+            <span class="kennung" th:text="${teilnehmer.id()}">P01</span>
+            <form method="post" action="/beenden"
+                  onsubmit="return confirm('Arbeitsphase wirklich beenden?');">
+                <button type="submit" class="beenden">Arbeitsphase beenden</button>
+            </form>
+        </span>
     </div>
 
     <div class="karte">
@@ -50,7 +61,8 @@
             <div class="eingabe">
                 <div class="feldblock schmal">
                     <label for="typ">Typ</label>
-                    <select name="typ" id="typ" autofocus>
+                    <select name="typ" id="typ" autofocus
+                            th:attr="data-nicht-auswertbar=${nichtAuswertbar}">
                         <option value=""
                                 th:selected="${#strings.isEmpty(letzterTyp)}">bitte wählen</option>
                         <option th:each="t : ${typen}"
@@ -111,20 +123,131 @@
             </form>
         </div>
 
+        <!--
+            Die Schreibweisen standen früher als Fußnote unter jeder Aufgabe. Jetzt
+            erscheinen sie einmal zu Beginn als Fenster und sind danach über diesen Link
+            jederzeit wieder erreichbar. Das hält die Aufgabenseite frei von Text, der ab
+            der zweiten Aufgabe nur noch Hintergrundrauschen ist.
+        -->
         <p class="konvention" th:unless="${erledigt}">
-            Ganze Zahlen ohne Punkt (<code>7</code>), Kommazahlen mit Punkt (<code>2.5</code>),
-            char als <code>'a'</code> oder <code>a</code>, String als <code>"abc"</code> oder
-            <code>abc</code>, boolean als <code>true</code> oder <code>false</code>. Führt der
-            Ausdruck zu einem Laufzeitfehler, wähle als Typ <code>nicht auswertbar</code>.
+            <button type="button" class="verweis" onclick="schreibweisenZeigen()">
+                Schreibweisen anzeigen
+            </button>
         </p>
     </div>
 
-    <div class="abbruch">
-        <form method="post" action="/beenden">
-            <button type="submit" class="leise">Arbeitsphase beenden</button>
-        </form>
-    </div>
-
 </div>
+
+<!--
+    Ob das Fenster von selbst aufgeht, entscheidet der Server und schreibt die Antwort in
+    ein Datenattribut. Vorher stand die Bedingung im Skript und wurde ueber
+    th:inline eingesetzt. Das hat nicht gegriffen, und uebrig blieb der Ersatzwert, mit
+    dem die Bedingung immer wahr war. Deshalb erschien das Fenster bei jeder Aufgabe.
+-->
+<dialog id="schreibweisen" class="hinweisfenster"
+        th:attr="data-zeigen=${nummer == 1 and versuche == 0 and !erledigt},
+                 data-teilnehmer=${teilnehmer.id()}">
+    <h2>Bevor es losgeht</h2>
+
+    <p>Gib zu jedem Ausdruck den Typ und den Wert an. So werden die Werte geschrieben:</p>
+
+    <ul>
+        <li>Ganze Zahlen ohne Punkt, also <code>7</code> und nicht <code>7.0</code>.</li>
+        <li>Kommazahlen mit Punkt, etwa <code>2.5</code>.</li>
+        <li>Einzelne Zeichen als <code>'a'</code> oder einfach <code>a</code>.</li>
+        <li>Zeichenketten als <code>"abc"</code> oder einfach <code>abc</code>.</li>
+        <li>Wahrheitswerte als <code>true</code> oder <code>false</code>.</li>
+        <li>Führt der Ausdruck zu einem Laufzeitfehler, wähle als Typ
+            <code>nicht auswertbar</code>. Das Feld für den Wert bleibt dann leer.</li>
+    </ul>
+
+    <p class="fussnote">Dieser Hinweis lässt sich jederzeit über „Schreibweisen anzeigen“
+       erneut öffnen.</p>
+
+    <form method="dialog">
+        <button type="submit" autofocus>Verstanden</button>
+    </form>
+</dialog>
+
+<!--
+    Das Fenster erscheint von selbst genau einmal je Sitzung, naemlich bei der ersten
+    Aufgabe vor dem ersten Versuch. Zwei Sperren wirken zusammen: das Datenattribut vom
+    Server und eine Notiz im sessionStorage. Die zweite faengt den Fall ab, dass jemand
+    die erste Seite neu laedt oder zurueckblaettert. sessionStorage gilt nur fuer diesen
+    Browsertab und ist nach dem Schliessen wieder leer, also genau fuer eine Sitzung.
+-->
+<script>
+    (function () {
+        var fenster = document.getElementById('schreibweisen');
+        if (!fenster) {
+            return;
+        }
+        // Der Schluessel traegt das Pseudonym. Sonst saehe die naechste Person, die am
+        // selben Browsertab arbeitet, das Fenster nicht mehr, und die Bedingungen waeren
+        // zwischen den Teilnehmenden nicht mehr gleich.
+        var merkmal = 'schreibweisen-gezeigt-' + (fenster.dataset.teilnehmer || '');
+
+        window.schreibweisenZeigen = function () {
+            if (typeof fenster.showModal === 'function') {
+                fenster.showModal();
+            } else {
+                fenster.setAttribute('open', '');
+            }
+        };
+
+        // Nach dem Schliessen steht die Schreibmarke im Typfeld, so wie ohne Fenster auch.
+        fenster.addEventListener('close', function () {
+            var typfeld = document.getElementById('typ');
+            if (typfeld) {
+                typfeld.focus();
+            }
+        });
+
+        if (fenster.dataset.zeigen !== 'true') {
+            return;
+        }
+        // Schlaegt der Zugriff auf sessionStorage fehl, etwa in einem privaten Fenster,
+        // wird das Fenster lieber einmal zu viel gezeigt als gar nicht.
+        try {
+            if (sessionStorage.getItem(merkmal) === 'ja') {
+                return;
+            }
+            sessionStorage.setItem(merkmal, 'ja');
+        } catch (keinSpeicher) {
+            // absichtlich leer
+        }
+        window.schreibweisenZeigen();
+    })();
+</script>
+
+<!--
+    Bei "nicht auswertbar" gibt es keinen Wert einzutragen. Das Feld wird deshalb
+    gesperrt und geleert, damit niemand einen Wert stehen laesst, der nicht gemeint ist.
+    Ohne Javascript bleibt das Feld bedienbar, der Parser ignoriert den Wert in diesem
+    Fall ohnehin.
+-->
+<script>
+    (function () {
+        var typ = document.getElementById('typ');
+        var wert = document.getElementById('wert');
+        if (!typ || !wert) {
+            return;
+        }
+        var marke = typ.getAttribute('data-nicht-auswertbar');
+        var platzhalter = wert.getAttribute('placeholder');
+
+        function anpassen() {
+            var gesperrt = typ.value === marke;
+            wert.disabled = gesperrt;
+            wert.placeholder = gesperrt ? 'entfällt' : platzhalter;
+            if (gesperrt) {
+                wert.value = '';
+            }
+        }
+
+        typ.addEventListener('change', anpassen);
+        anpassen();
+    })();
+</script>
 </body>
 </html>

@@ -28,7 +28,7 @@ import de.lmu.tutor.gen.Aufgabe;
 class FeedbackgeneratorTest {
 
     private final BugLibrary lib = BugLibrary.loadDefault();
-    private final Feedbackgenerator generator = new Feedbackgenerator(new Random(42));
+    private final Feedbackgenerator generator = new Feedbackgenerator();
     private final StepEvaluator evaluator = new StepEvaluator();
     private final Misconception b01 = lib.byId("B01").orElseThrow();
 

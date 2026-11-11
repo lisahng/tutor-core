@@ -2,11 +2,13 @@ package de.lmu.tutor.student;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Deque;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Random;
 
 import de.lmu.tutor.buglib.BugLibrary;
 import de.lmu.tutor.buglib.Misconception;
@@ -113,6 +115,56 @@ public final class Studentenmodell {
         return bibliothek.all().stream()
                 .map(Misconception::id)
                 .toList();
+    }
+
+    /**
+     * Dieselben Kategorien, aber je Person in zufaelliger Reihenfolge.
+     *
+     * <p>In der festen Reihenfolge begegnet jeder Person zuerst die Operatorpraezedenz,
+     * dann die Ganzzahldivision und so fort. Das ist fuer eine Studie eine stille
+     * Konstante: Die vorderen Kategorien treffen auf die frischeste Aufmerksamkeit, die
+     * hinteren auf die ermuedetste, und bei einer Arbeitsphase mit Zeitlimit erreichen
+     * manche Personen die letzten Kategorien gar nicht. Beides faellt in beiden Gruppen
+     * gleich aus und verzerrt den Vergleich nicht, es erhoeht aber die Streuung und macht
+     * jede Aussage ueber einzelne Kategorien wertlos.</p>
+     *
+     * <p>Gemischt wird aus einem Startwert, der sich aus dem Pseudonym ergibt. Dieselbe
+     * Person bekommt dadurch nach einem Neustart dieselbe Reihenfolge, und der Durchlauf
+     * laesst sich bei der Auswertung nachbilden. Echter Zufall waere hier schlechter,
+     * denn er liesse sich hinterher nicht rekonstruieren.</p>
+     *
+     * <p>Wichtig fuer die Beschreibung der Methode: Gemischt wird in beiden Bedingungen.
+     * Der Unterschied zwischen ihnen bleibt die Anpassung an die Person, nicht die
+     * Zufaelligkeit. Die Kontrollbedingung durchlaeuft eine zufaellige, aber feste
+     * Reihenfolge, die nicht auf ihre Antworten reagiert.</p>
+     *
+     * @param bibliothek die Bug Library
+     * @param seed       Startwert des Mischens, aus dem Pseudonym abgeleitet
+     */
+    public static List<String> gemischteStartreihenfolge(BugLibrary bibliothek, long seed) {
+        List<String> ids = new ArrayList<>(standardStartreihenfolge(bibliothek));
+        Collections.shuffle(ids, new Random(streue(seed)));
+        return List.copyOf(ids);
+    }
+
+    /**
+     * Streut benachbarte Startwerte auseinander.
+     *
+     * <p>Noetig, weil die Startwerte aus dem Pseudonym stammen und sich die Pseudonyme
+     * P01 bis P20 nur in den letzten Zeichen unterscheiden. Ihre Startwerte liegen damit
+     * dicht beieinander, und {@link Random} liefert aus benachbarten Startwerten
+     * aehnliche erste Zahlen. Ohne diesen Schritt begann ein auffaellig grosser Teil der
+     * Personen mit derselben Kategorie, obwohl jede fuer sich gemischt war.</p>
+     *
+     * <p>Verwendet wird der Abschluss von SplitMix64. Er ist umkehrbar, erhaelt also die
+     * Eindeutigkeit der Startwerte, verteilt aber jedes einzelne Bit ueber das ganze
+     * Wort.</p>
+     */
+    private static long streue(long wert) {
+        long x = wert + 0x9E3779B97F4A7C15L;
+        x = (x ^ (x >>> 30)) * 0xBF58476D1CE4E5B9L;
+        x = (x ^ (x >>> 27)) * 0x94D049BB133111EBL;
+        return x ^ (x >>> 31);
     }
 
     // ---------------------------------------------------------------

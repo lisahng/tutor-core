@@ -28,9 +28,17 @@ import de.lmu.tutor.diagnose.Diagnose;
  * wurde. Das ist nicht immer die Zielkategorie der Aufgabe, denn die Historie laeuft ueber
  * die diagnostizierte Fehlvorstellung.</p>
  *
+ * <p><b>Wofuer die beiden Zeitspalten gut sind.</b> {@code dauerVersuchSekunden} misst den
+ * einzelnen Versuch, {@code dauerSekunden} die Zeit seit der Aufgabenstellung. Die zweite
+ * laesst sich aus der ersten aufsummieren, aber nur solange alle Zeilen einer Aufgabe
+ * vorliegen und richtig sortiert sind. Beim Filtern in Excel ist das schnell nicht mehr der
+ * Fall, und die Dauer eines Versuchs ist gerade die Zahl, die im Gespraech interessiert:
+ * Wer nach einer Rueckmeldung sofort erneut antwortet, hat sie nicht gelesen.</p>
+ *
  * @param zeitpunkt         Zeitpunkt der Antwort
  * @param teilnehmerId      Pseudonym der Person, etwa "P07"
  * @param gruppe            die Versuchsbedingung
+ * @param aufgabenNummer    die wievielte Aufgabe der Sitzung, beginnend bei 1
  * @param kategorieId       die Kategorie, fuer die die Aufgabe erzeugt wurde
  * @param ausdruck          der gestellte Ausdruck als Java-Quelltext
  * @param belegung          die Variablenbelegung, leer ohne Variablen
@@ -46,12 +54,15 @@ import de.lmu.tutor.diagnose.Diagnose;
  * @param historieKategorie unter welcher Kategorie dieser Versuch verbucht wurde
  * @param erfolgeVorher     Erfolge in dieser Kategorie vor diesem Versuch
  * @param fehlerVorher      Fehler in dieser Kategorie vor diesem Versuch
+ * @param dauerVersuchSekunden Zeit seit der vorigen Antwort an dieser Aufgabe, beim ersten
+ *                          Versuch seit der Aufgabenstellung, in vollen Sekunden
  * @param dauerSekunden     Zeit zwischen Aufgabenstellung und dieser Antwort, in vollen Sekunden
  */
 public record Protokolleintrag(
         Instant zeitpunkt,
         String teilnehmerId,
         Teilnehmer.Gruppe gruppe,
+        int aufgabenNummer,
         String kategorieId,
         String ausdruck,
         String belegung,
@@ -67,6 +78,7 @@ public record Protokolleintrag(
         String historieKategorie,
         int erfolgeVorher,
         int fehlerVorher,
+        long dauerVersuchSekunden,
         long dauerSekunden
 ) {
 
@@ -82,9 +94,10 @@ public record Protokolleintrag(
 
     /** Kopfzeile fuer den CSV-Export, passend zu {@link #alsCsvZeile()}. */
     public static String csvKopfzeile() {
-        return "zeitpunkt;teilnehmer;gruppe;kategorie;ausdruck;belegung;referenz;antwort;"
-                + "versuch;korrekt;diagnose;vermutung;erklaert;konfidenz;feedbackStufe;"
-                + "historieKategorie;erfolgeVorher;fehlerVorher;dauerSekunden";
+        return "zeitpunkt;teilnehmer;gruppe;aufgabenNummer;kategorie;ausdruck;belegung;"
+                + "referenz;antwort;versuch;korrekt;diagnose;vermutung;erklaert;konfidenz;"
+                + "feedbackStufe;historieKategorie;erfolgeVorher;fehlerVorher;"
+                + "dauerVersuchSekunden;dauerSekunden";
     }
 
     /**
@@ -100,6 +113,7 @@ public record Protokolleintrag(
                 zitiere(zeitpunkt.toString()),
                 zitiere(teilnehmerId),
                 zitiere(gruppe.name()),
+                String.valueOf(aufgabenNummer),
                 zitiere(kategorieId),
                 zitiere(ausdruck),
                 zitiere(belegung),
@@ -115,6 +129,7 @@ public record Protokolleintrag(
                 zitiere(historieKategorie),
                 String.valueOf(erfolgeVorher),
                 String.valueOf(fehlerVorher),
+                String.valueOf(dauerVersuchSekunden),
                 String.valueOf(dauerSekunden));
     }
 

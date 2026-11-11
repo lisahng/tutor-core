@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS protokoll (
     zeitpunkt           DATETIME(3)  NOT NULL,
     teilnehmer          VARCHAR(64)  NOT NULL,
     gruppe              VARCHAR(16)  NOT NULL,
+    aufgaben_nummer     INT          NOT NULL,
     kategorie           VARCHAR(16)  NOT NULL,
     ausdruck            TEXT         NOT NULL,
     belegung            TEXT,
@@ -34,6 +35,7 @@ CREATE TABLE IF NOT EXISTS protokoll (
     historie_kategorie  VARCHAR(16),
     erfolge_vorher      INT          NOT NULL,
     fehler_vorher       INT          NOT NULL,
+    dauer_versuch_sekunden INT       NOT NULL,
     dauer_sekunden      INT          NOT NULL,
     INDEX idx_protokoll_sitzung (sitzung_id),
     INDEX idx_protokoll_teilnehmer (teilnehmer)
