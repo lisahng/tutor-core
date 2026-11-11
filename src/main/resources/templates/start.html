@@ -19,13 +19,15 @@
         <form method="post" action="/start">
             <div class="feld">
                 <label for="teilnehmerId">Pseudonym</label>
+                <!--
+                    Der erklaerende Absatz unter dem Feld ist entfallen. Die Regel steht
+                    jetzt im title-Attribut: Der Browser zeigt sie genau dann an, wenn die
+                    Eingabe dem Muster nicht entspricht. Ohne sie bliebe das Formular
+                    stehen, ohne zu sagen warum.
+                -->
                 <input type="text" id="teilnehmerId" name="teilnehmerId" value="P01" required
-                       pattern="[A-Za-z]*[0-9]+" autocomplete="off">
-                <p class="konvention">
-                    Das Pseudonym muss eine Nummer enthalten, etwa <code>P07</code>. Aus ihr
-                    ergibt sich die Bedingung, deshalb gibt es kein Auswahlfeld mehr. Die
-                    Zuordnung von Pseudonym zu Person steht vor dem Termin fest.
-                </p>
+                       pattern="[A-Za-z]*[0-9]+" autocomplete="off"
+                       title="Das Pseudonym muss auf eine Nummer enden, etwa P07.">
             </div>
 
 
@@ -63,11 +65,6 @@
                 <td th:text="${seed}">2026</td>
             </tr>
         </table>
-        <p class="konvention">
-            Was zuerst erreicht ist, beendet die Arbeitsphase. Alle Werte stehen in
-            <code>application.properties</code>. Der Startwert ist für alle Teilnehmenden
-            derselbe, damit auch dieselben Aufgaben entstehen.
-        </p>
     </div>
 
 </div>

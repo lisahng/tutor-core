@@ -9,6 +9,9 @@ import org.junit.jupiter.api.Test;
 import java.util.Random;
 
 import static de.lmu.tutor.ast.AST.bin;
+import static de.lmu.tutor.ast.AST.call;
+import static de.lmu.tutor.ast.AST.stringLit;
+import static de.lmu.tutor.ast.AST.var;
 import static de.lmu.tutor.ast.AST.intLit;
 import de.lmu.tutor.buglib.BugLibrary;
 import de.lmu.tutor.buglib.Misconception;
@@ -46,6 +49,67 @@ class FeedbackgeneratorTest {
 
     private Diagnose nurVermutet(Misconception m) {
         return Diagnose.von(m, Diagnose.Konfidenz.ZIELKATEGORIE, "Testfall");
+    }
+
+    // ================================================================
+    // B06 beim einzelnen Aufruf
+    // ================================================================
+
+    /** {@code s.equals("Java")} mit {@code s = "Java"} ergibt {@code true : boolean}. */
+    private Aufgabe aufrufAufgabe() {
+        EvaluationContext ctx = new EvaluationContext().setzeString("s", "Java");
+        return new Aufgabe("B14", call(var("s"), "equals", stringLit("Java")), ctx, "s = \"Java\"");
+    }
+
+    /**
+     * Wer den Empfaenger zurueckgibt, bekommt Texte ueber Rueckgabewerte und nicht die
+     * Texte der Bug Library ueber innere und aeussere Methode. Die passen hier nicht,
+     * ihre Platzhalter blieben leer, und uebrig bliebe der allgemeine Ausweichtext.
+     */
+    @Test
+    void b06BeimEinzelaufrufSprichtVomRueckgabewert() {
+        Aufgabe auf = aufrufAufgabe();
+        EvaluationResult ref = evaluator.evaluate(auf.ausdruck(), auf.kontext());
+        Misconception b06 = lib.byId("B06").orElseThrow();
+
+        String stufe1 = generator.erstelle(erklaert(b06), 1, auf, ref).text();
+        String stufe2 = generator.erstelle(erklaert(b06), 2, auf, ref).text();
+
+        assertTrue(stufe1.contains("equals"), stufe1);
+        assertFalse(stufe1.contains("{"), "Platzhalter nicht aufgeloest: " + stufe1);
+        assertTrue(stufe2.contains("true : boolean"), stufe2);
+        assertTrue(stufe2.contains("\"Java\""), stufe2);
+        assertFalse(stufe2.contains("Methode angewendet, das Gesamtergebnis"),
+                "Hier duerfen die Kettentexte nicht erscheinen: " + stufe2);
+    }
+
+    /** Bei einer echten Kette bleiben die Texte der Bug Library zustaendig. */
+    @Test
+    void b06BeiEinerKetteBleibtBeiDenBibliothekstexten() {
+        Aufgabe kette = new Aufgabe("B06",
+                call(call(stringLit("ROT"), "substring", intLit(1)), "toLowerCase"),
+                new EvaluationContext(), "");
+        EvaluationResult ref = evaluator.evaluate(kette.ausdruck(), kette.kontext());
+        Misconception b06 = lib.byId("B06").orElseThrow();
+
+        String stufe2 = generator.erstelle(erklaert(b06), 2, kette, ref).text();
+        assertTrue(stufe2.contains("Zuerst wird"), stufe2);
+        assertFalse(stufe2.contains("{"), "Platzhalter nicht aufgeloest: " + stufe2);
+    }
+
+    /**
+     * Der Ausweichtext der ersten Tracing-Stufe sprach frueher von Operanden und vom
+     * Zahlenwert. Bei einem Methodenaufruf auf einem String gibt es beides nicht.
+     */
+    @Test
+    void unerklaerterFehlerBeiEinemAufrufRedetNichtVonZahlen() {
+        Aufgabe auf = aufrufAufgabe();
+        EvaluationResult ref = evaluator.evaluate(auf.ausdruck(), auf.kontext());
+
+        String text = generator.erstelle(Diagnose.unbekannt("Testfall"), 1, auf, ref).text();
+        assertFalse(text.contains("Zahlenwert"), text);
+        assertFalse(text.contains("Operanden"), text);
+        assertFalse(text.contains("{"), "Platzhalter nicht aufgeloest: " + text);
     }
 
     // ================================================================

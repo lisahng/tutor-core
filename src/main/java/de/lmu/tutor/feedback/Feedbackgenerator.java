@@ -83,9 +83,27 @@ public final class Feedbackgenerator {
             "Geh den Ausdruck von innen nach aussen durch. Welchen Wert hat "
                     + "{innererTeilausdruck} bei dir?";
 
+    /**
+     * Fuer einen einzelnen Methodenaufruf, der keinen Zwischenschritt hergibt.
+     *
+     * <p>Steht vor {@link #TRACING_1_OHNE_SCHRITT}, weil die Frage nach dem Rueckgabewert
+     * bei einem Aufruf die eigentliche Frage ist.</p>
+     */
+    private static final String TRACING_1_METHODE =
+            "Welchen Wert liefert der Aufruf von {methode} zurueck, und welchen Typ hat "
+                    + "dieser Wert?";
+
+    /**
+     * Letzter allgemeiner Hinweis der ersten Stufe.
+     *
+     * <p>Fruehere Fassung: "achte auf die Datentypen der Operanden, nicht nur auf den
+     * Zahlenwert". Das passte nur zu arithmetischen Ausdruecken. Bei
+     * {@code s.equals("Java")} gibt es weder Operanden noch einen Zahlenwert, und der
+     * Hinweis ging ins Leere.</p>
+     */
     private static final String TRACING_1_OHNE_SCHRITT =
-            "Geh {ausdruck} Schritt fuer Schritt durch und achte dabei auch auf die "
-                    + "Datentypen der Operanden, nicht nur auf den Zahlenwert.";
+            "Geh {ausdruck} Schritt fuer Schritt durch und achte dabei auf den Typ des "
+                    + "Ergebnisses, nicht nur auf seinen Wert.";
 
     private static final String TRACING_2_AUSWERTBAR =
             "Die korrekte Auswertung verlaeuft so: {schritte}. Vergleiche das mit deinem "
@@ -159,20 +177,61 @@ public final class Feedbackgenerator {
         if (diagnose.istKombination()) {
             return ausKombination(diagnose, fehlversuche, platzhalter, aufgabe);
         }
-        return ausBugLibrary(diagnose, fehlversuche, platzhalter);
+        return ausBugLibrary(diagnose, fehlversuche, platzhalter, aufgabe);
     }
 
     /** Scaffolding mit den Texten der Bug Library, bei einer einzelnen Fehlvorstellung. */
-    private Rueckmeldung ausBugLibrary(Diagnose diagnose, int fehlversuche, Platzhalter platzhalter) {
+    private Rueckmeldung ausBugLibrary(Diagnose diagnose, int fehlversuche,
+                                       Platzhalter platzhalter, Aufgabe aufgabe) {
         Misconception m = diagnose.misconception().orElseThrow();
         int stufe = begrenze(fehlversuche, m.anzahlFeedbackStufen());
-        String text = aufloesen(m.feedbackStufe(stufe), platzhalter);
+        String vorlage = einzelnerAufruf(m, aufgabe)
+                ? EINZELAUFRUF[Math.min(stufe, EINZELAUFRUF.length - 1)]
+                : m.feedbackStufe(stufe);
+        String text = aufloesen(vorlage, platzhalter);
 
         if (diagnose.subtype().isPresent()) {
             Subtype s = diagnose.subtype().get();
             text += " (" + s.name() + ", z. B. " + s.beispiel() + ")";
         }
         return Rueckmeldung.fehler(text, m.id(), stufe);
+    }
+
+    /**
+     * Die Stufen fuer B06, wenn gar kein Aufruf angewendet wurde.
+     *
+     * <p>Die Texte der Bug Library sprechen von innerer und aeusserer Methode. Bei einem
+     * einzelnen Aufruf wie {@code s.equals("Java")} gibt es die nicht, die Platzhalter
+     * blieben leer und uebrig bliebe der allgemeine Ausweichtext. Deshalb stehen hier
+     * eigene Formulierungen fuer diesen Fall.</p>
+     *
+     * <p>Sie stehen im Code und nicht in der Bug Library, weil sie nicht von der
+     * Kategorie abhaengen, sondern von der Form des Ausdrucks. Dasselbe gilt fuer die
+     * Texte des Model Tracing weiter oben.</p>
+     */
+    private static final String[] EINZELAUFRUF = {
+            "Schau genau hin, was hier zurueckgegeben wird. Das ist nicht dasselbe wie "
+                    + "das, worauf die Methode angewendet wird.",
+
+            "Ein Methodenaufruf liefert einen neuen Wert zurueck. Was links vom Punkt "
+                    + "steht, bleibt unveraendert und ist nicht das Ergebnis. Welchen Typ "
+                    + "liefert {methode} zurueck?",
+
+            "In {ausdruck} wird {methode} auf {empfaengerWert} angewendet. Das Ergebnis "
+                    + "des Ausdrucks ist {ergebnis}, nicht {empfaengerWert} selbst."
+    };
+
+    /**
+     * Ob hier der Grenzfall von B06 vorliegt: ein einzelner Aufruf, der uebersehen wurde.
+     *
+     * <p>Eine Kette aus mehreren Aufrufen faellt nicht darunter, dafuer passen die Texte
+     * der Bug Library.</p>
+     */
+    private boolean einzelnerAufruf(Misconception m, Aufgabe aufgabe) {
+        return "B06".equals(m.id())
+                && aufgabe != null
+                && aufgabe.ausdruck() instanceof Expr.Call aufruf
+                && !(aufruf.empfaenger() instanceof Expr.Call);
     }
 
     /**
@@ -273,6 +332,7 @@ public final class Feedbackgenerator {
         String text = switch (stufe) {
             case 0 -> TRACING_0;
             case 1 -> platzhalter.fuelle(TRACING_1_MIT_SCHRITT)
+                    .or(() -> platzhalter.fuelle(TRACING_1_METHODE))
                     .or(() -> platzhalter.fuelle(TRACING_1_OHNE_SCHRITT))
                     .orElse(AUSWEICHTEXT);
             default -> auswertbar

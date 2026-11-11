@@ -164,6 +164,14 @@ keine Fehlvorstellung, und eine geratene Kategorie würde die Auswertung verfäl
 Fehlvorstellungen sind die aufwendigere Erklärung und kommen erst zum Zug, wenn die
 einfache versagt.
 
+**B06 deckt auch den ganz übersehenen Aufruf ab.** Wer auf `s.equals("Java")` mit
+`"Java" : String` antwortet, gibt den Empfänger zurück statt des Rückgabewerts. Das ist der
+Grenzfall des übersehenen Kettenglieds: Statt eines Gliedes wird die ganze Kette übersehen.
+Die Erweiterung stammt aus der Erprobung vor der Studie, nicht aus Teilnehmerdaten. Sie
+kostet keine neue Kategorie, die Zahl bleibt bei vierzehn. Für diesen Fall gibt es eigene
+Stufentexte, denn die Texte der Bug Library sprechen von innerer und äußerer Methode, die
+es bei einem einzelnen Aufruf nicht gibt.
+
 **Diagnose und Vermutung stehen in getrennten Spalten.** Sonst wäre die Trefferquote
 geschönt, denn Aufgaben einer Kategorie provozieren meist Fehler eben dieser Kategorie.
 

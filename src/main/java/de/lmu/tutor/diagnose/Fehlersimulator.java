@@ -74,6 +74,7 @@ public final class Fehlersimulator {
         b04FehlendeDoublePromotion(wurzel, ctx).ifPresent(treffer::add);
         b05IndexOhneVersatz(wurzel, ctx).ifPresent(treffer::add);
         treffer.addAll(b06KetteUnvollstaendig(wurzel, ctx));
+        b06AufrufUebersehen(wurzel, ctx).ifPresent(treffer::add);
         b10ModuloAlsQuotient(wurzel, ctx).ifPresent(treffer::add);
         b11FalscherZweig(wurzel, ctx).ifPresent(treffer::add);
         b12PraefixPostfixVerwechselt(wurzel, ctx).ifPresent(treffer::add);
@@ -424,6 +425,40 @@ public final class Fehlersimulator {
                         "Nur " + aussen.methode() + "(...) angewendet, " + innen.methode() + "(...) uebersehen.")));
 
         return treffer;
+    }
+
+    /**
+     * Der Aufruf wird ganz uebersehen: Zurueckgegeben wird der Empfaenger selbst.
+     *
+     * <p>Auf {@code s.equals("Java")} mit {@code s = "Java"} antwortet jemand
+     * {@code "Java" : String} statt {@code true : boolean}. Dahinter steckt die Annahme,
+     * ein Methodenaufruf liefere das zurueck, worauf er angewendet wird. Der Empfaenger
+     * bleibt in Wahrheit unveraendert, und das Ergebnis des Ausdrucks ist der
+     * Rueckgabewert.</p>
+     *
+     * <p>Das ist der Grenzfall von B06: Statt eines Gliedes der Kette wird die ganze
+     * Kette uebersehen. Deshalb eine eigene Regel, aber keine eigene Kategorie.</p>
+     *
+     * <p>Die Regel greift nur, wenn der Empfaenger ein anderes Ergebnis hat als der
+     * Aufruf. Bei einem Aufruf, der seinen Empfaenger unveraendert zurueckgibt, etwa
+     * {@code "abc".toLowerCase()}, waere sie wirkungslos und duerfte nicht als Diagnose
+     * auftauchen.</p>
+     */
+    private Optional<Treffer> b06AufrufUebersehen(Expr wurzel, EvaluationContext ctx) {
+        if (!(wurzel instanceof Expr.Call aufruf) || aufruf.empfaenger() instanceof Expr.Call) {
+            return Optional.empty();
+        }
+        Optional<Value> empfaenger = werteBlatt(aufruf.empfaenger(), ctx);
+        EvaluationResult richtig = evaluator.evaluate(wurzel, ctx);
+        if (empfaenger.isEmpty() || !richtig.auswertbar()) {
+            return Optional.empty();
+        }
+        if (empfaenger.get().mitTyp().equals(richtig.wert().mitTyp())) {
+            return Optional.empty();
+        }
+        return Optional.of(new Treffer("B06", empfaenger.get(),
+                "Der Empfaenger wurde zurueckgegeben, der Aufruf von "
+                        + aufruf.methode() + "(...) blieb unberuecksichtigt."));
     }
 
     // ================================================================

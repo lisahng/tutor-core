@@ -174,6 +174,9 @@ public final class Platzhalter {
             case Expr.Call aussen -> {
                 setze("methode", aussen.methode());
                 setze("empfaenger", aussen.empfaenger().render());
+                // Wird gebraucht, um dem Ergebnis des Aufrufs den unveraenderten
+                // Empfaenger gegenueberzustellen. Siehe B06 beim einzelnen Aufruf.
+                werte(aussen.empfaenger(), ctx).ifPresent(v -> setze("empfaengerWert", v.render()));
                 setze("aeussereMethode", aussen.methode() + "(...)");
                 if (aussen.empfaenger() instanceof Expr.Call innen) {
                     setze("innereMethode", innen.methode() + "(...)");

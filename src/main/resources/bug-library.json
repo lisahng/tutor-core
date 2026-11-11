@@ -90,9 +90,9 @@
     {
       "id": "B06",
       "name": "Method-Chaining falsch",
-      "beschreibung": "Bei verketteten Methodenaufrufen wird ein Glied uebersehen oder die Reihenfolge vertauscht.",
-      "beispiel": "\"HEY\".substring(1).toLowerCase()",
-      "typischerFehler": "Ergebnis \"EY\" oder \"hey\" statt \"ey\"",
+      "beschreibung": "Bei Methodenaufrufen wird ein Glied der Kette uebersehen, die Reihenfolge vertauscht oder der Aufruf ganz uebergangen, so dass der Empfaenger statt des Rueckgabewerts angegeben wird.",
+      "beispiel": "\"HEY\".substring(1).toLowerCase() oder s.equals(\"Java\")",
+      "typischerFehler": "Ergebnis \"EY\" oder \"hey\" statt \"ey\", oder der unveraenderte Empfaenger statt des Rueckgabewerts",
       "schwierigkeit": "MITTEL",
       "basisgewicht": 3,
       "konzept": "METHOD_CHAINING",
