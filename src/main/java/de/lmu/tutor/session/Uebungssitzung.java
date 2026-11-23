@@ -379,6 +379,57 @@ public final class Uebungssitzung {
                 historieKategorie,
                 erfolgeVorher,
                 fehlerVorher,
+                true,
+                rueckmeldung.text(),
+                sekundenSeit(letzteAntwortUm, jetzt),
+                sekundenSeit(aufgabeGestelltUm, jetzt)));
+
+        this.letzteAntwortUm = jetzt;
+    }
+
+    /**
+     * Haelt eine Eingabe fest, die sich nicht lesen liess.
+     *
+     * <p>Solche Eingaben werden nicht gewertet: Der Versuchszaehler, die Fehlerhistorie
+     * und das Studentenmodell bleiben unberuehrt, denn ein Tippfehler ist keine
+     * Fehlvorstellung. Bis hierher war das richtig, nur verschwand die Eingabe dadurch
+     * spurlos. Im Protokoll klaffte eine Luecke, und im Abschlussgespraech liess sich
+     * nicht mehr sehen, dass jemand etwas versucht hatte, das gar nicht ankam.</p>
+     *
+     * <p>Die Zeile traegt deshalb {@code lesbar = false} und denselben Versuchszaehler wie
+     * die naechste gewertete Zeile. Beim Auszaehlen der Versuche sind diese Zeilen
+     * auszuschliessen, beim Lesen des Verlaufs gehoeren sie dazu.</p>
+     *
+     * @param eingabe die Eingabe, wie sie getippt wurde
+     * @param hinweis der Hinweis, der daraufhin angezeigt wurde
+     */
+    public void protokolliereUnlesbar(String eingabe, String hinweis) {
+        if (aktuelleAufgabe == null) {
+            return;
+        }
+        Instant jetzt = uhr.instant();
+        protokoll.add(new Protokolleintrag(
+                jetzt,
+                teilnehmer.id(),
+                teilnehmer.gruppe(),
+                aufgabenNummer,
+                aktuelleAufgabe.kategorieId(),
+                aktuelleAufgabe.render(),
+                aktuelleAufgabe.belegung(),
+                aktuelleReferenz.ergebnisText(),
+                eingabe,
+                versucheAnAktuellerAufgabe,
+                false,
+                "",
+                "",
+                false,
+                Diagnose.Konfidenz.UNBEKANNT,
+                -1,
+                "",
+                0,
+                0,
+                false,
+                hinweis,
                 sekundenSeit(letzteAntwortUm, jetzt),
                 sekundenSeit(aufgabeGestelltUm, jetzt)));
 

@@ -496,3 +496,133 @@ table.zahlen td:last-child {
 a {
     color: var(--akzent);
 }
+
+/* ================================================================
+   Gespraechsblatt
+   Wird im Abschlussgespraech am Laptop gezeigt und muss aus zwei Metern
+   Entfernung lesbar sein. Deshalb durchgehend groessere Schrift und mehr
+   Weissraum als in der Arbeitsoberflaeche.
+   ================================================================ */
+
+.gespraech {
+    max-width: 1040px;
+}
+
+.gespraechsblock {
+    margin-bottom: 34px;
+    padding-bottom: 6px;
+}
+
+.gespraechsblock .ausdruck {
+    font-size: 34px;
+}
+
+table.eingaben {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 20px;
+}
+
+table.eingaben th {
+    padding: 10px 14px;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    text-align: left;
+    color: var(--text-leise);
+    border-bottom: 1px solid var(--rahmen);
+}
+
+table.eingaben td {
+    padding: 13px 14px;
+    border-bottom: 1px solid var(--rahmen);
+    vertical-align: top;
+}
+
+table.eingaben tr:last-child td {
+    border-bottom: none;
+}
+
+.spalte-versuch {
+    width: 110px;
+    white-space: nowrap;
+}
+
+.spalte-zeit {
+    width: 90px;
+    text-align: right;
+    font-size: 16px;
+    color: var(--text-leise);
+    white-space: nowrap;
+}
+
+/* Die Spalte heisst bewusst nicht .eingabe. Diese Klasse gehoert oben schon zum
+   Eingabebereich der Arbeitsoberflaeche und steht dort auf display: flex, was die
+   Tabellenzelle aus der Zeile heben wuerde.
+
+   Umbrechen darf die Eingabe nicht: stuende "Java" : String auf zwei Zeilen,
+   saehe es im Gespraech nach zwei Eingaben aus. */
+table.eingaben .spalte-eingabe {
+    width: 250px;
+}
+
+table.eingaben td.spalte-eingabe {
+    font-family: "Cascadia Mono", "Consolas", monospace;
+    font-size: 22px;
+    white-space: nowrap;
+}
+
+/* Eine Eingabe, die sich nicht lesen liess. Sie wurde nicht gewertet und steht
+   deshalb zurueckhaltender da, gehoert aber zum Verlauf. */
+tr.unlesbar td {
+    color: var(--text-leise);
+}
+
+tr.unlesbar .spalte-versuch {
+    font-size: 14px;
+    font-style: italic;
+}
+
+.rueckmeldungstext {
+    font-size: 17px;
+    line-height: 1.45;
+    color: var(--text-leise);
+}
+
+/* Ein verdeckter Block zeigt die Rueckmeldungsspalte nicht. Ueberschrift und Zellen
+   verschwinden gemeinsam, sonst stuende die Spalte leer in der Tabelle. */
+.gespraechsblock.verdeckt .rueckmeldungstext,
+.gespraechsblock.verdeckt th.spalte-rueckmeldung {
+    display: none;
+}
+
+.knopfzeile {
+    margin: 14px 0 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+button.rueckmeldung-knopf {
+    font-size: 16px;
+    padding: 7px 14px;
+    border: 1px solid var(--rahmen);
+    border-radius: 7px;
+    background: var(--flaeche);
+    color: var(--text-leise);
+    cursor: pointer;
+}
+
+button.rueckmeldung-knopf:hover {
+    border-color: var(--text-leise);
+    color: var(--text);
+}
+
+/* Bleibt stehen, auch wenn der Block wieder zugeklappt wird. */
+.gezeigt-marke {
+    font-size: 14px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-leise);
+}

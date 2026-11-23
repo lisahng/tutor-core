@@ -14,7 +14,17 @@ COPY pom.xml .
 RUN mvn -B -q dependency:go-offline
 
 COPY src ./src
-RUN mvn -B -q clean package -DskipTests
+
+# Ohne -q, damit im Fehlerfall sichtbar ist, woran Maven scheitert. Mit -q bleibt eine
+# fehlgeschlagene Uebersetzung stumm, und der Fehler faellt erst weiter unten auf, wo die
+# JAR-Datei fehlt. Das fuehrt in die Irre.
+RUN mvn -B clean package -DskipTests
+
+# Auf einen festen Namen bringen. Sonst steht die Versionsnummer aus der pom.xml an zwei
+# Stellen, und beim naechsten Versionssprung bricht der Bau an einer Stelle ab, die mit der
+# Ursache nichts zu tun hat. Liegen wider Erwarten mehrere JAR-Dateien im Ordner, bricht cp
+# mit einer klaren Meldung ab, statt stillschweigend die falsche zu nehmen.
+RUN cp target/*.jar /bau/app.jar
 
 FROM eclipse-temurin:21-jre
 WORKDIR /app
@@ -27,7 +37,7 @@ ENV TZ=Europe/Berlin
 RUN useradd --create-home --uid 10001 tutor
 USER tutor
 
-COPY --from=bau /bau/target/tutor-core-0.1.0.jar app.jar
+COPY --from=bau /bau/app.jar app.jar
 
 # Hier landen die CSV-Dateien. Das Verzeichnis muss beim Start eingehaengt werden, sonst
 # verschwinden sie mit dem Container.

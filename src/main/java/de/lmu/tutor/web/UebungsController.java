@@ -242,7 +242,43 @@ public class UebungsController {
                 .body(inhalt);
     }
 
-    /** Die Bewertungen als CSV-Datei zum Herunterladen. */
+    /**
+     * Die Eingaben der laufenden Sitzung als lesbare Tabelle, fuer das Abschlussgespraech.
+     *
+     * <p>Die CSV-Datei taugt dafuer schlecht. In Excel sind die Spalten zu schmal, die
+     * Zeilen stehen ungruppiert untereinander, und vor allem muss die Versuchsleitung
+     * daran denken, die verraeterischen Spalten von Hand auszublenden. Ein einziger Blick
+     * auf {@code diagnose} macht den Abgleich in Strang 3 fuer diese Person wertlos, weil
+     * die Selbsterklaerung danach nur noch die Diagnose wiederholt.</p>
+     *
+     * <p>Diese Ansicht nimmt der Versuchsleitung die Entscheidung ab. Sie zeigt nur
+     * Ausdruck, Belegung, Versuch und Eingabe, gruppiert nach Aufgabe. Die Spalten
+     * {@code gruppe}, {@code kategorie}, {@code referenz}, {@code korrekt},
+     * {@code diagnose}, {@code vermutung}, {@code erklaert} und {@code konfidenz} sind
+     * nicht im Modell und koennen deshalb gar nicht erscheinen.</p>
+     *
+     * <p>Mit {@code rueckmeldung=true} kommt der Text dazu, den die Person gelesen hat.
+     * Er verraet nichts Neues, denn sie hat ihn waehrend der Bearbeitung schon gesehen.
+     * Er legt ihr aber die Erklaerung in den Mund, deshalb ist er standardmaessig aus.
+     * Sinnvoll ist er, nachdem zu einer Aufgabe schon gesprochen wurde.</p>
+     *
+     * <p>Wie die Export-Adressen nur mit Schluessel erreichbar.</p>
+     */
+    @GetMapping("/gespraech")
+    public String gespraech(HttpSession sitzung, Model model,
+                            @RequestParam(name = "schluessel", required = false) String schluessel,
+                            @RequestParam(name = "rueckmeldung", required = false,
+                                          defaultValue = "false") boolean mitRueckmeldung) {
+        Uebungsablauf ablauf = ablauf(sitzung);
+        if (ablauf == null || !einstellungen.schluesselStimmt(schluessel)) {
+            return "redirect:/";
+        }
+        model.addAttribute("teilnehmer", ablauf.teilnehmer().id());
+        model.addAttribute("mitRueckmeldung", mitRueckmeldung);
+        model.addAttribute("aufgaben", Gespraechsansicht.ausProtokoll(ablauf.protokoll()));
+        return "gespraech";
+    }
+
     /** Die Bewertungen der laufenden Sitzung, ebenfalls nur mit Schluessel. */
     @GetMapping("/bewertungen.csv")
     public ResponseEntity<byte[]> bewertungen(HttpSession sitzung,

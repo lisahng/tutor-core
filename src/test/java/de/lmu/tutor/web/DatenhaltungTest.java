@@ -1,5 +1,6 @@
 package de.lmu.tutor.web;
 
+import de.lmu.tutor.session.Protokolleintrag;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -92,10 +93,17 @@ class DatenhaltungTest {
     }
 
     @Test
-    void eineUnlesbareEingabeErzeugtKeineNeueZeile() {
+    void eineUnlesbareEingabeWirdEbenfallsGespeichert() {
+        // Frueher entstand hier gar keine Zeile. Seit die Tippfehler mitprotokolliert
+        // werden, muss auch die Datenhaltung sie bekommen, sonst stuenden sie in der
+        // CSV-Datei, aber nicht in der Datenbank.
         Uebungsablauf a = gestartet();
         a.antworte("int", "qqq");
-        assertTrue(a.neueProtokollzeilen().isEmpty());
+
+        List<Protokolleintrag> neu = a.neueProtokollzeilen();
+        assertEquals(1, neu.size());
+        assertFalse(neu.get(0).lesbar());
+        assertTrue(a.neueProtokollzeilen().isEmpty(), "Jede Zeile wird nur einmal herausgegeben");
     }
 
     @Test

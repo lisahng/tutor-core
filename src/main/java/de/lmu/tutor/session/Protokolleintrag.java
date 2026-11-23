@@ -54,6 +54,11 @@ import de.lmu.tutor.diagnose.Diagnose;
  * @param historieKategorie unter welcher Kategorie dieser Versuch verbucht wurde
  * @param erfolgeVorher     Erfolge in dieser Kategorie vor diesem Versuch
  * @param fehlerVorher      Fehler in dieser Kategorie vor diesem Versuch
+ * @param lesbar            ob die Eingabe gelesen werden konnte. {@code false} steht fuer
+ *                          einen Tippfehler, der nicht gewertet wurde. Solche Zeilen
+ *                          gehoeren zum Verlauf, aber nicht in die Zaehlung der Versuche
+ * @param rueckmeldung      der Text, den die Person daraufhin gelesen hat. Bei einer nicht
+ *                          lesbaren Eingabe der Hinweis zur Schreibweise
  * @param dauerVersuchSekunden Zeit seit der vorigen Antwort an dieser Aufgabe, beim ersten
  *                          Versuch seit der Aufgabenstellung, in vollen Sekunden
  * @param dauerSekunden     Zeit zwischen Aufgabenstellung und dieser Antwort, in vollen Sekunden
@@ -78,6 +83,8 @@ public record Protokolleintrag(
         String historieKategorie,
         int erfolgeVorher,
         int fehlerVorher,
+        boolean lesbar,
+        String rueckmeldung,
         long dauerVersuchSekunden,
         long dauerSekunden
 ) {
@@ -96,8 +103,8 @@ public record Protokolleintrag(
     public static String csvKopfzeile() {
         return "zeitpunkt;teilnehmer;gruppe;aufgabenNummer;kategorie;ausdruck;belegung;"
                 + "referenz;antwort;versuch;korrekt;diagnose;vermutung;erklaert;konfidenz;"
-                + "feedbackStufe;historieKategorie;erfolgeVorher;fehlerVorher;"
-                + "dauerVersuchSekunden;dauerSekunden";
+                + "feedbackStufe;historieKategorie;erfolgeVorher;fehlerVorher;lesbar;"
+                + "rueckmeldung;dauerVersuchSekunden;dauerSekunden";
     }
 
     /**
@@ -129,6 +136,8 @@ public record Protokolleintrag(
                 zitiere(historieKategorie),
                 String.valueOf(erfolgeVorher),
                 String.valueOf(fehlerVorher),
+                String.valueOf(lesbar),
+                zitiere(rueckmeldung),
                 String.valueOf(dauerVersuchSekunden),
                 String.valueOf(dauerSekunden));
     }

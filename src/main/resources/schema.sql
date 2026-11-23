@@ -35,6 +35,8 @@ CREATE TABLE IF NOT EXISTS protokoll (
     historie_kategorie  VARCHAR(16),
     erfolge_vorher      INT          NOT NULL,
     fehler_vorher       INT          NOT NULL,
+    lesbar              BOOLEAN      NOT NULL DEFAULT TRUE,
+    rueckmeldung        TEXT,
     dauer_versuch_sekunden INT       NOT NULL,
     dauer_sekunden      INT          NOT NULL,
     INDEX idx_protokoll_sitzung (sitzung_id),

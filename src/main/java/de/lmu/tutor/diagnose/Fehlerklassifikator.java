@@ -183,10 +183,17 @@ public final class Fehlerklassifikator {
         if (!antwort.auswertbar()) {
             return Optional.empty(); // Simulationen liefern stets einen Wert
         }
-        List<Fehlersimulator.Treffer> passende =
-                simulator.simuliereAlle(aufgabe.ausdruck(), aufgabe.kontext()).stream()
-                        .filter(t -> Vergleichsmodul.werteGleich(t.wert(), antwort.wert()))
-                        .toList();
+        List<Fehlersimulator.Treffer> alle =
+                simulator.simuliereAlle(aufgabe.ausdruck(), aufgabe.kontext());
+        List<Fehlersimulator.Treffer> passende = alle.stream()
+                .filter(t -> Vergleichsmodul.werteGleich(t.wert(), antwort.wert()))
+                .toList();
+        if (passende.isEmpty()) {
+            // Zweiter Durchgang mit gekuerzten Nachkommastellen, siehe passtGekuerzt.
+            passende = alle.stream()
+                    .filter(t -> passtGekuerzt(t.wert(), antwort.wert()))
+                    .toList();
+        }
         if (passende.isEmpty()) {
             return Optional.empty();
         }
@@ -197,6 +204,55 @@ public final class Fehlerklassifikator {
         }
         return Optional.of(Diagnose.vonKombination(kategorien, Diagnose.Konfidenz.SIMULIERT,
                 gewaehlt.erklaerung()));
+    }
+
+    /**
+     * Gleicht die Nutzerantwort mit einem simulierten Wert ab und laesst dabei gekuerzte
+     * Nachkommastellen zu.
+     *
+     * <p>Wer {@code 22 / 6} fuer eine Fliesskommadivision haelt, kommt auf
+     * 3.6666666666666665. Von Hand schreibt das niemand so auf, sondern als 3.666 oder
+     * 3.67. Der exakte Vergleich verwirft eine solche Antwort, und die Fehlvorstellung
+     * bleibt unerkannt, obwohl sie offen zutage liegt. Hier gilt die Antwort deshalb auch
+     * dann als Treffer, wenn sie der auf ihre eigene Stellenzahl gekuerzten oder
+     * gerundeten Simulation entspricht.</p>
+     *
+     * <p>Das gilt ausschliesslich fuer die Diagnose. Ob eine Antwort richtig ist,
+     * entscheidet unveraendert das {@link Vergleichsmodul} mit dem exakten Vergleich.
+     * 3.666 bleibt auf {@code 22 / 6} eine falsche Antwort, sie ist nur keine
+     * unerklaerliche mehr.</p>
+     *
+     * <p>Ohne Nachkommastellen wird nicht gekuerzt. Eine Antwort wie 4 auf
+     * {@code 22 / 6} ist keine gekuerzte Schreibweise, sondern ein eigener Gedanke, naemlich
+     * gerundet statt abgeschnitten. Diesen Fall hier mitzufangen hiesse, zwei
+     * verschiedene Fehlvorstellungen in einen Topf zu werfen.</p>
+     */
+    static boolean passtGekuerzt(Value simuliert, Value antwort) {
+        if (!simuliert.typ().isNumeric() || !antwort.typ().isNumeric()) {
+            return false;
+        }
+        int stellen = nachkommastellen(antwort);
+        if (stellen == 0 || stellen > 10) {
+            return false;
+        }
+        double faktor = Math.pow(10, stellen);
+        double s = simuliert.alsZahl();
+        double skaliert = s * faktor;
+        double abgeschnitten = (s < 0 ? Math.ceil(skaliert) : Math.floor(skaliert)) / faktor;
+        double gerundet = Math.round(skaliert) / faktor;
+        double a = antwort.alsZahl();
+        return Math.abs(abgeschnitten - a) < 1e-9 || Math.abs(gerundet - a) < 1e-9;
+    }
+
+    /** Wie viele Nachkommastellen die Antwort traegt, 0 bei einer ganzen Zahl. */
+    private static int nachkommastellen(Value wert) {
+        String text = Double.toString(wert.alsZahl());
+        int punkt = text.indexOf('.');
+        if (punkt < 0 || text.indexOf('E') >= 0 || text.indexOf('e') >= 0) {
+            return 0;
+        }
+        String nach = text.substring(punkt + 1);
+        return nach.equals("0") ? 0 : nach.length();
     }
 
     private List<Misconception> nachschlagen(List<String> ids) {

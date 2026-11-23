@@ -1,5 +1,7 @@
 package de.lmu.tutor.web;
 
+import java.util.List;
+import de.lmu.tutor.session.Protokolleintrag;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -139,8 +141,30 @@ class UebungsablaufTest {
         Uebungsablauf a = gestartet();
         assertFalse(a.antworte("int", "qqq"));
         assertEquals(0, a.versuche());
-        assertTrue(a.protokoll().isEmpty());
         assertEquals(Uebungsablauf.Zustand.AUFGABE_OFFEN, a.zustand());
+    }
+
+    /**
+     * Gewertet wird der Tippfehler nicht, festgehalten schon.
+     *
+     * <p>Ohne diese Zeile verschwaende die Eingabe spurlos, und im Abschlussgespraech
+     * waere nicht mehr zu sehen, dass jemand etwas versucht hat, das gar nicht ankam.
+     * Die Zeile traegt {@code lesbar = false} und denselben Versuchszaehler wie die
+     * naechste gewertete Zeile.</p>
+     */
+    @Test
+    void einTippfehlerStehtTrotzdemImProtokoll() {
+        Uebungsablauf a = gestartet();
+        a.antworte("int", "qqq");
+
+        assertEquals(1, a.protokoll().size());
+        Protokolleintrag zeile = a.protokoll().get(0);
+        assertFalse(zeile.lesbar());
+        assertEquals(0, zeile.versuch());
+        assertTrue(zeile.antwort().contains("qqq"), zeile.antwort());
+        assertFalse(zeile.rueckmeldung().isBlank(), "Der Hinweis gehoert in die Zeile");
+        assertTrue(zeile.diagnose().isEmpty());
+        assertTrue(zeile.vermutung().isEmpty());
     }
 
     @Test
@@ -350,7 +374,11 @@ class UebungsablaufTest {
         a.antworte("int", "qqq");
         falsch(a);
         falsch(a);
-        assertEquals(2, a.protokoll().size());
+
+        // Drei Zeilen insgesamt, davon zwei gewertete. Die Zaehlung der Versuche laeuft
+        // deshalb ueber lesbar und nicht ueber die Zahl der Zeilen.
+        assertEquals(3, a.protokoll().size());
+        assertEquals(2, a.protokoll().stream().filter(Protokolleintrag::lesbar).count());
     }
 
     @Test

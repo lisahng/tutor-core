@@ -140,6 +140,37 @@ class FehlerklassifikatorTest {
     }
 
     @Test
+    void b02AuchWennDiePeriodeAbgeschnittenWurde() {
+        // 22 / 6 ergibt 3 : int. Wer eine Fliesskommadivision annimmt, kommt auf
+        // 3.6666666666666665 und schreibt das von Hand als 3.666 auf. Frueher fiel eine
+        // solche Antwort durch den exakten Vergleich und blieb ohne Diagnose, obwohl die
+        // Fehlvorstellung eindeutig ist.
+        erwarteKategorie("B02", aufgabe("B02", bin("/", intLit(22), intLit(6))),
+                NutzerAntwort.wert(Value.ofDouble(3.666)));
+    }
+
+    @Test
+    void b02AuchWennDiePeriodeGerundetWurde() {
+        erwarteKategorie("B02", aufgabe("B02", bin("/", intLit(22), intLit(6))),
+                NutzerAntwort.wert(Value.ofDouble(3.67)));
+    }
+
+    @Test
+    void eineGanzeZahlGiltNichtAlsGekuerzteSchreibweise() {
+        // 4 auf 22 / 6 ist nicht 3.666... mit weggelassenen Stellen, sondern gerundet
+        // statt abgeschnitten, also ein eigener Gedanke. Das darf nicht als B02
+        // durchgehen, sonst stuenden zwei Fehlvorstellungen unter einer Kategorie.
+        assertFalse(Fehlerklassifikator.passtGekuerzt(Value.ofDouble(22 / 6.0), Value.ofInt(4)));
+    }
+
+    @Test
+    void derExakteVergleichBleibtUnberuehrt() {
+        // Die Lockerung gilt nur fuer die Diagnose. Ob eine Antwort richtig ist,
+        // entscheidet weiterhin der exakte Vergleich.
+        assertFalse(Vergleichsmodul.werteGleich(Value.ofDouble(22 / 6.0), Value.ofDouble(3.666)));
+    }
+
+    @Test
     void b03WennStringKonkatenationAlsAdditionGerechnetWurde() {
         // "17" + 4 ergibt "174" : String; typischer Fehler 21 : int
         erwarteKategorie("B03", aufgabe("B03", bin("+", stringLit("17"), intLit(4))),

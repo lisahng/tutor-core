@@ -131,14 +131,30 @@ Für die Auswertung:
 Die Übungsseiten sind bewusst ohne Anmeldung erreichbar. Der Export ist das nicht, dort
 liegen die Daten aller Teilnehmenden beisammen.
 
+Für das Abschlussgespräch:
+
+```
+/gespraech?schluessel=...
+/gespraech?schluessel=...&rueckmeldung=true
+```
+
+Das Gesprächsblatt zeigt die laufende Sitzung des Browsers, in dem es aufgerufen wird, also
+die der Person, die gerade fertig geworden ist. Je Aufgabe stehen dort alle Eingaben in der
+Reihenfolge, in der sie gemacht wurden, auf Wunsch mit der Rückmeldung, die die Person
+daraufhin gelesen hat. Angezeigt wird ausschließlich das, was während der Bearbeitung
+ohnehin auf dem Bildschirm stand. Gruppe, Zielkategorie, Richtigkeit, Diagnose, Vermutung
+und Konfidenz kommen in der Ansicht gar nicht erst an, damit im Gespräch nichts davon
+sichtbar werden kann. Dafür sorgt `Gespraechsansicht`, eine eigene Sicht auf das Protokoll:
+die Vorlage bekommt die Protokollzeilen nie zu sehen.
+
 ## Einstellungen
 
 Alles in `src/main/resources/application.properties`, wirksam nach einem Neustart.
 
 | Eigenschaft | Standard | Bedeutung |
 |---|---|---|
-| `tutor.aufgaben` | 20 | Höchstzahl der Aufgaben je Sitzung |
-| `tutor.arbeitszeit-minuten` | 25 | Zeitbudget der Arbeitsphase |
+| `tutor.aufgaben` | 60 | Höchstzahl der Aufgaben je Sitzung |
+| `tutor.arbeitszeit-minuten` | 20 | Zeitbudget der Arbeitsphase |
 | `tutor.versuche` | 3 | Versuche je Aufgabe, bevor die Lösung erscheint |
 | `tutor.seed` | 2026 | Startwert des Generators, für alle Teilnehmenden derselbe |
 | `tutor.protokoll-ordner` | `protokolle` | wohin die CSV-Dateien gehen |

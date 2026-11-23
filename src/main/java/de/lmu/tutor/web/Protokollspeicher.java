@@ -37,8 +37,9 @@ public class Protokollspeicher {
                 sitzung_id, zeitpunkt, teilnehmer, gruppe, aufgaben_nummer, kategorie,
                 ausdruck, belegung, referenz, antwort, versuch, korrekt, diagnose,
                 vermutung, erklaert, konfidenz, feedback_stufe, historie_kategorie,
-                erfolge_vorher, fehler_vorher, dauer_versuch_sekunden, dauer_sekunden
-            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                erfolge_vorher, fehler_vorher, lesbar, rueckmeldung,
+                dauer_versuch_sekunden, dauer_sekunden
+            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
             """;
 
     private static final String BEWERTUNG_EINFUEGEN = """
@@ -96,6 +97,8 @@ public class Protokollspeicher {
                             z.historieKategorie(),
                             z.erfolgeVorher(),
                             z.fehlerVorher(),
+                            z.lesbar(),
+                            z.rueckmeldung(),
                             z.dauerVersuchSekunden(),
                             z.dauerSekunden()
                     })

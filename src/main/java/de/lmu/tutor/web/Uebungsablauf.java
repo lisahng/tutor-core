@@ -178,6 +178,11 @@ public final class Uebungsablauf {
         Optional<NutzerAntwort> gelesen = Antwortparser.lies(typ, wert);
         if (gelesen.isEmpty()) {
             eingabehinweis = Antwortparser.hinweisZu(typ, wert);
+            // Die Eingabe wird nicht gewertet, aber festgehalten. Sonst fehlt sie im
+            // Protokoll, und im Abschlussgespraech ist nicht mehr zu sehen, dass jemand
+            // etwas versucht hat, das gar nicht ankam.
+            sitzung.protokolliereUnlesbar(letzterTyp + " : " + letzterWert, eingabehinweis);
+            bisherigeVersuche.add(letzterWert + " : " + letzterTyp + " (nicht lesbar)");
             return false;
         }
 
