@@ -11,19 +11,19 @@
 <!--
     Ansicht fuer das Abschlussgespraech. Sie wird am Laptop gezeigt und soll aus zwei
     Metern Entfernung lesbar sein, deshalb die grossen Schriften und der viele Weissraum.
-    Angezeigt wird ausschliesslich, was die teilnehmende Person waehrend der Bearbeitung
-    ohnehin gesehen hat.
 
-    Die Rueckmeldungstexte sind standardmaessig verdeckt und werden je Aufgabe einzeln
-    aufgedeckt. Teil D des Leitfadens fragt, an welche Rueckmeldung sich die Person
-    erinnert. Stuende der Wortlaut dabei auf dem Bildschirm, waehlte sie beim Lesen aus,
-    statt sich zu erinnern, und gemessen waere die Verstaendlichkeit des Textes im
-    ruhigen Nachlesen, nicht seine Wirkung waehrend der Bearbeitung.
+    Gezeigt werden Aufgabe, Belegung, die eigenen Eingaben in der Reihenfolge, in der sie
+    gemacht wurden, und die dafuer benoetigte Zeit. Das ist der Hinweisreiz fuer die
+    nachtraegliche Befragung nach van Gog.
 
-    Deshalb auch blockweise und nicht fuer alle Aufgaben auf einmal: Wird in Teil B bei
-    einer Aufgabe nachgeholfen, bleiben die noch nicht besprochenen Aufgaben verdeckt.
-    Ein aufgedeckter Block behaelt die Marke "gezeigt", damit im Protokoll vermerkt
-    werden kann, wo mit Hinweisreiz gearbeitet wurde.
+    Die Rueckmeldungstexte sind bewusst nicht dabei, und zwar nirgends: weder in der Seite
+    noch zum Nachladen. Sie benennen die Fehlvorstellung beim Namen. Wer sie im Gespraech
+    liest und danach erklaert, was er sich gedacht hatte, gibt die Erklaerung des Systems
+    zurueck statt seiner eigenen. Die Uebereinstimmung von Selbsterklaerung und Diagnose,
+    die in Strang 3 ausgezaehlt wird, waere dann teilweise selbst erzeugt, und zwar in
+    Richtung der Hypothese.
+
+    Ein "weiss ich nicht mehr" ist deshalb kein Ausfall, sondern ein Ergebnis.
 -->
 <div class="seite gespraech">
 
@@ -36,8 +36,7 @@
         Zu dieser Sitzung liegen noch keine Eingaben vor.
     </p>
 
-    <div class="aufgabenblock gespraechsblock verdeckt" th:each="a : ${aufgaben}"
-         th:classappend="${mitRueckmeldung} ? 'offen' : ''">
+    <div class="aufgabenblock gespraechsblock" th:each="a : ${aufgaben}">
         <p class="belegung" th:if="${a.hatBelegung()}">
             <span class="marke">gegeben</span>
             <span th:text="${a.belegung()}">s = "Java"</span>
@@ -50,7 +49,6 @@
             <tr>
                 <th class="spalte-versuch">Versuch</th>
                 <th class="spalte-eingabe">Eingabe</th>
-                <th class="spalte-rueckmeldung">Rückmeldung</th>
                 <th class="spalte-zeit">Dauer</th>
             </tr>
             </thead>
@@ -58,51 +56,12 @@
             <tr th:each="e : ${a.eingaben()}" th:classappend="${e.lesbar()} ? '' : 'unlesbar'">
                 <td class="spalte-versuch" th:text="${e.marke()}">1</td>
                 <td class="spalte-eingabe" th:text="${e.antwort()}">"Java" : String</td>
-                <td class="rueckmeldungstext" th:text="${e.rueckmeldung()}">Richtig!</td>
                 <td class="spalte-zeit" th:text="|${e.sekunden()} s|">12 s</td>
             </tr>
             </tbody>
         </table>
-
-        <p class="knopfzeile">
-            <button type="button" class="rueckmeldung-knopf">Rückmeldung zeigen</button>
-            <span class="gezeigt-marke" hidden>gezeigt</span>
-        </p>
     </div>
 
 </div>
-
-<script>
-    // Deckt die Rueckmeldungen eines einzelnen Aufgabenblocks auf. Die Marke "gezeigt"
-    // bleibt danach stehen, auch wenn wieder zugeklappt wird, denn fuer die Auswertung
-    // zaehlt, dass bei dieser Aufgabe mit Hinweisreiz gearbeitet wurde.
-    (function () {
-        document.querySelectorAll('.gespraechsblock').forEach(function (block) {
-            var knopf = block.querySelector('.rueckmeldung-knopf');
-            var marke = block.querySelector('.gezeigt-marke');
-            if (!knopf) {
-                return;
-            }
-            function beschrifte() {
-                knopf.textContent = block.classList.contains('verdeckt')
-                        ? 'Rückmeldung zeigen' : 'Rückmeldung ausblenden';
-            }
-            if (block.classList.contains('offen')) {
-                block.classList.remove('verdeckt');
-                if (marke) {
-                    marke.hidden = false;
-                }
-            }
-            beschrifte();
-            knopf.addEventListener('click', function () {
-                block.classList.toggle('verdeckt');
-                if (!block.classList.contains('verdeckt') && marke) {
-                    marke.hidden = false;
-                }
-                beschrifte();
-            });
-        });
-    })();
-</script>
 </body>
 </html>

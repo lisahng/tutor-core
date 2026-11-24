@@ -9,7 +9,7 @@ services:
   tutor:
     build: .
     ports:
-      - "8080:8080"
+      - "8081:8080"
     environment:
       # Schaltet die Speicherung in der Datenbank ein. Ohne dieses Profil laeuft die
       # Anwendung ohne Datenbank und schreibt allein CSV-Dateien.

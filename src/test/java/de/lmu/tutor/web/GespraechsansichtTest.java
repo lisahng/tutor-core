@@ -85,24 +85,30 @@ class GespraechsansichtTest {
     }
 
     @Test
-    void zuJederEingabeStehtDerGeleseneRueckmeldungstext() {
-        Uebungsablauf a = gestartet();
-        falsch(a);
-
-        Gespraechsansicht.Eingabe erste =
-                Gespraechsansicht.ausProtokoll(a.protokoll()).get(0).eingaben().get(0);
-
-        assertFalse(erste.rueckmeldung().isBlank(),
-                "Ohne den Text laesst sich im Gespraech nicht nachvollziehen, worauf reagiert wurde");
-    }
-
-    @Test
     void ohneBelegungWirdKeineZeileDafuerAngelegt() {
         Uebungsablauf a = gestartet();
         falsch(a);
 
         Gespraechsansicht.Aufgabenblock block = Gespraechsansicht.ausProtokoll(a.protokoll()).get(0);
         assertEquals(block.belegung() != null && !block.belegung().isBlank(), block.hatBelegung());
+    }
+
+    @Test
+    void derRueckmeldungstextKommtInDerAnsichtNichtVor() {
+        // Er benennt die Fehlvorstellung. Stuende er im Gespraech auf dem Bildschirm,
+        // gaebe die Person die Erklaerung des Systems zurueck statt ihrer eigenen, und die
+        // Uebereinstimmung in Strang 3 waere teilweise selbst erzeugt. Fuer die Auswertung
+        // steht der Text weiterhin im Protokoll.
+        Uebungsablauf a = gestartet();
+        falsch(a);
+
+        Gespraechsansicht.Eingabe e =
+                Gespraechsansicht.ausProtokoll(a.protokoll()).get(0).eingaben().get(0);
+        assertFalse(a.protokoll().get(0).rueckmeldung().isBlank(),
+                "Im Protokoll steht der Text weiterhin");
+        assertEquals(4, Gespraechsansicht.Eingabe.class.getRecordComponents().length,
+                "Die Sicht traegt nur Versuch, Antwort, Lesbarkeit und Dauer");
+        assertEquals(1, e.versuch());
     }
 
     @Test

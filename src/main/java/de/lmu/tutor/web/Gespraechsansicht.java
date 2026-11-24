@@ -33,14 +33,12 @@ public final class Gespraechsansicht {
     /**
      * Eine einzelne Eingabe.
      *
-     * @param versuch      die Nummer des Versuchs, 0 bei einer nicht lesbaren Eingabe
-     * @param antwort      die Eingabe, so wie sie gemacht wurde
-     * @param lesbar       ob sie gewertet wurde
-     * @param rueckmeldung der Text, den die Person daraufhin gelesen hat
-     * @param sekunden     wie lange dieser Versuch gedauert hat
+     * @param versuch  die Nummer des Versuchs, 0 bei einer nicht lesbaren Eingabe
+     * @param antwort  die Eingabe, so wie sie gemacht wurde
+     * @param lesbar   ob sie gewertet wurde
+     * @param sekunden wie lange dieser Versuch gedauert hat
      */
-    public record Eingabe(int versuch, String antwort, boolean lesbar,
-                          String rueckmeldung, long sekunden) {
+    public record Eingabe(int versuch, String antwort, boolean lesbar, long sekunden) {
 
         /** Die Beschriftung der ersten Spalte. */
         public String marke() {
@@ -63,8 +61,8 @@ public final class Gespraechsansicht {
                         zeile.belegung(), new ArrayList<>());
                 bloecke.add(letzter);
             }
-            letzter.eingaben().add(new Eingabe(zeile.versuch(), zeile.antwort(), zeile.lesbar(),
-                    zeile.rueckmeldung(), zeile.dauerVersuchSekunden()));
+            letzter.eingaben().add(new Eingabe(zeile.versuch(), zeile.antwort(),
+                    zeile.lesbar(), zeile.dauerVersuchSekunden()));
         }
         return bloecke;
     }

@@ -257,27 +257,26 @@ public class UebungsController {
      * {@code diagnose}, {@code vermutung}, {@code erklaert} und {@code konfidenz} sind
      * nicht im Modell und koennen deshalb gar nicht erscheinen.</p>
      *
-     * <p>Mit {@code rueckmeldung=true} kommt der Text dazu, den die Person gelesen hat.
-     * Er verraet nichts Neues, denn sie hat ihn waehrend der Bearbeitung schon gesehen.
-     * Er legt ihr aber die Erklaerung in den Mund, deshalb ist er standardmaessig aus.
-     * Sinnvoll ist er, nachdem zu einer Aufgabe schon gesprochen wurde.</p>
+     * <p>Die Rueckmeldungstexte sind nicht dabei, und sie lassen sich auch nicht
+     * nachladen. Sie benennen die Fehlvorstellung, und eine Selbsterklaerung, die nach
+     * dem Lesen entsteht, gibt die Diagnose des Systems zurueck statt der eigenen
+     * Ueberlegung. Fuer die Auswertung stehen sie in der Spalte {@code rueckmeldung} des
+     * Protokolls.</p>
      *
      * <p>Wie die Export-Adressen nur mit Schluessel erreichbar.</p>
      */
     @GetMapping("/gespraech")
     public String gespraech(HttpSession sitzung, Model model,
-                            @RequestParam(name = "schluessel", required = false) String schluessel,
-                            @RequestParam(name = "rueckmeldung", required = false,
-                                          defaultValue = "false") boolean mitRueckmeldung) {
+                            @RequestParam(name = "schluessel", required = false) String schluessel) {
         Uebungsablauf ablauf = ablauf(sitzung);
         if (ablauf == null || !einstellungen.schluesselStimmt(schluessel)) {
             return "redirect:/";
         }
         model.addAttribute("teilnehmer", ablauf.teilnehmer().id());
-        model.addAttribute("mitRueckmeldung", mitRueckmeldung);
         model.addAttribute("aufgaben", Gespraechsansicht.ausProtokoll(ablauf.protokoll()));
         return "gespraech";
     }
+
 
     /** Die Bewertungen der laufenden Sitzung, ebenfalls nur mit Schluessel. */
     @GetMapping("/bewertungen.csv")
