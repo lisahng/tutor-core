@@ -3,11 +3,15 @@ package de.lmu.tutor.gen;
 import de.lmu.tutor.ast.Expr;
 import de.lmu.tutor.ast.JType;
 import de.lmu.tutor.eval.EvaluationContext;
+import de.lmu.tutor.eval.Value;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 
 import static de.lmu.tutor.ast.AST.*;
 
@@ -62,7 +66,7 @@ public final class AufgabenGenerator {
      */
     public Aufgabe generiere(String kategorieId, int stufe) {
         int s = hoechsteGepruefteStufe(kategorieId, Math.max(1, Math.min(3, stufe)));
-        return switch (kategorieId) {
+        return nurBenutzteVariablen(switch (kategorieId) {
             case "B01" -> switch (s) { case 3 -> b01s3(); case 2 -> b01s2(); default -> b01(); };
             case "B02" -> b02();
             case "B03" -> s == 3 ? b03s3() : b03();
@@ -78,7 +82,58 @@ public final class AufgabenGenerator {
             case "B13" -> switch (s) { case 3 -> b13s3(); case 2 -> b13s2(); default -> b13(); };
             case "B14" -> switch (s) { case 3 -> b14s3(); case 2 -> b14s2(); default -> b14(); };
             default -> throw new IllegalArgumentException("Keine Vorlage fuer Kategorie: " + kategorieId);
-        };
+        });
+    }
+
+    /** Reihenfolge, in der Variablen in der Belegung stehen. Alles Uebrige haengt hinten an. */
+    private static final List<String> ANZEIGEREIHENFOLGE = List.of("a", "s", "k", "i", "x");
+
+    /**
+     * Baut die angezeigte Belegung aus den Variablen neu auf, die im Ausdruck tatsaechlich
+     * vorkommen.
+     *
+     * <p>Die Vorlagen legen k und i gemeinsam an, weil sich mehrere Stufen derselben
+     * Kategorie denselben Kontext teilen. Angezeigt wurde bisher beides, auch wenn im
+     * Ausdruck nur k stand. In einer Diagnoseaufgabe ist eine solche Zugabe nicht harmlos:
+     * Wer i genannt bekommt und im Ausdruck nicht findet, sucht zuerst den eigenen Lesefehler
+     * statt zu rechnen. Die Zeit dafuer steht hinterher im Protokoll als Bearbeitungsdauer
+     * dieser Aufgabe, obwohl sie nichts mit der Fehlvorstellung zu tun hat.</p>
+     *
+     * <p>Der Kontext selbst bleibt unveraendert und vollstaendig. Er wird nicht angezeigt,
+     * kostet nichts, und {@code ++k} schreibt waehrend der Auswertung dorthin zurueck.</p>
+     */
+    private Aufgabe nurBenutzteVariablen(Aufgabe aufgabe) {
+        Set<String> benutzt = new LinkedHashSet<>();
+        sammleVariablen(aufgabe.ausdruck(), benutzt);
+        List<String> namen = new ArrayList<>(benutzt);
+        namen.sort(Comparator.comparingInt(name -> {
+            int platz = ANZEIGEREIHENFOLGE.indexOf(name);
+            return platz < 0 ? ANZEIGEREIHENFOLGE.size() : platz;
+        }));
+
+        StringBuilder sb = new StringBuilder();
+        for (String name : namen) {
+            Value wert = aufgabe.kontext().hole(name);
+            if (wert == null) {
+                continue;
+            }
+            if (sb.length() > 0) {
+                sb.append(", ");
+            }
+            sb.append(name).append(" = ").append(wert.render());
+        }
+        return new Aufgabe(aufgabe.kategorieId(), aufgabe.ausdruck(), aufgabe.kontext(),
+                sb.toString());
+    }
+
+    /** Sammelt die Namen aller Variablen im Teilbaum, auch die in {@code ++k} und {@code a[k]}. */
+    private static void sammleVariablen(Expr ausdruck, Set<String> ziel) {
+        if (ausdruck instanceof Expr.Var v) {
+            ziel.add(v.name());
+        }
+        for (Expr kind : ausdruck.children()) {
+            sammleVariablen(kind, ziel);
+        }
     }
 
     /**

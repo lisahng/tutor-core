@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
+import de.lmu.tutor.ast.Expr;
 import de.lmu.tutor.ast.JType;
 import de.lmu.tutor.buglib.BugLibrary;
 import de.lmu.tutor.diagnose.Diagnose;
@@ -108,6 +109,32 @@ class AufgabenStufenTest {
         }
     }
 
+    @Test
+    void dieBelegungNenntNurVariablenDieImAusdruckVorkommen() {
+        // Die Vorlagen legen k und i gemeinsam an, weil mehrere Stufen sich denselben
+        // Kontext teilen. Angezeigt werden darf nur, was im Ausdruck auch steht. Eine
+        // ueberzaehlige Variable laesst die Person zuerst ihre eigene Lesart pruefen, und
+        // diese Zeit steht hinterher im Protokoll als Bearbeitungsdauer der Aufgabe.
+        for (String id : alleKategorien()) {
+            for (int stufe = 1; stufe <= 3; stufe++) {
+                AufgabenGenerator gen = new AufgabenGenerator(31L + stufe);
+                for (int lauf = 0; lauf < STICHPROBE; lauf++) {
+                    Aufgabe aufgabe = gen.generiere(id, stufe);
+                    String text = aufgabe.render();
+                    for (String name : List.of("a", "s", "k", "i", "x")) {
+                        boolean imAusdruck = stehtImBaum(aufgabe.ausdruck(), name);
+                        boolean inDerBelegung = aufgabe.belegung().startsWith(name + " = ")
+                                || aufgabe.belegung().contains(", " + name + " = ");
+                        assertEquals(imAusdruck, inDerBelegung,
+                                id + " Stufe " + stufe + ": " + text
+                                        + " mit Belegung [" + aufgabe.belegung()
+                                        + "], Variable " + name);
+                    }
+                }
+            }
+        }
+    }
+
     // ================================================================
     // Diagnostizierbarkeit
     // ================================================================
@@ -172,6 +199,17 @@ class AufgabenStufenTest {
 
     private List<String> alleKategorien() {
         return lib.all().stream().map(m -> m.id()).toList();
+    }
+
+    /**
+     * Ob die Variable mit diesem Namen im Ausdruck steht. Geprueft wird der Baum und nicht
+     * der Quelltext: In {@code "Java".charAt(14) == 'a'} steht ein a, aber als Zeichen.
+     */
+    private boolean stehtImBaum(Expr ausdruck, String name) {
+        if (ausdruck instanceof Expr.Var v && v.name().equals(name)) {
+            return true;
+        }
+        return ausdruck.children().stream().anyMatch(kind -> stehtImBaum(kind, name));
     }
 
     /**
