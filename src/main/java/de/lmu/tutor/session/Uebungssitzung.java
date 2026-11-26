@@ -235,12 +235,49 @@ public final class Uebungssitzung {
      * stehen bleibt.</p>
      */
     private Aufgabe frischeAufgabe(String kategorieId) {
-        Aufgabe aufgabe = generator.generiere(kategorieId);
+        int stufe = stufeFuer(aufgabenNummer + 1);
+        Aufgabe aufgabe = generator.generiere(kategorieId, stufe);
         for (int anlauf = 1; anlauf < ANLAEUFE && gestellteAusdruecke.contains(kennung(aufgabe));
                 anlauf++) {
-            aufgabe = generator.generiere(kategorieId);
+            aufgabe = generator.generiere(kategorieId, stufe);
         }
         return aufgabe;
+    }
+
+    /**
+     * Die Schwierigkeitsstufe nach der Position in der Sitzung.
+     *
+     * <p><b>Warum nach Position und nicht nach Leistung.</b> Eine Steigerung, die an den
+     * eigenen Antworten haengt, waere paedagogisch naheliegend, wuerde hier aber den
+     * Versuchsplan beschaedigen. Der untersuchte Faktor ist die Anpassung der
+     * Aufgabenauswahl, und die Kontrollbedingung ist gerade dadurch definiert, dass ihre
+     * Abfolge <em>feststeht</em>. Haengt die Schwierigkeit an der Leistung, ist auch die
+     * Kontrollgruppe angepasst, nur in einer anderen Dimension, und der Unterschied
+     * zwischen den Bedingungen wird kleiner.</p>
+     *
+     * <p>Nach Position ist die Abfolge dagegen fuer jede Person und beide Gruppen
+     * dieselbe. Der sanfte Einstieg bleibt, und die spaeteren Aufgaben erreichen den
+     * Zuschnitt der Klausuren.</p>
+     *
+     * <p>Die Grenzen sind an der Arbeitszeit ausgerichtet. In zwanzig Minuten sind rund
+     * 24 Aufgaben zu schaffen: Wert und Typ bestimmen, eintippen, Rueckmeldung lesen, bei
+     * Fehlern ein zweiter Versuch, am Ende die Selbsteinschaetzung. Mit 6 und 14 verteilt
+     * sich eine solche Sitzung auf etwa sechs leichte, acht mittlere und zehn schwere
+     * Aufgaben.</p>
+     *
+     * <p>Hoehere Grenzen waeren hier ein Fehler. Bei 8 und 20 erreichte dieselbe Sitzung
+     * nur noch vier Aufgaben der Stufe 3, und wer langsamer arbeitet, saehe sie gar nicht.
+     * Dann haette die Geschwindigkeit darueber entschieden, welche Art Aufgaben jemand
+     * ueberhaupt zu sehen bekommt, und nicht die Bedingung.</p>
+     *
+     * <p>Sechs Aufgaben genuegen zum Hineinfinden. Niemand startet kalt in einen
+     * zusammengesetzten Ausdruck.</p>
+     */
+    public static int stufeFuer(int nummer) {
+        if (nummer <= 6) {
+            return 1;
+        }
+        return nummer <= 14 ? 2 : 3;
     }
 
     /** Ausdruck samt Belegung, denn bei {@code a[k + 1]} entscheidet erst die Belegung. */

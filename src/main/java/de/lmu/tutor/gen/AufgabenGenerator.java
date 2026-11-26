@@ -30,25 +30,87 @@ public final class AufgabenGenerator {
     public AufgabenGenerator(long seed) { this(new Random(seed)); }
     public AufgabenGenerator(Random random) { this.random = random; }
 
-    /** Erzeugt eine Aufgabe fuer die gegebene Kategorie (z. B. "B05"). */
+    /** Erzeugt eine Aufgabe der untersten Schwierigkeitsstufe. */
     public Aufgabe generiere(String kategorieId) {
+        return generiere(kategorieId, 1);
+    }
+
+    /**
+     * Erzeugt eine Aufgabe fuer die gegebene Kategorie in der gewuenschten
+     * Schwierigkeitsstufe.
+     *
+     * <p>Die Stufen unterscheiden sich in der Zahl der Schritte, nicht in der
+     * Fehlvorstellung. Jede Stufe prueft dieselbe Kategorie:</p>
+     *
+     * <ul>
+     *   <li><b>Stufe 1</b> stellt die Fehlvorstellung allein. Ein Operator, zwei
+     *       Operanden, keine Variablen ausser den noetigen.</li>
+     *   <li><b>Stufe 2</b> setzt einen Schritt davor oder dahinter, meist mit Variablen
+     *       aus der Belegung. Wer den Kern nicht beherrscht, scheitert weiterhin, wer ihn
+     *       beherrscht, muss zusaetzlich die Reihenfolge einhalten.</li>
+     *   <li><b>Stufe 3</b> entspricht dem Zuschnitt der Altklausuren: mehrere Schritte,
+     *       Indexzugriffe und Ketten, und damit auch Kombinationen mehrerer
+     *       Fehlvorstellungen in einem Ausdruck.</li>
+     * </ul>
+     *
+     * <p>Zu jeder Kategorie muss der Fehlersimulator auch in den hoeheren Stufen einen
+     * Wert erzeugen koennen, der sich vom richtigen unterscheidet. Sonst waere die Aufgabe
+     * zwar schwerer, aber nicht mehr diagnostisch. {@code AufgabenGeneratorStufenTest}
+     * prueft das fuer jede Kategorie und jede Stufe.</p>
+     *
+     * @param stufe 1 bis 3; hoehere Werte werden auf 3 begrenzt
+     */
+    public Aufgabe generiere(String kategorieId, int stufe) {
+        int s = hoechsteGepruefteStufe(kategorieId, Math.max(1, Math.min(3, stufe)));
         return switch (kategorieId) {
-            case "B01" -> b01();
+            case "B01" -> switch (s) { case 3 -> b01s3(); case 2 -> b01s2(); default -> b01(); };
             case "B02" -> b02();
-            case "B03" -> b03();
+            case "B03" -> s == 3 ? b03s3() : b03();
             case "B04" -> b04();
             case "B05" -> b05();
-            case "B06" -> b06();
-            case "B07" -> b07();
-            case "B08" -> b08();
-            case "B09" -> b09();
-            case "B10" -> b10();
-            case "B11" -> b11();
+            case "B06" -> switch (s) { case 3 -> b06s3(); case 2 -> b06s2(); default -> b06(); };
+            case "B07" -> s >= 2 ? b07s2() : b07();
+            case "B08" -> switch (s) { case 3 -> b08s3(); case 2 -> b08s2(); default -> b08(); };
+            case "B09" -> switch (s) { case 3 -> b09s3(); case 2 -> b09s2(); default -> b09(); };
+            case "B10" -> s == 3 ? b10s3() : b10();
+            case "B11" -> switch (s) { case 3 -> b11s3(); case 2 -> b11s2(); default -> b11(); };
             case "B12" -> b12();
-            case "B13" -> b13();
-            case "B14" -> b14();
+            case "B13" -> switch (s) { case 3 -> b13s3(); case 2 -> b13s2(); default -> b13(); };
+            case "B14" -> switch (s) { case 3 -> b14s3(); case 2 -> b14s2(); default -> b14(); };
             default -> throw new IllegalArgumentException("Keine Vorlage fuer Kategorie: " + kategorieId);
         };
+    }
+
+    /**
+     * Begrenzt die Stufe auf das, was fuer diese Kategorie nachweislich diagnostizierbar
+     * bleibt.
+     *
+     * <p>Eine schwerere Aufgabe nuetzt nichts, wenn das System die Fehlvorstellung darin
+     * nicht mehr erkennt. Die Regeln des Fehlersimulators setzen an der Wurzel des
+     * Ausdrucks an: {@code 22 / 6} wird erkannt, {@code 22 / 6 + 8} nicht mehr, weil dort
+     * oben ein Plus steht. Nur wo eine Regel den Baum durchlaeuft, wie bei der
+     * Praezedenzkette und beim Method-Chaining, oder wo gar keine Simulation noetig ist,
+     * ueberlebt die Diagnose eine Einbettung.</p>
+     *
+     * <p>Welche Kombination aus Kategorie und Stufe das erfuellt, ist nicht geschaetzt,
+     * sondern gemessen: {@code AufgabenStufenTest} erzeugt je Kombination Aufgaben und
+     * prueft, dass die Fehlvorstellung weiterhin zu einem anderen Ergebnis fuehrt als die
+     * richtige Loesung. Faellt eine Kombination durch, gehoert sie hier heraus.</p>
+     *
+     * <p>Nicht eingebettet werden deshalb B02, B04, B05 und B12 sowie B03 und B10 in
+     * Stufe 2 und B07 in Stufe 3. Diese Kategorien bleiben auf Stufe 1.</p>
+     */
+    private static int hoechsteGepruefteStufe(String kategorieId, int gewuenscht) {
+        int grenze = switch (kategorieId) {
+            case "B02", "B04", "B05", "B12" -> 1;
+            case "B07" -> 2;
+            default -> 3;
+        };
+        // B03 und B10 haben keine brauchbare Stufe 2, wohl aber eine Stufe 3.
+        if (gewuenscht == 2 && (kategorieId.equals("B03") || kategorieId.equals("B10"))) {
+            return 1;
+        }
+        return Math.min(gewuenscht, grenze);
     }
 
     // ---- Vorlagen je Kategorie ----
@@ -305,6 +367,358 @@ public final class AufgabenGenerator {
         String vergleich = random.nextBoolean() ? w : andereSchreibweise(w);
         EvaluationContext ctx = new EvaluationContext().setzeString("s", w);
         return new Aufgabe("B14", call(var("s"), "equals", stringLit(vergleich)), ctx, "s = \"" + w + "\"");
+    }
+
+    // =====================================================================
+    // Stufe 2 und 3
+    //
+    // Gemeinsame Regel: Der Kern der Fehlvorstellung bleibt unveraendert, es kommen nur
+    // Schritte davor oder dahinter. Wird der Kern gestoert, veraendert sich dadurch auch
+    // das Gesamtergebnis, und die Kategorie bleibt diagnostizierbar.
+    //
+    // Bewusst NICHT verwendet werden mehrere Seiteneffekte in einem Ausdruck, etwa
+    // b == b++ aus der Altklausur. Solche Ausdruecke sind zwar gueltiges Java, ihr Wert
+    // haengt aber an der strikten Auswertungsreihenfolge. Zwei Tage vor der Erhebung ist
+    // das ein Risiko ohne Gegenwert.
+    // =====================================================================
+
+    /** Belegung zweier ganzzahliger Variablen, in der Schreibweise der Altklausuren. */
+    private EvaluationContext ctxKI(int k, int i) {
+        return new EvaluationContext().setzeInt("k", k).setzeInt("i", i);
+    }
+
+    private String belegungKI(int k, int i) {
+        return "k = " + k + ", i = " + i;
+    }
+
+    // ---- B01 Praezedenz ----
+
+    /** {@code x - y * z + w}: zwei Operatoren gleicher und einer hoeherer Stufe. */
+    private Aufgabe b01s2() {
+        return ohneVars("B01", bin("+",
+                bin("-", intLit(rnd(20, 40)), bin("*", intLit(rnd(2, 6)), intLit(rnd(2, 6)))),
+                intLit(rnd(2, 9))));
+    }
+
+    /** {@code k % m + i + x / y}, der Zuschnitt aus der Altklausur. */
+    private Aufgabe b01s3() {
+        int k = rnd(5, 19), i = rnd(2, 9), m = rnd(3, 7), x = rnd(10, 40), y = rnd(3, 7);
+        Expr e = bin("+", bin("+", bin("%", var("k"), intLit(m)), var("i")),
+                bin("/", intLit(x), intLit(y)));
+        return new Aufgabe("B01", e, ctxKI(k, i), belegungKI(k, i));
+    }
+
+    // ---- B02 Integer-Division ----
+
+    /** {@code x / y + z}. */
+    private Aufgabe b02s2() {
+        int y = rnd(3, 8), x;
+        do { x = rnd(10, 40); } while (x % y == 0);
+        return ohneVars("B02", bin("+", bin("/", intLit(x), intLit(y)), intLit(rnd(2, 9))));
+    }
+
+    /** {@code x / y * y}: zeigt das Abschneiden besonders deutlich, denn heraus kommt nicht x. */
+    private Aufgabe b02s3() {
+        int y = rnd(3, 8), x;
+        do { x = rnd(10, 40); } while (x % y == 0);
+        return ohneVars("B02", bin("*", bin("/", intLit(x), intLit(y)), intLit(y)));
+    }
+
+    // ---- B03 Konkatenation ----
+
+    /** {@code "w" + k}, mit einer Variablen aus der Belegung. */
+    private Aufgabe b03s2() {
+        int k = rnd(2, 9), i = rnd(2, 9);
+        Expr e = bin("+", stringLit(wort()), var("k"));
+        return new Aufgabe("B03", e, ctxKI(k, i), belegungKI(k, i));
+    }
+
+    /** {@code k + "" + 2 * i}: erst Zahl plus Text, dann Punktrechnung angehaengt. */
+    private Aufgabe b03s3() {
+        int k = rnd(2, 9), i = rnd(2, 9);
+        Expr e = bin("+", bin("+", var("k"), stringLit("")),
+                bin("*", intLit(2), var("i")));
+        return new Aufgabe("B03", e, ctxKI(k, i), belegungKI(k, i));
+    }
+
+    // ---- B04 Cast ----
+
+    /** {@code (int)(k / 8.0) + z}, der Zuschnitt aus der Altklausur. */
+    private Aufgabe b04s2() {
+        int k = rnd(10, 60), i = rnd(2, 9);
+        Expr e = bin("+", cast(JType.INT, bin("/", var("k"), doubleLit(8.0))), intLit(rnd(2, 9)));
+        return new Aufgabe("B04", e, ctxKI(k, i), belegungKI(k, i));
+    }
+
+    /** {@code (int)(x * 1.5) - y}. */
+    private Aufgabe b04s3() {
+        int x;
+        do { x = rnd(3, 19); } while (x % 2 == 0);
+        return ohneVars("B04", bin("-",
+                cast(JType.INT, bin("*", intLit(x), doubleLit(1.5))), intLit(rnd(2, 9))));
+    }
+
+    // ---- B05 Array-Index ----
+
+    /** {@code a[k + 1].length() * k}, der Zuschnitt aus der Altklausur. */
+    private Aufgabe b05s2() {
+        String[] arr = zufallsArrayVerschiedenLang(4);
+        int k = rnd(0, arr.length - 2), i = rnd(2, 9);
+        EvaluationContext ctx = ctxKI(k, i).setzeStringArray("a", arr);
+        Expr e = bin("*", call(index(var("a"), bin("+", var("k"), intLit(1))), "length"), var("k"));
+        return new Aufgabe("B05", e, ctx, belegungArray(arr, "k", k) + ", i = " + i);
+    }
+
+    /** {@code a[k].length() + a[i].length()}: zwei Zugriffe, beide muessen stimmen. */
+    private Aufgabe b05s3() {
+        String[] arr = zufallsArrayVerschiedenLang(4);
+        int k = rnd(0, arr.length - 1), i;
+        do { i = rnd(0, arr.length - 1); } while (i == k);
+        EvaluationContext ctx = ctxKI(k, i).setzeStringArray("a", arr);
+        Expr e = bin("+", call(index(var("a"), var("k")), "length"),
+                call(index(var("a"), var("i")), "length"));
+        return new Aufgabe("B05", e, ctx, belegungArray(arr, "k", k) + ", i = " + i);
+    }
+
+    // ---- B06 Method-Chaining ----
+
+    /** {@code a[k].substring(1).toLowerCase()}, der Zuschnitt aus der Altklausur. */
+    private Aufgabe b06s2() {
+        String[] arr = grossArray(4);
+        int k = rnd(0, arr.length - 1), i = rnd(2, 9);
+        EvaluationContext ctx = ctxKI(k, i).setzeStringArray("a", arr);
+        Expr e = call(call(index(var("a"), var("k")), "substring", intLit(1)), "toLowerCase");
+        return new Aufgabe("B06", e, ctx, belegungArray(arr, "k", k) + ", i = " + i);
+    }
+
+    /** {@code a[k].toLowerCase().charAt(1)}: drei Schritte, Ergebnis ist ein char. */
+    private Aufgabe b06s3() {
+        String[] arr = grossArray(4);
+        int k = rnd(0, arr.length - 1), i = rnd(2, 9);
+        EvaluationContext ctx = ctxKI(k, i).setzeStringArray("a", arr);
+        Expr e = call(call(index(var("a"), var("k")), "toLowerCase"), "charAt", intLit(1));
+        return new Aufgabe("B06", e, ctx, belegungArray(arr, "k", k) + ", i = " + i);
+    }
+
+    // ---- B07 Datentyp ----
+
+    /** {@code x / y + z}: der Wert ueberrascht, der Typ bleibt int. */
+    private Aufgabe b07s2() {
+        int y = rnd(3, 8), x;
+        do { x = rnd(10, 40); } while (x % y == 0);
+        return ohneVars("B07", bin("+", bin("/", intLit(x), intLit(y)), intLit(rnd(2, 9))));
+    }
+
+    /** {@code x / y + 0.5}: sobald eine Kommazahl beteiligt ist, wird das Ganze double. */
+    private Aufgabe b07s3() {
+        int y = rnd(3, 8), x;
+        do { x = rnd(10, 40); } while (x % y == 0);
+        return ohneVars("B07", bin("+", bin("/", intLit(x), intLit(y)), doubleLit(0.5)));
+    }
+
+    // ---- B08 nicht auswertbar ----
+
+    /** {@code "nn" + x - k}, der Zuschnitt aus der Altklausur. */
+    private Aufgabe b08s2() {
+        int k = rnd(2, 9), i = rnd(2, 9);
+        Expr e = bin("-", bin("+", stringLit(String.valueOf(rnd(10, 99))), intLit(rnd(1, 9))),
+                var("k"));
+        return new Aufgabe("B08", e, ctxKI(k, i), belegungKI(k, i));
+    }
+
+    /** {@code a[k] * i}: ein Text laesst sich nicht multiplizieren. */
+    private Aufgabe b08s3() {
+        String[] arr = zufallsArray(4);
+        int k = rnd(0, arr.length - 1), i = rnd(2, 9);
+        EvaluationContext ctx = ctxKI(k, i).setzeStringArray("a", arr);
+        Expr e = bin("*", index(var("a"), var("k")), var("i"));
+        return new Aufgabe("B08", e, ctx, belegungArray(arr, "k", k) + ", i = " + i);
+    }
+
+    // ---- B09 Kurzschluss ----
+
+    /** Links ein Vergleich mit Variablen, rechts ein Ausdruck, der abstuerzen wuerde. */
+    private Aufgabe b09s2() {
+        boolean oder = random.nextBoolean();
+        int k = rnd(2, 9), i = rnd(10, 30);
+        Expr links = oder ? bin("<", var("k"), var("i")) : bin(">", var("k"), var("i"));
+        Expr e = bin(oder ? "||" : "&&", links, riskanterAusdruck());
+        return new Aufgabe("B09", e, ctxKI(k, i), belegungKI(k, i));
+    }
+
+    /** Rechts ein Indexzugriff hinter das Ende des Feldes. */
+    private Aufgabe b09s3() {
+        boolean oder = random.nextBoolean();
+        String[] arr = zufallsArray(3);
+        int k = rnd(2, 9), i = rnd(10, 30);
+        EvaluationContext ctx = ctxKI(k, i).setzeStringArray("a", arr);
+        Expr links = oder ? bin("<", var("k"), var("i")) : bin(">", var("k"), var("i"));
+        Expr rechts = bin(">", call(index(var("a"), var("i")), "length"), intLit(0));
+        Expr e = bin(oder ? "||" : "&&", links, rechts);
+        return new Aufgabe("B09", e, ctx, belegungArray(arr, "k", k) + ", i = " + i);
+    }
+
+    // ---- B10 Modulo ----
+
+    /** {@code x % y + z}. */
+    private Aufgabe b10s2() {
+        int y = rnd(3, 9), x;
+        do { x = rnd(10, 40); } while (x % y == 0 || x % y == x / y);
+        return ohneVars("B10", bin("+", bin("%", intLit(x), intLit(y)), intLit(rnd(2, 9))));
+    }
+
+    /** {@code (x + k) % y}: der Rest wird erst nach einer Rechnung gebildet. */
+    private Aufgabe b10s3() {
+        int k = rnd(2, 9), i = rnd(2, 9);
+        int y = rnd(3, 9), x;
+        do { x = rnd(10, 40); } while ((x + k) % y == 0 || (x + k) % y == (x + k) / y);
+        Expr e = bin("%", bin("+", intLit(x), var("k")), intLit(y));
+        return new Aufgabe("B10", e, ctxKI(k, i), belegungKI(k, i));
+    }
+
+    // ---- B11 Ternaerer Operator ----
+
+    /** {@code (k > i) ? k * 2 : i * 2}: beide Zweige rechnen. */
+    private Aufgabe b11s2() {
+        int k = rnd(2, 9), i;
+        do { i = rnd(2, 9); } while (i == k);
+        Expr e = ternary(bin(">", var("k"), var("i")),
+                bin("*", var("k"), intLit(2)), bin("*", var("i"), intLit(2)));
+        return new Aufgabe("B11", e, ctxKI(k, i), belegungKI(k, i));
+    }
+
+    /** {@code (k + i > m) ? k % 3 : i / 2}: die Bedingung muss selbst ausgerechnet werden. */
+    private Aufgabe b11s3() {
+        int k, i, m;
+        // Die beiden Zweige muessen verschiedene Werte liefern, sonst faellt der falsche
+        // Zweig nicht auf. Dieselbe Bedingung wie in Stufe 1, hier nur ueber die
+        // berechneten Zweige statt ueber zwei Konstanten.
+        do {
+            k = rnd(2, 9);
+            i = rnd(2, 9);
+            m = rnd(4, 14);
+        } while (k % 3 == i / 2);
+        Expr e = ternary(bin(">", bin("+", var("k"), var("i")), intLit(m)),
+                bin("%", var("k"), intLit(3)), bin("/", var("i"), intLit(2)));
+        return new Aufgabe("B11", e, ctxKI(k, i), belegungKI(k, i));
+    }
+
+    // ---- B12 Inkrement ----
+
+    /** {@code k++ + z} oder {@code ++k + z}: ein einziger Seiteneffekt, dahinter eine Rechnung. */
+    private Aufgabe b12s2() {
+        int k = rnd(2, 9), i = rnd(2, 9);
+        Expr kern = random.nextBoolean() ? preInc(var("k")) : postInc(var("k"));
+        Expr e = bin("+", kern, intLit(rnd(2, 9)));
+        return new Aufgabe("B12", e, ctxKI(k, i), belegungKI(k, i));
+    }
+
+    /** {@code (++k) * z - i} beziehungsweise mit Postfix. */
+    private Aufgabe b12s3() {
+        int k = rnd(2, 9), i = rnd(2, 9);
+        Expr kern = random.nextBoolean() ? preInc(var("k")) : postInc(var("k"));
+        Expr e = bin("-", bin("*", kern, intLit(rnd(2, 5))), var("i"));
+        return new Aufgabe("B12", e, ctxKI(k, i), belegungKI(k, i));
+    }
+
+    // ---- B13 char ----
+
+    /** {@code a[k].charAt(i)}: der Zugriff kommt vor dem Zeichen. */
+    private Aufgabe b13s2() {
+        String[] arr = zufallsArrayMitMindestlaenge(4, 4);
+        int k = rnd(0, arr.length - 1);
+        int i = rnd(0, 3);
+        EvaluationContext ctx = ctxKI(k, i).setzeStringArray("a", arr);
+        Expr e = call(index(var("a"), var("k")), "charAt", var("i"));
+        return new Aufgabe("B13", e, ctx, belegungArray(arr, "k", k) + ", i = " + i);
+    }
+
+    /** {@code a[k].substring(1).charAt(0)}: zwei Schritte bis zum Zeichen. */
+    private Aufgabe b13s3() {
+        String[] arr = zufallsArrayMitMindestlaenge(4, 3);
+        int k = rnd(0, arr.length - 1), i = rnd(2, 9);
+        EvaluationContext ctx = ctxKI(k, i).setzeStringArray("a", arr);
+        Expr e = call(call(index(var("a"), var("k")), "substring", intLit(1)), "charAt", intLit(0));
+        return new Aufgabe("B13", e, ctx, belegungArray(arr, "k", k) + ", i = " + i);
+    }
+
+    // ---- B14 equals ----
+
+    /** {@code a[k].equals(a[i])}: zwei Zugriffe, dann der Vergleich. */
+    private Aufgabe b14s2() {
+        String[] arr = zufallsArray(4);
+        int k = rnd(0, arr.length - 1);
+        // In der Haelfte der Faelle dieselbe Stelle, dann ist das Ergebnis true und die
+        // Fehlvorstellung sichtbar. Sonst eine andere Stelle, sonst waere es zu erraten.
+        int i = random.nextBoolean() ? k : andererIndex(arr.length, k);
+        EvaluationContext ctx = ctxKI(k, i).setzeStringArray("a", arr);
+        Expr e = call(index(var("a"), var("k")), "equals", index(var("a"), var("i")));
+        return new Aufgabe("B14", e, ctx, belegungArray(arr, "k", k) + ", i = " + i);
+    }
+
+    /** {@code a[k].toLowerCase().equals("wort")}: erst umwandeln, dann vergleichen. */
+    private Aufgabe b14s3() {
+        String[] arr = grossArray(4);
+        int k = rnd(0, arr.length - 1), i = rnd(2, 9);
+        String vergleich = random.nextBoolean()
+                ? arr[k].toLowerCase()
+                : andereSchreibweise(arr[k].toLowerCase());
+        EvaluationContext ctx = ctxKI(k, i).setzeStringArray("a", arr);
+        Expr e = call(call(index(var("a"), var("k")), "toLowerCase"), "equals",
+                stringLit(vergleich));
+        return new Aufgabe("B14", e, ctx, belegungArray(arr, "k", k) + ", i = " + i);
+    }
+
+    /** Ein anderer Index als der gegebene. */
+    private int andererIndex(int laenge, int ausser) {
+        int j;
+        do { j = random.nextInt(laenge); } while (j == ausser);
+        return j;
+    }
+
+    /** Lauter grossgeschriebene Woerter, damit {@code toLowerCase} sichtbar wirkt. */
+    private String[] grossArray(int n) {
+        String[] arr = zufallsArrayMitMindestlaenge(n, 3);
+        for (int j = 0; j < arr.length; j++) {
+            arr[j] = arr[j].toUpperCase();
+        }
+        return arr;
+    }
+
+    /** Verschiedene Woerter, alle mindestens so lang wie verlangt. */
+    private String[] zufallsArrayMitMindestlaenge(int n, int minLaenge) {
+        List<String> vorrat = new ArrayList<>();
+        for (String w : WOERTER) {
+            if (w.length() >= minLaenge) {
+                vorrat.add(w);
+            }
+        }
+        Collections.shuffle(vorrat, random);
+        return vorrat.subList(0, Math.min(n, vorrat.size())).toArray(new String[0]);
+    }
+
+    /**
+     * Verschiedene Woerter mit paarweise verschiedener Laenge.
+     *
+     * <p>Noetig, wo {@code length()} auf einen Eintrag angewendet wird: Haetten zwei
+     * Eintraege dieselbe Laenge, lieferte ein falsch berechneter Index dasselbe Ergebnis
+     * wie der richtige, und der Indexfehler bliebe unsichtbar.</p>
+     */
+    private String[] zufallsArrayVerschiedenLang(int n) {
+        List<String> vorrat = new ArrayList<>(List.of(WOERTER));
+        Collections.shuffle(vorrat, random);
+        List<String> gewaehlt = new ArrayList<>();
+        List<Integer> laengen = new ArrayList<>();
+        for (String w : vorrat) {
+            if (!laengen.contains(w.length())) {
+                gewaehlt.add(w);
+                laengen.add(w.length());
+            }
+            if (gewaehlt.size() == n) {
+                break;
+            }
+        }
+        return gewaehlt.toArray(new String[0]);
     }
 
     // ---- Hilfsmittel ----
